@@ -1,0 +1,17 @@
+module uart (
+    input clk,          // Saat girişi
+    input reset,        // Sıfırlama girişi
+    input rx,           // RX giriş portu
+    output tx,          // TX çıkış portu
+    input [7:0] tx_data,// TX veri girişi
+    output [7:0] rx_data,// RX veri çıkışı
+    input tx_en,        // TX kanalını etkinleştir
+    input rx_en,        // RX kanalını etkinleştir
+    input [15:0] baud_div, // Baud rate ayarı
+    output tx_busy,     // TX meşgul durumu
+    output rx_ready     // RX veri hazır durumu
+);
+
+// Baud rate jeneratörü, TX ve RX modülleri burada tanımlanacaktır.
+
+endmodule
