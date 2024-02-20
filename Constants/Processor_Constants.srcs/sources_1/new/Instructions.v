@@ -1,9 +1,3 @@
-
-// Module Name: Instructions
-module Instructions(
-
-    );
-
     // RISC-V Instructions
     // RV32I Base Integer Instruction Set
     localparam LUI = 1;
@@ -55,45 +49,45 @@ module Instructions(
     localparam REMU = 45;
 
     // RV32A Standard Extension for Atomic Instructions
-    localparam LR.W = 46;
-    localparam SC.W = 47;
-    localparam AMOSWAP.W = 48;
-    localparam AMOADD.W = 49;
-    localparam AMOXOR.W = 50;
-    localparam AMOAND.W = 51;
-    localparam AMOOR.W = 52;
-    localparam AMOMIN.W = 53;
-    localparam AMOMAX.W = 54;
-    localparam AMOMINU.W = 55;
-    localparam AMOMAXU.W = 56;
+    localparam LR_W = 46;
+    localparam SC_W = 47;
+    localparam AMOSWAP_W = 48;
+    localparam AMOADD_W = 49;
+    localparam AMOXOR_W = 50;
+    localparam AMOAND_W = 51;
+    localparam AMOOR_W = 52;
+    localparam AMOMIN_W = 53;
+    localparam AMOMAX_W = 54;
+    localparam AMOMINU_W = 55;
+    localparam AMOMAXU_W = 56;
 
     // RV32F Standard Extension for Single-Precision Floating-Point
     localparam FLW = 57;
     localparam FSW = 58;
-    localparam FMADD.S = 59;
-    localparam FMSUB.S = 60;
-    localparam FNMSUB.S = 61;
-    localparam FNMADD.S = 62;
-    localparam FADD.S = 63;
-    localparam FSUB.S = 64;
-    localparam FMUL.S = 65;
-    localparam FDIV.S = 66;
-    localparam FSQRT.S = 67;
-    localparam FSGNJ.S = 68;
-    localparam FSGNJN.S = 69;
-    localparam FSGNJX.S = 70;
-    localparam FMIN.S = 71;
-    localparam FMAX.S = 72;
-    localparam FCVT.W.S = 73;
-    localparam FCVT.WU.S = 74;
-    localparam FMV.X.W = 75;
-    localparam FEQ.S = 76;
-    localparam FLT.S = 77;
-    localparam FLE.S = 78;
-    localparam FCLASS.S = 79;
-    localparam FCVT.S.W = 80;
-    localparam FCVT.S.WU = 81;
-    localparam FMV.W.X = 82;
+    localparam FMADD_S = 59;
+    localparam FMSUB_S = 60;
+    localparam FNMSUB_S = 61;
+    localparam FNMADD_S = 62;
+    localparam FADD_S = 63;
+    localparam FSUB_S = 64;
+    localparam FMUL_S = 65;
+    localparam FDIV_S = 66;
+    localparam FSQRT_S = 67;
+    localparam FSGNJ_S = 68;
+    localparam FSGNJN_S = 69;
+    localparam FSGNJX_S = 70;
+    localparam FMIN_S = 71;
+    localparam FMAX_S = 72;
+    localparam FCVT_W_S = 73;
+    localparam FCVT_WU_S = 74;
+    localparam FMV_X_W = 75;
+    localparam FEQ_S = 76;
+    localparam FLT_S = 77;
+    localparam FLE_S = 78;
+    localparam FCLASS_S = 79;
+    localparam FCVT_S_W = 80;
+    localparam FCVT_S_WU = 81;
+    localparam FMV_W_X = 82;
 
 function automatic logic [6:0] decodeInstruction(input logic [31:0] instruction);
     logic [6:0] opcode = instruction[6:0];
@@ -197,86 +191,86 @@ function automatic logic [6:0] decodeInstruction(input logic [31:0] instruction)
         end
         7'b0101111: begin
             case (funct7[6:2])
-                5'b00010: decodeInstruction = LR.W;
-                5'b00011: decodeInstruction = SC.W;
-                5'b00001: decodeInstruction = AMOSWAP.W;
-                5'b00000: decodeInstruction = AMOADD.W;
-                5'b00100: decodeInstruction = AMOXOR.W;
-                5'b01100: decodeInstruction = AMOAND.W;
-                5'b01000: decodeInstruction = AMOOR.W;
-                5'b10000: decodeInstruction = AMOMIN.W;
-                5'b10100: decodeInstruction = AMOMAX.W;
-                5'b11000: decodeInstruction = AMOMINU.W;
-                5'b11100: decodeInstruction = AMOMAXU.W;
+                5'b00010: decodeInstruction = LR_W;
+                5'b00011: decodeInstruction = SC_W;
+                5'b00001: decodeInstruction = AMOSWAP_W;
+                5'b00000: decodeInstruction = AMOADD_W;
+                5'b00100: decodeInstruction = AMOXOR_W;
+                5'b01100: decodeInstruction = AMOAND_W;
+                5'b01000: decodeInstruction = AMOOR_W;
+                5'b10000: decodeInstruction = AMOMIN_W;
+                5'b10100: decodeInstruction = AMOMAX_W;
+                5'b11000: decodeInstruction = AMOMINU_W;
+                5'b11100: decodeInstruction = AMOMAXU_W;
                 default: decodeInstruction = 7'b0;
             endcase
         end
         7'b0000111: decodeInstruction = FLW;
         7'b0100111: decodeInstruction = FSW;
-        7'b1000011: decodeInstruction = FMADD.S;
-        7'b1000111: decodeInstruction = FMSUB.S;
-        7'b1001011: decodeInstruction = FNMSUB.S;
-        7'b1001111: decodeInstruction = FNMADD.S;
+        7'b1000011: decodeInstruction = FMADD_S;
+        7'b1000111: decodeInstruction = FMSUB_S;
+        7'b1001011: decodeInstruction = FNMSUB_S;
+        7'b1001111: decodeInstruction = FNMADD_S;
         7'b1010011: begin
             case(funct7)
-                7'b0000000: decodeInstruction = FADD.S;
-                7'b0000100: decodeInstruction = FSUB.S;
-                7'b0001000: decodeInstruction = FMUL.S;
-                7'b0001100: decodeInstruction = FDIV.S;
-                7'b0101100: decodeInstruction = FSQRT.S;
+                7'b0000000: decodeInstruction = FADD_S;
+                7'b0000100: decodeInstruction = FSUB_S;
+                7'b0001000: decodeInstruction = FMUL_S;
+                7'b0001100: decodeInstruction = FDIV_S;
+                7'b0101100: decodeInstruction = FSQRT_S;
                 7'b0010000: begin
                     if (funct3 == 3'b000)
-                        decodeInstruction = FSGNJ.S;
+                        decodeInstruction = FSGNJ_S;
                     else if (funct3 == 3'b001)
-                        decodeInstruction = FSGNJN.S;
+                        decodeInstruction = FSGNJN_S;
                     else if (funct3 == 3'b010)
-                        decodeInstruction = FSGNJX.S;
+                        decodeInstruction = FSGNJX_S;
                     else
                         decodeInstruction = 7'b0;
                 end
                 7'b0010100: begin
                     if(funct3 == 3'b000)
-                        decodeInstruction = FMIN.S;
+                        decodeInstruction = FMIN_S;
                     else if(funct3 == 3'b001)
-                        decodeInstruction = FMAX.S;
+                        decodeInstruction = FMAX_S;
                     else
                         decodeInstruction = 7'b0;
                 end
                 7'b1100000: begin
                     if(instruction[24:20] == 5'b00000)
-                        decodeInstruction = FCVT.W.S;
+                        decodeInstruction = FCVT_W_S;
                     else if(instruction[24:20] == 5'b00001)
-                        decodeInstruction = FCVT.WU.S;
+                        decodeInstruction = FCVT_WU_S;
                     else
                         decodeInstruction = 7'b0;
                 end
                 7'b1110000: begin
                     if(funct3 == 3'b000)
-                        decodeInstruction = FMV.X.W;
+                        decodeInstruction = FMV_X_W;
                     else if (funct3 == 3'b001)
-                        decodeInstruction = FCLASS.S;
+                        decodeInstruction = FCLASS_S;
                     else
                         decodeInstruction = 7'b0;  
                 end
                 7'b1010000: begin
                     if(funct3 == 3'b010)
-                        decodeInstruction = FEQ.S;
+                        decodeInstruction = FEQ_S;
                     else if(funct3 == 3'b001)
-                        decodeInstruction = FLT.S;
+                        decodeInstruction = FLT_S;
                     else if(funct3 == 3'b000)
-                        decodeInstruction = FLE.S;
+                        decodeInstruction = FLE_S;
                     else
                         decodeInstruction = 7'b0;
                     end
                 7'b1101000:begin
                     if(instruction[24:20] == 5'b00000)
-                        decodeInstruction = FCVT.S.W;
+                        decodeInstruction = FCVT_S_W;
                     else if(instruction[24:20] == 5'b00001)
-                        decodeInstruction = FCVT.S.WU;
+                        decodeInstruction = FCVT_S_WU;
                     else
                         decodeInstruction = 7'b0;
                 end
-                7'b1111000: decodeInstruction = FMV.W.X;
+                7'b1111000: decodeInstruction = FMV_W_X;
             endcase
         end  
         default: decodeInstruction = 7'b0; 
@@ -284,7 +278,4 @@ function automatic logic [6:0] decodeInstruction(input logic [31:0] instruction)
     
 endfunction
     
-    
 
-
-endmodule
