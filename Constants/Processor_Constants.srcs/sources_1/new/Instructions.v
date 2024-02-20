@@ -23,7 +23,6 @@ module Instructions(
     localparam LHU = 15;
     localparam SB = 16;
     localparam SH = 17;
-
     localparam SW = 18;
     localparam ADDI = 19;
     localparam SLTI = 20;
@@ -31,75 +30,70 @@ module Instructions(
     localparam XORI = 22;
     localparam ORI = 23;
     localparam ANDI = 24;
-    localparam SLTI = 25;
-    localparam SLTIU = 26;
-    localparam XORI = 27;
-    localparam ORI = 28;
-    localparam ANDI = 29;
-    localparam SLLI = 30;
-    localparam SRLI = 31;
-    localparam SRAI = 32;
-    localparam ADD = 33;
-    localparam SUB = 34;
-    localparam SLL = 35;
-    localparam SLT = 36;
-    localparam SLTU = 37;
-    localparam XOR = 38;
-    localparam SRL = 39;
-    localparam SRA = 40;
-    localparam OR = 41;
-    localparam AND = 42;
+    localparam SLLI = 25;
+    localparam SRLI = 26;
+    localparam SRAI = 27;
+    localparam ADD = 28;
+    localparam SUB = 29;
+    localparam SLL = 30;
+    localparam SLT = 31;
+    localparam SLTU = 32;
+    localparam XOR = 33;
+    localparam SRL = 34;
+    localparam SRA = 35;
+    localparam OR = 36;
+    localparam AND = 37;
 
     // RV32M Standard Extension for Integer Multiplication and Division
-    localparam MUL = 43;
-    localparam MULH = 44;
-    localparam MULHSU = 45;
-    localparam MULHU = 46;
-    localparam DIV = 47;
-    localparam DIVU = 48;
-    localparam REM = 49;
-    localparam REMU = 50;
+    localparam MUL = 38;
+    localparam MULH = 39;
+    localparam MULHSU = 40;
+    localparam MULHU = 41;
+    localparam DIV = 42;
+    localparam DIVU = 43;
+    localparam REM = 44;
+    localparam REMU = 45;
 
     // RV32A Standard Extension for Atomic Instructions
-    localparam LR.W = 51;
-    localparam SC.W = 52;
-    localparam AMOSWAP.W = 53;
-    localparam AMOADD.W = 54;
-    localparam AMOXOR.W = 55;
-    localparam AMOAND.W = 56;
-    localparam AMOOR.W = 57;
-    localparam AMOMIN.W = 58;
-    localparam AMOMAX.W = 59;
-    localparam AMOMINU.W = 60;
-    localparam AMOMAXU.W = 61;
+    localparam LR.W = 46;
+    localparam SC.W = 47;
+    localparam AMOSWAP.W = 48;
+    localparam AMOADD.W = 49;
+    localparam AMOXOR.W = 50;
+    localparam AMOAND.W = 51;
+    localparam AMOOR.W = 52;
+    localparam AMOMIN.W = 53;
+    localparam AMOMAX.W = 54;
+    localparam AMOMINU.W = 55;
+    localparam AMOMAXU.W = 56;
 
     // RV32F Standard Extension for Single-Precision Floating-Point
-    localparam FLW = 62;
-    localparam FSW = 63;
-    localparam FMADD.S = 64;
-    localparam FMSUB.S = 65;
-    localparam FNMSUB.S = 66;
-    localparam FNMADD.S = 67;
-    localparam FADD.S = 68;
-    localparam FSUB.S = 69;
-    localparam FMUL.S = 70;
-    localparam FDIV.S = 71;
-    localparam FSQRT.S = 72;
-    localparam FSGNJ.S = 73;
-    localparam FSGNJN.S = 74;
-    localparam FSGNJX.S = 75;
-    localparam FMIN.S = 76;
-    localparam FMAX.S = 77;
-    localparam FCVT.W.S = 78;
-    localparam FCVT.WU.S = 79;
-    localparam FMV.X.W = 80;
-    localparam FEQ.S = 81;
-    localparam FLT.S = 82;
-    localparam FLE.S = 83;
-    localparam FCLASS.S = 84;
-    localparam FCVT.S.W = 85;
-    localparam FCVT.S.WU = 86;
-    localparam FMV.W.X = 87;
+    localparam FLW = 57;
+    localparam FSW = 58;
+    localparam FMADD.S = 59;
+    localparam FMSUB.S = 60;
+    localparam FNMSUB.S = 61;
+    localparam FNMADD.S = 62;
+    localparam FADD.S = 63;
+    localparam FSUB.S = 64;
+    localparam FMUL.S = 65;
+    localparam FDIV.S = 66;
+    localparam FSQRT.S = 67;
+    localparam FSGNJ.S = 68;
+    localparam FSGNJN.S = 69;
+    localparam FSGNJX.S = 70;
+    localparam FMIN.S = 71;
+    localparam FMAX.S = 72;
+    localparam FCVT.W.S = 73;
+    localparam FCVT.WU.S = 74;
+    localparam FMV.X.W = 75;
+    localparam FEQ.S = 76;
+    localparam FLT.S = 77;
+    localparam FLE.S = 78;
+    localparam FCLASS.S = 79;
+    localparam FCVT.S.W = 80;
+    localparam FCVT.S.WU = 81;
+    localparam FMV.W.X = 82;
 
 function automatic logic [6:0] decodeInstruction(input logic [31:0] instruction);
     logic [6:0] opcode = instruction[6:0];
@@ -160,44 +154,46 @@ function automatic logic [6:0] decodeInstruction(input logic [31:0] instruction)
             endcase
         end
         7'b0110011: begin
-            case (funct3)
-                3'b000: begin
-                    if (funct7 == 7'b0000000)
-                        decodeInstruction = ADD;
-                    else if (funct7 == 6'b0100000)
-                        decodeInstruction = SUB;
-                    else
-                        decodeInstruction = 7'b0;
-                end
-                3'b001: decodeInstruction = SLL;
-                3'b010: decodeInstruction = SLT;
-                3'b011: decodeInstruction = SLTU;
-                3'b100: decodeInstruction = XOR;
-                3'b101: begin
-                    if (funct7 == 7'b0000000)
-                        decodeInstruction = SRL;
-                    else if (funct7 == 7'b0100000)
-                        decodeInstruction = SRA;
-                    else
-                        decodeInstruction = 7'b0;
-                end
-                3'b110: decodeInstruction = OR;
-                3'b111: decodeInstruction = AND;
-                default: decodeInstruction = 7'b0;
-            endcase
-        end
-        7'b0110011: begin
-            case (funct3)
-                3'b000: decodeInstruction = MUL;
-                3'b001: decodeInstruction = MULH;
-                3'b010: decodeInstruction = MULHSU;
-                3'b011: decodeInstruction = MULHU;
-                3'b100: decodeInstruction = DIV;
-                3'b101: decodeInstruction = DIVU;
-                3'b110: decodeInstruction = REM;
-                3'b111: decodeInstruction = REMU;
-                default: decodeInstruction = 7'b0;
-            endcase
+            if(funct7 == 7'b0000001) begin
+                case (funct3)
+                    3'b000: decodeInstruction = MUL;
+                    3'b001: decodeInstruction = MULH;
+                    3'b010: decodeInstruction = MULHSU;
+                    3'b011: decodeInstruction = MULHU;
+                    3'b100: decodeInstruction = DIV;
+                    3'b101: decodeInstruction = DIVU;
+                    3'b110: decodeInstruction = REM;
+                    3'b111: decodeInstruction = REMU;
+                    default: decodeInstruction = 7'b0;
+                endcase
+            end
+            else begin
+                case (funct3)
+                    3'b000: begin
+                        if (funct7 == 7'b0000000)
+                            decodeInstruction = ADD;
+                        else if (funct7 == 6'b0100000)
+                            decodeInstruction = SUB;
+                        else
+                            decodeInstruction = 7'b0;
+                    end
+                    3'b001: decodeInstruction = SLL;
+                    3'b010: decodeInstruction = SLT;
+                    3'b011: decodeInstruction = SLTU;
+                    3'b100: decodeInstruction = XOR;
+                    3'b101: begin
+                        if (funct7 == 7'b0000000)
+                            decodeInstruction = SRL;
+                        else if (funct7 == 7'b0100000)
+                            decodeInstruction = SRA;
+                        else
+                            decodeInstruction = 7'b0;
+                    end
+                    3'b110: decodeInstruction = OR;
+                    3'b111: decodeInstruction = AND;
+                    default: decodeInstruction = 7'b0;
+                endcase
+            end
         end
         7'b0101111: begin
             case (funct7[6:2])
@@ -230,7 +226,7 @@ function automatic logic [6:0] decodeInstruction(input logic [31:0] instruction)
                 7'b0101100: decodeInstruction = FSQRT.S;
                 7'b0010000: begin
                     if (funct3 == 3'b000)
-                        decodeInstruction = FSGNJN.S;
+                        decodeInstruction = FSGNJ.S;
                     else if (funct3 == 3'b001)
                         decodeInstruction = FSGNJN.S;
                     else if (funct3 == 3'b010)
