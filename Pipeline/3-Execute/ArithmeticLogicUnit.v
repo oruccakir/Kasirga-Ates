@@ -6,10 +6,10 @@
 `include "Pipeline\definitions.vh"
 
 module ArithmeticLogicUnit (
-    input wire [31:0] operand1_i,
-    input wire [31:0] operand2_i,
-    input wire [3:0] aluOp_i,
-    output wire [31:0] result_o,
+    input wire [31:0] operand1_i, // First operand
+    input wire [31:0] operand2_i, // Second operand
+    input wire [3:0] aluOp_i, // ALU operation
+    output wire [31:0] result_o, // Result
 );
     
     // Declare the result wire
@@ -18,6 +18,6 @@ module ArithmeticLogicUnit (
     // Perform the operation based on the aluOp
 
 
-    assign result_o = result;
+    assign result_o = result; // Assign the result to the output
 
 endmodule

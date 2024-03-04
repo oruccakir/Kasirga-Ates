@@ -1,0 +1,11 @@
+// Purpose: FetchStep module for the Fetch stage of the pipeline.
+// Functionality: Fetches the instruction from the instruction memory.
+// File: FetchStep.v
+
+module FetchStep (
+    input wire clk_i, // Clock input
+    input wire rst_i, // Reset input
+);
+    
+
+endmodule
