@@ -13,7 +13,7 @@ module FloatRegisterFile(
   output wire [31:0] read_data2_o // data from read register 2
 );
 
-  reg [31:0] registers [31:0]; // 32 registers for integer data
+  reg [31:0] registers [31:0]; // 32 registers for float data
 
   assign read_data1_o = registers[rs1]; // read data from register 1
   assign read_data2_o = registers[rs2]; // read data from register 2
