@@ -68,7 +68,11 @@ always @(posedge clk_i or posedge rst_i) begin
             12'h300: csr_read_data_o <= mstatus;
             12'h301: csr_read_data_o <= misa;
             12'h341: csr_read_data_o <= mepc;
-            // Handle other CSR addresses
+            12'h344: csr_read_data_o <= mip;
+            12'h342: csr_read_data_o <= mcause;
+            12'h304: csr_read_data_o <= mie;
+            12'h305: csr_read_data_o <= mtvec;
+            12'h340: csr_read_data_o <= mscratch;
             default: csr_read_data_o <= 32'b0; // Return 0 for unsupported addresses
         endcase
     end
