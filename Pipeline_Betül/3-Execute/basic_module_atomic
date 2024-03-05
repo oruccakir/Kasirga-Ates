@@ -1,0 +1,36 @@
+module atomic_operations(
+    input wire clk,
+    input wire reset,
+    input wire [31:0] address, // Address for lr.w or sc.w
+    input wire [31:0] write_data, // Data to write for sc.w
+    input wire load_reserve, // Signal to trigger lr.w
+    input wire store_conditional, // Signal to trigger sc.w
+    output reg [31:0] read_data, // Data read by lr.w
+    output reg success // Indicates if sc.w was successful
+);
+
+// Reservation register
+reg [31:0] reserved_address;
+reg reserved; // Indicates if a reservation exists
+
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        // Reset reservation
+        reserved <= 0;
+        reserved_address <= 32'b0;
+    end else if (load_reserve) begin
+        // Load-reserve operation
+        read_data <= memory[address]; // Assuming memory read operation
+        reserved <= 1;
+        reserved_address <= address;
+    end else if (store_conditional && reserved && address == reserved_address) begin
+        // Store-conditional operation
+        memory[address] <= write_data; // Assuming memory write operation
+        success <= 1; // Indicate success
+        reserved <= 0; // Clear reservation
+    end else begin
+        success <= 0; // Indicate failure for sc.w if conditions not met
+    end
+end
+
+endmodule
