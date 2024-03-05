@@ -1,47 +1,45 @@
-
-
 module HelperMemory #(
-    parameter BASLANGIC_ADRES = 32'h8000_0000,
-    parameter ADRES_BIT       = 32,
-    parameter VERI_BIT        = 32,
-    parameter BELLEK_SATIR    = 2048,
+    parameter INITIAL_ADDRES = 32'h8000_0000,
+    parameter ADDRES_BIT       = 32,
+    parameter DATA_BIT        = 32,
+    parameter MEMORY_INDEX    = 2048,
     parameter DEBUG           = "TRUE"
 )(
-    input                       clk,
-    input   [ADRES_BIT-1:0]     adres,
-    output  [VERI_BIT-1:0]      oku_veri,
-    input   [VERI_BIT-1:0]      yaz_veri,
-    input                       yaz_gecerli
+    input wire                       clk_i,
+    input wire   [ADDRES_BIT-1:0]     addres_i,
+    input wire   [DATA_BIT-1:0]      write_data_i,
+    input wire                       write_enable_i
+    output wire  [DATA_BIT-1:0]      read_data_o,
 );
 
-localparam TANIMSIZ = DEBUG == "TRUE" ? {VERI_BIT{1'bZ}} : {VERI_BIT{1'b0}};
+localparam UNDEFINED = DEBUG == "TRUE" ? {DATA_BIT_{1'bZ}} : {DATA_BIT_{1'b0}};
 
-reg [VERI_BIT-1:0] bellek [0:BELLEK_SATIR-1];
-reg [VERI_BIT-1:0] oku_veri_cmb;
+reg [DATA_BIT_-1:0] memory [0:MEMORY_INDEX-1];
+reg [DATA_BIT_-1:0] read_data_cmb;
 
-wire bellek_istek_gecerli = (adres >= BASLANGIC_ADRES) && (adres < (BASLANGIC_ADRES + BELLEK_SATIR));
-wire [ADRES_BIT-1:0] bellek_satir_idx = (adres - BASLANGIC_ADRES) >> $clog2(VERI_BIT / 8);
+wire mem_access_valid = (addres >= INITIAL_ADDRES) && (addres < (INITIAL_ADDRES + MEMORY_INDEX));
+wire [ADDRES_BIT-1:0] MEMORY_INDEX = (addres - INITIAL_ADDRES) >> $clog2(DATA_BIT_ / 8);
 
 integer i;
 initial begin
-    for (i = 0; i < BELLEK_SATIR; i = i + 1) begin
-        bellek[i] <= 0;
+    for (i = 0; i < MEMORY_INDEX; i = i + 1) begin
+        memory[i] <= 0;
     end
 end
 
 always @* begin
-    oku_veri_cmb = TANIMSIZ;
-    if (bellek_istek_gecerli) begin
-        oku_veri_cmb = bellek[bellek_satir_idx];
+    read_data_cmb = UNDEFINED;
+    if (mem_access_valid) begin
+        read_data_cmb = memory[MEMORY_INDEX];
     end
 end
 
-always @(posedge clk) begin
-    if (bellek_istek_gecerli && yaz_gecerli) begin
-        bellek[bellek_satir_idx] <= yaz_veri;
+always @(posedge clk_i) begin
+    if (mem_access_valid && write_enable_i) begin
+        memory[MEMORY_INDEX] <= write_data_i;
     end
 end
 
-assign oku_veri = oku_veri_cmb;
+assign read_data_o = read_data_cmb;
 
 endmodule
