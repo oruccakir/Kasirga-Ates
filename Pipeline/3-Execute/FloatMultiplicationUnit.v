@@ -10,6 +10,4 @@ module FloatMultiplicationUnit(
     output wire [63:0] result_o // Result output
 );
     
-   
-    
 endmodule

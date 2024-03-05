@@ -6,6 +6,7 @@
 module AtomicUnit(
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
+    input wire [3:0] atomicOp_i, // Atomic operation input
 );
 
 endmodule
