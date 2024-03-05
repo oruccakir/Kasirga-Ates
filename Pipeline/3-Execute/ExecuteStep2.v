@@ -7,6 +7,5 @@ module ExecuteStep2 (
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
 );
-    
 
 endmodule

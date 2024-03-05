@@ -13,6 +13,7 @@ wire [VERI_BIT-1:0] islemci_bellek_oku_veri;
 wire [VERI_BIT-1:0] islemci_bellek_yaz_veri;
 wire islemci_bellek_yaz;
 
+
 HelperMemory memory (
     .clk(clk_r),
     .adres(islemci_MEMORY_ADDRESS),
