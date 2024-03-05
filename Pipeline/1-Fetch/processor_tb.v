@@ -66,8 +66,6 @@ initial begin
     repeat (10) @(posedge clk_r); #2; // 10 cevrim reset
     rst_r = 1'b0;
 
-    
-
 end
 
 // Islemcide buyruk_sayisi kadar buyruk yurutulmesini izler ve asama sirasini kontrol eder.
