@@ -8,6 +8,7 @@ module DecodeStep (
     input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input   
 );
+
     
 
 endmodule
