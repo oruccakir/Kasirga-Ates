@@ -5,6 +5,7 @@
 module FetchStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
+    input wire enable_step_i, // Enable input
 );
     
 

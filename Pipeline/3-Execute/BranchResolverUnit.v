@@ -5,6 +5,7 @@
 module BranchResolverUnit (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
+    input wire enable_i, // Enable input
 );
 
 endmodule

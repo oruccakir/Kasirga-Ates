@@ -4,10 +4,10 @@
 module CsrRegisterFile(
     input wire clk_i, // clock signal
     input wire rst_i, // reset signal
-    input wire csr_write_enable_i, // write enable
     input wire [11:0] csr_address_i, // address of CSR to write
     input wire [31:0] csr_write_data_i, // data to write
     input wire csr_read_enable_i, // read enable
+    input wire csr_write_enable_i, // write enable
     output reg [31:0] csr_read_data_o // data from CSR
 );
 
