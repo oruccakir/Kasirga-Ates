@@ -1,6 +1,5 @@
-`timescale 1ns/1ps
 
-module tb_islemci();
+module processor_tb();
 
 localparam BELLEK_ADRES = 32'h8000_0000;
 localparam ADRES_BIT = 32;
@@ -14,7 +13,7 @@ wire [VERI_BIT-1:0] islemci_bellek_oku_veri;
 wire [VERI_BIT-1:0] islemci_bellek_yaz_veri;
 wire islemci_bellek_yaz;
 
-anabellek anabellek (
+HelperMemory memory (
     .clk(clk_r),
     .adres(islemci_bellek_adres),
     .oku_veri(islemci_bellek_oku_veri),
@@ -22,7 +21,7 @@ anabellek anabellek (
     .yaz_gecerli(islemci_bellek_yaz)
 );
 
-islemci islemci (
+Processpr processor (
     .clk(clk_r),
     .rst(rst_r),
     .bellek_adres(islemci_bellek_adres),
@@ -122,7 +121,7 @@ task bellek_yaz (
     input [VERI_BIT-1:0] veri
 );
 begin
-    anabellek.bellek[adres_satir_idx(adres)] = veri;
+    memory.bellek[adres_satir_idx(adres)] = veri;
 end
 endtask
 
@@ -130,7 +129,7 @@ function [VERI_BIT-1:0] bellek_oku (
     input [ADRES_BIT-1:0] adres
 );
 begin
-    bellek_oku = anabellek.bellek[adres_satir_idx(adres)];
+    bellek_oku = memory.bellek[adres_satir_idx(adres)];
 end
 endfunction
 
