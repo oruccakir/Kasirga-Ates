@@ -29,7 +29,7 @@ module BitManipulationUnit (
             else if(enable_i)
                 begin
                     case(bitOp_i)
-                        
+                    
                     endcase
                 end
         end    

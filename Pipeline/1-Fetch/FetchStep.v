@@ -9,6 +9,5 @@ module FetchStep (
     input wire [31:0] mem_adres_i, // Memory address input
     output wire [31:0] instruction_o // Instruction output
 );
-    
 
 endmodule
