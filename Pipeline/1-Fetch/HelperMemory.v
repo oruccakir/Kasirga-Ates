@@ -30,7 +30,7 @@ end
 always @* begin
     read_data_cmb = UNDEFINED;
     if (mem_access_valid) begin
-        read_data_cmb = memory[MEMORY_INDEX];
+        read_data_cmb = memory[MEM_INDEX];
     end
 end
 

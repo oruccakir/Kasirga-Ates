@@ -8,7 +8,7 @@ localparam DATA_BIT = 32;
 reg clk_r;
 reg rst_r;
 
-wire [ADDRESS_BIT-1:0] processor_MEMORY_ADDRESS;
+wire [31:0] processor_MEMORY_ADDRESS;
 wire [DATA_BIT-1:0] processor_memory_read_data;
 wire [DATA_BIT-1:0] processor_memory_write_data;
 wire processor_memory_write;
@@ -25,7 +25,8 @@ HelperMemory memory (
 Processor processor (
     .clk_i(clk_r),
     .rst_i(rst_r),
-    .mem_address_i(processor_MEMORY_ADDRESS)
+    .instruction_i(processor_memory_read_data),
+    .mem_address_o(processor_MEMORY_ADDRESS)
 );
 
 always begin
