@@ -39,3 +39,5 @@ xvlog.*
 *.prj
 *.xpr/
 *.glbl.v
+
+*.KasirgaVerilog\KasirgaVerilog.xpr
