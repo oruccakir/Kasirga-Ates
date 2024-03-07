@@ -41,3 +41,5 @@ xvlog.*
 *.glbl.v
 
 *.KasirgaVerilog\KasirgaVerilog.xpr
+
+*.wdf
