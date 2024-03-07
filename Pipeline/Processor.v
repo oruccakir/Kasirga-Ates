@@ -8,7 +8,7 @@
 module Processor(
     input wire clk_i,
     input wire rst_i,
-    input wire [31:0] mem_adres_i,
+    input wire [31:0] mem_address_i,
 );
 
 endmodule
