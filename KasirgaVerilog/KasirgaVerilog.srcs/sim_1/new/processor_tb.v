@@ -40,7 +40,7 @@ localparam MAX_CYCLES = 100;
 integer stall_ctr;
 initial begin
     stall_ctr = 0;
-    rst_r = 1'b1;
+    //rst_r = 1'b1;
     // Race condition engellemek icin sistem 1 cevrim calistirilir
     @(posedge clk_r); // reset sinyali aktif oldugu icin degisiklik olusmaz
     // https://luplab.gitlab.io/rvcodecjs/ <- assembly binary donusumu icin kullanabiliriniz
