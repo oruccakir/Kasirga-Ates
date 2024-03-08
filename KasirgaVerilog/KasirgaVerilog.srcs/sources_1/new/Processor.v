@@ -3,7 +3,7 @@
 // File: Processor.v
 
 // Include the definitions
-//`include "C:\Users\orucc\Desktop\Coding_Projects\Kas�rga_Ates_Teknofest\Teknofest-Ates-Processor-Design\KasirgaVerilog\KasirgaVerilog.srcs\sources_1\new\definitions.vh"
+//`include "C:\Users\orucc\Desktop\Coding_Projects\Kasï¿½rga_Ates_Teknofest\Teknofest-Ates-Processor-Design\KasirgaVerilog\KasirgaVerilog.srcs\sources_1\new\definitions.vh"
 
 module Processor(
     input wire clk_i,
@@ -79,7 +79,50 @@ ExecuteStep1 execute1(
     .execute1_finished_o(execute1_finished)
 );
 
+// Execute2 stage
+reg enable_execute2 = 1'b0;
+wire execute2_finished;
 
+// Execute2 module
+ExecuteStep2 execute2(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_step_i(enable_execute2),
+    .execute2_finished_o(execute2_finished)
+);
+
+// Memory stage
+reg enable_memory = 1'b0;
+wire memory_finished;
+reg mem_read_enable = 1'b0;
+reg mem_write_enable = 1'b0;
+wire [31:0] mem_data;
+wire [31:0] mem_address;
+
+// Memory module
+MemoryStep memory(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_step_i(enable_memory),
+    .mem_read_enable_i(mem_read_enable),
+    .mem_write_enable_i(mem_write_enable),
+    .memOp_i(opcode),
+    .mem_data_o(mem_data),
+    .mem_address_o(mem_address),
+    .memory_finished_o(memory_finished)
+);
+
+// Writeback stage
+reg enable_writeback = 1'b0;
+wire writeback_finished;
+
+// Writeback module
+WriteBackStep writeback(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_step_i(enable_writeback),
+    .writeback_finished_o(writeback_finished)
+);
 
 always@(posedge clk_i) begin
 
@@ -100,8 +143,31 @@ always@(posedge clk_i) begin
     begin
         enable_decode <= 1'b1;
         enable_execute1 <= 1'b0;
+        enable_execute2 <= 1'b1;
         execute1.execute1_finished <= 1'b0;
     end
+    else if(execute2_finished)
+    begin
+        enable_execute1 <= 1'b1;
+        enable_memory <= 1'b1;
+        enable_execute2 <= 1'b0;
+        execute2.execute2_finished <= 1'b0;
+    end
+    else if(memory_finished)
+    begin
+        enable_execute2 <= 1'b1;
+        enable_writeback <=1'b1;
+        enable_memory <= 1'b0;
+        memory.memory_finished <= 1'b0;
+    end
+    else if(writeback_finished)
+    begin
+        enable_memory <= 1'b1;
+        enable_fetch <= 1'b1;
+        enable_writeback <= 1'b0;
+        writeback.writeback_finished <= 1'b0;
+    end
+    
 end
 
 endmodule

@@ -12,7 +12,7 @@ module FetchStep (
     output wire [31:0] instruction_to_decode_o
 );
 
-// Output signals to decode stage
+// decode
 reg [31:0] instruction_to_decode = 32'b0;
 
 
