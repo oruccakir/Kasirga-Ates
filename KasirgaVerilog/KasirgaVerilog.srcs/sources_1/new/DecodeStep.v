@@ -20,14 +20,45 @@ module DecodeStep (
 );
 
 // Output signals
-reg [6:0] opcode = 0; // Opcode
-reg [4:0] rs1 = 0;// Source register 1
-reg [4:0] rs2 = 0; // Source register 2 
-reg [4:0] rd = 0; // Destination register
-reg [31:0] operand1 = 0; // Operand 1
-reg [31:0] operand2 = 0;// Operand 2 
-reg [31:0] immediate = 0; // Immediate
+reg [6:0] opcode = 7'b0; // Opcode
+reg [4:0] rs1 = 5'b0;// Source register 1
+reg [4:0] rs2 = 5'b0; // Source register 2 
+reg [4:0] rd = 5'b0; // Destination register
+wire [31:0] operand1; // Operand 1
+wire [31:0] operand2; // Operand 2 
+reg [31:0] immediate = 32'b0; // Immediate
 
+
+reg reg_write_integer = 1'b0; // Write data flag for integer register file
+
+// Integer Register File module
+IntegerRegisterFile integerRegisterFile(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .rs1_i(rs1),
+    .rs2_i(rs2),
+    .rd_i(rd),
+    .write_data_i(operand2),
+    .reg_write_i(reg_write_integer),
+    .read_data1_o(operand1),
+    .read_data2_o(operand2)
+);
+
+reg reg_write_float = 1'b0;  // Write data flag for float register file
+// Float Register File module
+/*
+FloatRegisterFile floatRegisterFile(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .rs1_i(rs1),
+    .rs2_i(rs2),
+    .rd_i(rd),
+    .write_data_i(operand2),
+    .reg_write_i(reg_write_float),
+    .read_data1_o(operand1),
+    .read_data2_o(operand2)
+);
+*/
 //Decode modul implementation
 reg decode_finished = 1'b0; // Flag for finishing decode step
 wire isWorking; // Flag for working
@@ -52,8 +83,6 @@ always @(posedge clk_i) begin
                         rs1 <= instruction_i[19:15]; // Extract source register 1
                         rs2 <= instruction_i[24:20]; // Extract source register 2
                         rd <= instruction_i[11:7];   // Extract destination register
-                        operand1 <= 32'h0;           // Set operand 1 to 0
-                        operand2 <= 32'h0;           // Set operand 2 to 0    
                         immediate <= 32'h0;          // Set immediate to 0
                         STATE <= SECOND_CYCLE;       // Go to the second cycle
                         end
@@ -64,7 +93,9 @@ always @(posedge clk_i) begin
                         $display("-->rs1: %d", rs1);       // Display source register 1
                         $display("-->rs2: %d", rs2);       // Display source register 2
                         $display("-->rd: %d", rd);         // Display destination register
-                        decode_finished <= 1'b1;        // Set the flag for finishing decode step        
+                        decode_finished <= 1'b1;        // Set the flag for finishing decode step  
+                        $display("--> Operand1 %d",operand1);  
+                        $display("--> Operand2 %d",operand2);     
                         STATE <= FIRST_CYCLE;            // Go back to the first cycle
                     end
             endcase
