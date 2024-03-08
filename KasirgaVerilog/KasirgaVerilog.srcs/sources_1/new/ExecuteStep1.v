@@ -40,6 +40,10 @@ always @(posedge clk_i) begin
                 INS_RESULT :
                     begin
                         $display("ExecuteStep1: Execution completed");
+                        $display("Opcode: %b", opcode_i);
+                        $display("rs1: %d", rs1_i);
+                        $display("rs2: %d", rs2_i);
+                        $display("rd: %d", rd_i);
                         execute1_finished <= 1'b1;
                         STATE = INS_DESIRE;
                     end
@@ -47,4 +51,6 @@ always @(posedge clk_i) begin
         end
 end
 
-endmodule
+assign execute1_finished_o = execute1_finished;
+
+endmodule 
