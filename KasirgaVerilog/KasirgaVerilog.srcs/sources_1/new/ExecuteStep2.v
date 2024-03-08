@@ -6,7 +6,7 @@ module ExecuteStep2 (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
-    output wire execute2_finished_o
+    output wire execute2_finished_o // Flag for finishing execute step 2
 );
 
 // ExecuteStep2 module implementation
@@ -27,17 +27,17 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         $display("ExecuteStep2: Executing instruction");
-                        STATE = SECOND_CYCLE;
+                        STATE = SECOND_CYCLE;   // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
                         $display("ExecuteStep2: Execution completed");
-                        execute2_finished <= 1'b1;
-                        STATE = FIRST_CYCLE;
+                        execute2_finished <= 1'b1; // Set execute2_finished to 1
+                        STATE = FIRST_CYCLE;       // Go to the first cycle
                     end
             endcase
         end
 end
 
-assign execute2_finished_o = execute2_finished;
+assign execute2_finished_o = execute2_finished; // Assign execute2_finished
 endmodule

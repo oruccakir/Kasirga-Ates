@@ -27,19 +27,19 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         $display("WriteBackStep: Writing back to register file");
-                        STATE = SECOND_CYCLE;
+                        STATE = SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
                         $display("WriteBackStep: Writeback completed");
                         writeback_finished <= 1'b1;
-                        STATE = FIRST_CYCLE;
+                        STATE = FIRST_CYCLE; // Go to the first cycle
                     end
             endcase
         end
 end
 
-assign writeback_finished_o = writeback_finished;
+assign writeback_finished_o = writeback_finished; // Assign writeback_finished
 
 endmodule
 

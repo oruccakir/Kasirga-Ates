@@ -36,20 +36,20 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         $display("MemoryStep: Performing memory operation");
-                        STATE = SECOND_CYCLE;
+                        STATE = SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
                         $display("MemoryStep: Memory operation completed");
-                        memory_finished <=1;
-                        STATE = FIRST_CYCLE;
+                        memory_finished <=1; // Set memory_finished to 1
+                        STATE = FIRST_CYCLE; // Go to the first cycle
                     end
             endcase
         end
 end
 
-assign mem_data_o = mem_data;
-assign mem_address_o = mem_address;
-assign memory_finished_o = memory_finished;
+assign mem_data_o = mem_data; // Assign the memory data
+assign mem_address_o = mem_address; // Assign the memory address
+assign memory_finished_o = memory_finished;     // Assign the flag for finishing memory step
 
 endmodule

@@ -35,17 +35,17 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         $display("ExecuteStep1: Executing instruction");
-                        STATE = SECOND_CYCLE;
+                        STATE = SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
                         $display("ExecuteStep1: Execution completed");
-                        $display("Opcode: %b", opcode_i);
-                        $display("rs1: %d", rs1_i);
-                        $display("rs2: %d", rs2_i);
-                        $display("rd: %d", rd_i);
-                        execute1_finished <= 1'b1;
-                        STATE = FIRST_CYCLE;
+                        $display("Opcode: %b", opcode_i); // Display opcode
+                        $display("rs1: %d", rs1_i);       // Display source register 1  
+                        $display("rs2: %d", rs2_i);       // Display source register 2  
+                        $display("rd: %d", rd_i);         // Display destination register
+                        execute1_finished <= 1'b1;       // Set execute1_finished to 1
+                        STATE = FIRST_CYCLE;            // Go to the first cycle
                     end
             endcase
         end
