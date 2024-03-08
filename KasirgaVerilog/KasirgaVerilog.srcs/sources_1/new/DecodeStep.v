@@ -6,9 +6,26 @@ module DecodeStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
-    input wire [31:0] instruction_i, // Instruction input   
+    input wire [31:0] instruction_i, // Instruction input  
+    output wire [6:0] opcode_o, // Opcode output
+    output wire [4:0] rs1_o, // Source register 1 output
+    output wire [4:0] rs2_o, // Source register 2 output
+    output wire [4:0] rd_o, // Destination register output
+    output wire [31:0] operand1_o, // Operand 1 output
+    output wire [31:0] operand2_o, // Operand 2 output
+    output wire [31:0] immediate_o, // Immediate output
     output wire decode_finished_o
 );
+
+// output signals
+reg [6:0] opcode; // Opcode
+reg [4:0] rs1; // Source register 1
+reg [4:0] rs2; // Source register 2 
+reg [4:0] rd; // Destination register
+reg [31:0] operand1; // Operand 1
+reg [31:0] operand2; // Operand 2 
+reg [31:0] immediate; // Immediate
+
 
 //Decode modul implementation
 reg decode_finished = 1'b0;

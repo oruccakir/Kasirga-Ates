@@ -43,7 +43,17 @@ DecodeStep decode(
     .decode_finished_o(decode_finished)
 );
 
+// Execute stage1
+reg enable_execute1 = 1'b0;
+wire execute1_finished;
 
+// ExecuteStep1 module
+ExecuteStep1 execute1(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_step_i(enable_execute1),
+    .execute1_finished_o(execute1_finished)
+);
 
 always@(posedge clk_i) begin
 
