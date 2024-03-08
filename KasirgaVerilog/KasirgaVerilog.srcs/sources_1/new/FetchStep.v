@@ -21,10 +21,10 @@ reg [31:0] program_counter = 32'h8000_0000;
 reg fetch_finished = 1'b0;
 wire isWorking;
 
-localparam INS_DESIRE = 1'b0;
-localparam INS_RESULT = 1'b1;
+localparam FIRST_CYCLE = 1'b0;
+localparam SECOND_CYCLE = 1'b1;
 
-reg STATE = INS_DESIRE;
+reg STATE = FIRST_CYCLE;
 
 assign isWorking = enable_step_i && fetch_finished != 1'b1;
 
@@ -32,14 +32,14 @@ always @(posedge clk_i) begin
     if(isWorking)
         begin
             case(STATE)
-                INS_DESIRE : begin
+                FIRST_CYCLE : begin
                     $display("FetchStep: Fetching instruction from memory %h", program_counter);
-                    STATE = INS_RESULT;
+                    STATE = SECOND_CYCLE;
                 end
-                INS_RESULT : begin
+                SECOND_CYCLE : begin
                     $display("Instruction %h", instruction_i); 
                     instruction_to_decode = instruction_i;
-                    STATE = INS_DESIRE;
+                    STATE = FIRST_CYCLE;
                     program_counter <= program_counter + 4;
                     fetch_finished <= 1'b1;
                 end

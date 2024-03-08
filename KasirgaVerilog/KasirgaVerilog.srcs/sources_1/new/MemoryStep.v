@@ -22,10 +22,10 @@ wire isWorking; // Flag for working
 
 reg memory_finished = 1'b0; // Flag for finishing memory step
 
-localparam MEM_DESIRE = 1'b0; // State for desiring memory operation
-localparam MEM_RESULT = 1'b1; // State for memory operation result
+localparam FIRST_CYCLE = 1'b0; // State for desiring memory operation
+localparam SECOND_CYCLE = 1'b1; // State for memory operation result
 
-reg STATE = MEM_DESIRE; // State for the module
+reg STATE = FIRST_CYCLE; // State for the module
 
 assign isWorking = enable_step_i && memory_finished != 1'b1; // Assign isWorking
 
@@ -33,16 +33,16 @@ always @(posedge clk_i) begin
     if(isWorking)
         begin
             case(STATE)
-                MEM_DESIRE :
+                FIRST_CYCLE :
                     begin
                         $display("MemoryStep: Performing memory operation");
-                        STATE = MEM_RESULT;
+                        STATE = SECOND_CYCLE;
                     end
-                MEM_RESULT :
+                SECOND_CYCLE :
                     begin
                         $display("MemoryStep: Memory operation completed");
                         memory_finished <=1;
-                        STATE = MEM_DESIRE;
+                        STATE = FIRST_CYCLE;
                     end
             endcase
         end

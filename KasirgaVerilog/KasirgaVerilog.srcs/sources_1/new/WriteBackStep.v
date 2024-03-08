@@ -13,10 +13,10 @@ module WriteBackStep (
 reg writeback_finished = 1'b0; // Flag for finishing writeback step
 wire isWorking; // Flag for working
 
-localparam INS_DESIRE = 1'b0; // State for desiring instruction
-localparam INS_RESULT = 1'b1; // State for instruction result
+localparam FIRST_CYCLE = 1'b0; // State for desiring instruction
+localparam SECOND_CYCLE = 1'b1; // State for instruction result
 
-reg STATE = INS_DESIRE; // State for the module
+reg STATE = FIRST_CYCLE; // State for the module
 
 assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 
@@ -24,16 +24,16 @@ always @(posedge clk_i) begin
     if(isWorking)
         begin
             case(STATE)
-                INS_DESIRE :
+                FIRST_CYCLE :
                     begin
                         $display("WriteBackStep: Writing back to register file");
-                        STATE = INS_RESULT;
+                        STATE = SECOND_CYCLE;
                     end
-                INS_RESULT :
+                SECOND_CYCLE :
                     begin
                         $display("WriteBackStep: Writeback completed");
                         writeback_finished <= 1'b1;
-                        STATE = INS_DESIRE;
+                        STATE = FIRST_CYCLE;
                     end
             endcase
         end

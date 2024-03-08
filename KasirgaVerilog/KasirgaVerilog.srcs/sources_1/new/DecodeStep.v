@@ -30,10 +30,10 @@ reg [31:0] immediate = 0; // Immediate
 reg decode_finished = 1'b0;
 wire isWorking;
 
-localparam INS_DESIRE = 1'b0;
-localparam INS_RESULT = 1'b1;
+localparam FIRST_CYCLE = 1'b0;
+localparam SECOND_CYCLE = 1'b1;
 
-reg STATE = INS_DESIRE;
+reg STATE = FIRST_CYCLE;
 
 assign isWorking = enable_step_i && decode_finished != 1'b1;
 
@@ -41,7 +41,7 @@ always @(posedge clk_i) begin
     if(isWorking)
         begin
             case(STATE)
-                INS_DESIRE :
+                FIRST_CYCLE :
                     begin
                         $display("DecodeStep: Decoding instruction %h", instruction_i);
                         opcode = instruction_i[6:0];
@@ -51,9 +51,9 @@ always @(posedge clk_i) begin
                         operand1 = 32'h0;
                         operand2 = 32'h0;
                         immediate = 32'h0;
-                        STATE = INS_RESULT;
+                        STATE = SECOND_CYCLE;
                     end
-                INS_RESULT :
+                SECOND_CYCLE :
                     begin
                         $display("DecodeStep: Decoding completed");
                         $display("Opcode: %b", opcode);
@@ -61,7 +61,7 @@ always @(posedge clk_i) begin
                         $display("rs2: %d", rs2);
                         $display("rd: %d", rd);
                         decode_finished <= 1'b1;
-                        STATE = INS_DESIRE;
+                        STATE = FIRST_CYCLE;
                     end
             endcase
             
