@@ -3,7 +3,7 @@
 // File: Processor.v
 
 // Include the definitions
-//`include "C:\Users\orucc\Desktop\Coding_Projects\Kasï¿½rga_Ates_Teknofest\Teknofest-Ates-Processor-Design\KasirgaVerilog\KasirgaVerilog.srcs\sources_1\new\definitions.vh"
+include "definitions.vh";
 
 module Processor(
     input wire clk_i,

@@ -2,6 +2,8 @@
 // Functionality: This module performs the memory stage of the pipeline.
 // File: MemoryStep.v
 
+include "definitions.vh";
+
 module MemoryStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
@@ -32,17 +34,18 @@ assign isWorking = enable_step_i && memory_finished != 1'b1; // Assign isWorking
 always @(posedge clk_i) begin
     if(isWorking)
         begin
+            $display("MEMORY STEP");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("MemoryStep: Performing memory operation");
-                        STATE = SECOND_CYCLE; // Go to the second cycle
+                        $display("-->Performing memory operation");
+                        STATE <= SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("MemoryStep: Memory operation completed");
+                        $display("-->Memory operation completed");
                         memory_finished <=1; // Set memory_finished to 1
-                        STATE = FIRST_CYCLE; // Go to the first cycle
+                        STATE <= FIRST_CYCLE; // Go to the first cycle
                     end
             endcase
         end

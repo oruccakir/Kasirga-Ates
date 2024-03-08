@@ -2,6 +2,8 @@
 // Functionality: Fetches the instruction from the instruction memory.
 // File: FetchStep.v
 
+include "definitions.vh";
+
 module FetchStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
@@ -31,13 +33,14 @@ assign isWorking = enable_step_i && fetch_finished != 1'b1;
 always @(posedge clk_i) begin
     if(isWorking)
         begin
+            $display("FETCH STEP");
             case(STATE)
                 FIRST_CYCLE : begin
-                    $display("FetchStep: Fetching instruction from memory %h", program_counter);
+                    $display("-->Fetching instruction from memory %h", program_counter);
                     STATE = SECOND_CYCLE;
                 end
                 SECOND_CYCLE : begin
-                    $display("Instruction %h", instruction_i); 
+                    $display("-->Fetched Instruction %h", instruction_i); 
                     instruction_to_decode = instruction_i;
                     STATE = FIRST_CYCLE;
                     program_counter <= program_counter + 4;

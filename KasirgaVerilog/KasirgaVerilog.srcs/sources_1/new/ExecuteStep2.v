@@ -2,6 +2,8 @@
 // Functionality: This module performs the second part of the execute stage of the pipeline.
 // File: ExecuteStep2.v
 
+include "definitions.vh";
+
 module ExecuteStep2 (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
@@ -23,17 +25,18 @@ assign isWorking = enable_step_i && execute2_finished != 1'b1; // Assign isWorki
 always @(posedge clk_i) begin
     if(isWorking)
         begin
+            $display("EXECUTE STEP2");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("ExecuteStep2: Executing instruction");
-                        STATE = SECOND_CYCLE;   // Go to the second cycle
+                        $display("-->Executing instruction");
+                        STATE <= SECOND_CYCLE;   // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("ExecuteStep2: Execution completed");
+                        $display("-->Execution completed");
                         execute2_finished <= 1'b1; // Set execute2_finished to 1
-                        STATE = FIRST_CYCLE;       // Go to the first cycle
+                        STATE <= FIRST_CYCLE;       // Go to the first cycle
                     end
             endcase
         end

@@ -2,6 +2,8 @@
 // Functionality: This module performs the first part of the execute stage of the pipeline.
 // File: ExecuteStep1.v
 
+include "definitions.vh";
+
 module ExecuteStep1 (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
@@ -31,21 +33,22 @@ assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorki
 always @(posedge clk_i) begin
     if(isWorking)
         begin
+            $display("EXECUTE STEP1");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("ExecuteStep1: Executing instruction");
-                        STATE = SECOND_CYCLE; // Go to the second cycle
+                        $display("-->Executing instruction");
+                        STATE <= SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("ExecuteStep1: Execution completed");
-                        $display("Opcode: %b", opcode_i); // Display opcode
-                        $display("rs1: %d", rs1_i);       // Display source register 1  
-                        $display("rs2: %d", rs2_i);       // Display source register 2  
-                        $display("rd: %d", rd_i);         // Display destination register
+                        $display("-->Execution completed");
+                        $display("-->Opcode: %b", opcode_i); // Display opcode
+                        $display("-->rs1: %d", rs1_i);       // Display source register 1  
+                        $display("-->rs2: %d", rs2_i);       // Display source register 2  
+                        $display("-->rd: %d", rd_i);         // Display destination register
                         execute1_finished <= 1'b1;       // Set execute1_finished to 1
-                        STATE = FIRST_CYCLE;            // Go to the first cycle
+                        STATE <= FIRST_CYCLE;            // Go to the first cycle
                     end
             endcase
         end

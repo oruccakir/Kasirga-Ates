@@ -2,11 +2,13 @@
 // Functionality: This module performs the write back stage of the pipeline.
 // File: WriteBackStep.v
 
+include "definitions.vh";
+
 module WriteBackStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
-    output wire writeback_finished_o
+    output wire writeback_finished_o // Flag for finishing writeback step
 );
 
 // WriteBackStep module implementation
@@ -23,17 +25,18 @@ assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWork
 always @(posedge clk_i) begin
     if(isWorking)
         begin
+            $display("WRITEBACK STEP");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("WriteBackStep: Writing back to register file");
-                        STATE = SECOND_CYCLE; // Go to the second cycle
+                        $display("-->Writing back to register file");
+                        STATE <= SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("WriteBackStep: Writeback completed");
+                        $display("-->Writeback completed");
                         writeback_finished <= 1'b1;
-                        STATE = FIRST_CYCLE; // Go to the first cycle
+                        STATE <= FIRST_CYCLE; // Go to the first cycle
                     end
             endcase
         end

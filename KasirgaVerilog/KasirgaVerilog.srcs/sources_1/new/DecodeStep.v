@@ -2,6 +2,8 @@
 // Functionality: Decodes the instruction and reads the register file
 // File: DecodeStep.v
 
+include "definitions.vh";
+
 module DecodeStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
@@ -41,28 +43,29 @@ assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 always @(posedge clk_i) begin
     if(isWorking)
         begin
+            $display("DECODE STEP");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("DecodeStep: Decoding instruction %h", instruction_i);
-                        opcode = instruction_i[6:0]; // Extract opcode
-                        rs1 = instruction_i[19:15]; // Extract source register 1
-                        rs2 = instruction_i[24:20]; // Extract source register 2
-                        rd = instruction_i[11:7];   // Extract destination register
-                        operand1 = 32'h0;           // Set operand 1 to 0
-                        operand2 = 32'h0;           // Set operand 2 to 0    
-                        immediate = 32'h0;          // Set immediate to 0
-                        STATE = SECOND_CYCLE;       // Go to the second cycle
+                        $display("-->Decoding instruction %h", instruction_i);
+                        opcode <= instruction_i[6:0]; // Extract opcode
+                        rs1 <= instruction_i[19:15]; // Extract source register 1
+                        rs2 <= instruction_i[24:20]; // Extract source register 2
+                        rd <= instruction_i[11:7];   // Extract destination register
+                        operand1 <= 32'h0;           // Set operand 1 to 0
+                        operand2 <= 32'h0;           // Set operand 2 to 0    
+                        immediate <= 32'h0;          // Set immediate to 0
+                        STATE <= SECOND_CYCLE;       // Go to the second cycle
                         end
                 SECOND_CYCLE :
                     begin
-                        $display("DecodeStep: Decoding completed");
-                        $display("Opcode: %b", opcode); // Display opcode
-                        $display("rs1: %d", rs1);       // Display source register 1
-                        $display("rs2: %d", rs2);       // Display source register 2
-                        $display("rd: %d", rd);         // Display destination register
+                        $display("-->Decoding completed");
+                        $display("-->Opcode: %b", opcode); // Display opcode
+                        $display("-->rs1: %d", rs1);       // Display source register 1
+                        $display("-->rs2: %d", rs2);       // Display source register 2
+                        $display("-->rd: %d", rd);         // Display destination register
                         decode_finished <= 1'b1;        // Set the flag for finishing decode step        
-                        STATE = FIRST_CYCLE;            // Go back to the first cycle
+                        STATE <= FIRST_CYCLE;            // Go back to the first cycle
                     end
             endcase
             
