@@ -9,6 +9,7 @@ module DecodeStep (
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input
+    input wire [31:0] writebacked_result_i, // writebacked result to suitable register
     output wire [6:0] opcode_o, // Opcode output
     output wire [4:0] rs1_o, // Source register 1 output
     output wire [4:0] rs2_o, // Source register 2 output
@@ -86,6 +87,10 @@ always @(posedge clk_i) begin
                     begin
                         $display("-->Decoding instruction %h", instruction_i);
                         opcode <= instruction_i[6:0]; // Extract opcode
+                        case(opcode)
+                            7'b0110011 :
+                                unit_type <= `FLOATING_POINT_UNIT;
+                        endcase
                         rs1 <= instruction_i[19:15]; // Extract source register 1
                         rs2 <= instruction_i[24:20]; // Extract source register 2
                         rd <= instruction_i[11:7];   // Extract destination register

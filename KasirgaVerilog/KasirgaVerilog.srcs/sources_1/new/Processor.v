@@ -12,6 +12,9 @@ module Processor(
     output wire [31:0] mem_address_o
 );
 
+
+wire [31:0] writebacked_result; // will be writed to available register
+
 // Output signals
 wire [6:0] opcode; // Opcode
 wire [4:0] rs1;// Source register 1
@@ -50,6 +53,7 @@ DecodeStep decode(
     .rst_i(rst_i),
     .enable_step_i(enable_decode),
     .instruction_i(instruction_to_decode),
+    .writebacked_result_i(writebacked_result),
     .opcode_o(opcode),
     .rs1_o(rs1),
     .rs2_o(rs2),
@@ -63,6 +67,8 @@ DecodeStep decode(
 // Execute1 stage
 reg enable_execute1 = 1'b0;
 wire execute1_finished;
+
+wire [31:0] calculated_result; // calculated result by execute1
 
 // Execute1 module
 ExecuteStep1 execute1(
@@ -78,12 +84,15 @@ ExecuteStep1 execute1(
     .operand2_i(operand2),
     .immediate_i(immediate),
     .unit_type_i(unit_type),
+    .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished)
 );
 
 // Execute2 stage
 reg enable_execute2 = 1'b0;
 wire execute2_finished;
+
+
 
 // Execute2 module
 ExecuteStep2 execute2(
@@ -123,7 +132,9 @@ WriteBackStep writeback(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_step_i(enable_writeback),
-    .writeback_finished_o(writeback_finished)
+    .calculated_result_i(calculated_result),
+    .writeback_finished_o(writeback_finished),
+    .writebacked_result_o(writebacked_result)
 );
 
 always@(posedge clk_i) begin

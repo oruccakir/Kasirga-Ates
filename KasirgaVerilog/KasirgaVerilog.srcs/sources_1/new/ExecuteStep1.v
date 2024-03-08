@@ -17,6 +17,7 @@ module ExecuteStep1 (
     input wire [31:0] operand2_i, // Operand 2 input
     input wire [31:0] immediate_i, // Immediate input
     input wire [3:0] unit_type_i,  // for unit selection input
+    output wire [31:0] calculated_result_o, // resulted
     output wire execute1_finished_o // Flag for finishing execute step 1
 );
 
