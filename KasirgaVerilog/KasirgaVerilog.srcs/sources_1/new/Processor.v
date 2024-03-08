@@ -20,6 +20,7 @@ wire [4:0] rd; // Destination register
 wire [31:0] operand1; // Operand 1
 wire [31:0] operand2;// Operand 2 
 wire [31:0] immediate; // Immediate
+wire [3:0] unit_type;
 
 // Instruction to decode
 wire [31:0]instruction_to_decode;
@@ -76,6 +77,7 @@ ExecuteStep1 execute1(
     .operand1_i(operand1),
     .operand2_i(operand2),
     .immediate_i(immediate),
+    .unit_type_i(unit_type),
     .execute1_finished_o(execute1_finished)
 );
 

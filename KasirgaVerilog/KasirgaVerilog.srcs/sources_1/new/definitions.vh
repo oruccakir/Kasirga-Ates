@@ -111,6 +111,21 @@
 `define BT_ZEXT                 5'h1F
 
 
+// UNIT SELECTION UNIT SELECTION
+`define FLOATING_POINT_UNIT             4'h0
+`define ARITHMETIC_LOGIC_UNIT           4'h1
+`define INTEGER_MULTIPLICATION_UNIT     4'h2
+`define INTEGER_DIVISION_UNIT           4'h3
+`define BRANCH_RESOLVER_UNIT            4'h4
+`define CONTROL_UNIT                    4'h5
+`define CONTROL_STATUS_UNIT             4'h6
+`define ATOMIC_UNIT                     4'h7
+`define BIT_MANIPULATION_UNIT           4'h8
+
+// FLOATING POINT UNIT SELECTION
+`define FLOATING_MULTIPLICATION_UNIT    1'b0
+`define FLOATING_DIVISION_UNIT          1'b1
+
 
 
 

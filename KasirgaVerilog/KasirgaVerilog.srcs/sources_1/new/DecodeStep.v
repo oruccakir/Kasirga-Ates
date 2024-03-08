@@ -16,6 +16,7 @@ module DecodeStep (
     output wire [31:0] operand1_o, // Operand 1 output
     output wire [31:0] operand2_o, // Operand 2 output
     output wire [31:0] immediate_o, // Immediate output
+    output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
     output wire decode_finished_o // Flag for finishing decode step
 );
 
@@ -23,11 +24,14 @@ module DecodeStep (
 reg [6:0] opcode = 7'b0; // Opcode
 reg [4:0] rs1 = 5'b0;// Source register 1
 reg [4:0] rs2 = 5'b0; // Source register 2 
+reg [4:0] rs3 = 5'b0; // Source register 3
 reg [4:0] rd = 5'b0; // Destination register
 wire [31:0] operand1; // Operand 1
 wire [31:0] operand2; // Operand 2 
+wire [31:0] operand3; // Operand 3
 reg [31:0] immediate = 32'b0; // Immediate
 
+reg [3:0] unit_type = 4'b0000; // default zero will be changed later
 
 reg reg_write_integer = 1'b0; // Write data flag for integer register file
 
@@ -52,11 +56,13 @@ FloatRegisterFile floatRegisterFile(
     .rst_i(rst_i),
     .rs1_i(rs1),
     .rs2_i(rs2),
+    .rs3_i(rs3),
     .rd_i(rd),
     .write_data_i(operand2),
     .reg_write_i(reg_write_float),
     .read_data1_o(operand1),
-    .read_data2_o(operand2)
+    .read_data2_o(operand2),
+    .read_data3_o(operand3)
 );
 */
 //Decode modul implementation
@@ -111,6 +117,7 @@ assign rs2_o = rs2;                         // Assign source register 2
 assign rd_o = rd;                           // Assign destination register
 assign operand1_o = operand1;               // Assign operand 1    
 assign operand2_o = operand2;               // Assign operand 2
-assign immediate_o = immediate;             // Assign immediate        
+assign immediate_o = immediate;             // Assign immediate 
+assign unit_type_o = unit_type;             // Assign unit type       
 
 endmodule

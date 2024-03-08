@@ -48,5 +48,6 @@ module IntegerRegisterFile (
       registers[rd_i] <= write_data_i; // write data to register
     end
   end
+  
 
 endmodule

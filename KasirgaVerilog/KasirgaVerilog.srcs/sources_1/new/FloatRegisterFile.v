@@ -8,11 +8,13 @@ module FloatRegisterFile(
   input wire rst_i, // reset signal
   input wire [4:0] rs1_i, // read register 1
   input wire [4:0] rs2_i, // read register 2
+  input wire [3:0] rs3_i, // read register 3
   input wire [4:0] rd_i,  // write register
   input wire [31:0] write_data_i, // data to write
   input wire reg_write_i, // write enable
   output wire [31:0] read_data1_o, // data from read register 1
-  output wire [31:0] read_data2_o // data from read register 2
+  output wire [31:0] read_data2_o, // data from read register 2
+  output wire [31:0] read_data3_o // data from read register 3
 );
 
   reg [31:0] registers [31:0]; // 32 registers for float data
@@ -30,6 +32,7 @@ module FloatRegisterFile(
   
   assign read_data1_o = registers[rs1_i]; // read data from register 1
   assign read_data2_o = registers[rs2_i]; // read data from register 2
+  assign read_data3_o = registers[rs3_i]; // read data from register 2
 
   always @(posedge clk_i or posedge rst_i) begin // synchronous reset
     if (rst_i) begin 
