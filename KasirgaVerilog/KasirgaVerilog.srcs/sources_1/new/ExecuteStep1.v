@@ -45,6 +45,54 @@ ArithmeticLogicUnit arithmetic_logic_unit(
     .result_o(calculated_result)
 );
 
+// Integer Multiplication Unit module
+IntegerMultiplicationUnit integer_multiplication_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_integer_multiplication_unit),
+    .operand1_i(operand1_i),
+    .operand2_i(operand2_i),
+    .result_o(calculated_result)
+);
+
+// Integer Division Unit module
+IntegerDivisionUnit integer_division_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_integer_division_unit),
+    .operand1_i(operand1_i),
+    .operand2_i(operand2_i),
+    .result_o(calculated_result)
+);
+
+// Floating Point Unit module
+FloatingPointUnit floating_point_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_floating_point_unit)
+);
+
+// Branch Resolver Unit module
+BranchResolverUnit branch_resolver_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_branch_resolver_unit)
+);
+
+// Control Unit module
+ControlUnit control_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_control_unit)
+);
+
+// Control Status Unit module
+ControlStatusUnit control_status_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_control_status_unit)
+);
+
 // ExecuteStep1 module implementation
 reg execute1_finished = 1'b0; // Flag for finishing execute step 1
 wire isWorking; // Flag for working

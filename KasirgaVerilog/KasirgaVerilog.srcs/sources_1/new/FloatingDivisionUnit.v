@@ -1,8 +1,8 @@
-// Purpose: 32-bit float multiplication unit for the execute stage of the pipeline.
-// Functionality: This module performs 32-bit integer multiplication.
-// File: FloatMultiplicationUnit.v
+// Purpose: Integer division unit for the execute stage of the pipeline.
+// Functionality: This module performs integer division.
+// File: IntegerDivisionUnit.v    
 
-module FloatMultiplicationUnit(
+module IntegerDivisionUnit(
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_i, // Enable input
@@ -10,5 +10,5 @@ module FloatMultiplicationUnit(
     input wire [31:0] operand2_i, // Operand 2 input 
     output wire [31:0] result_o // Result output
 );
-    
+
 endmodule
