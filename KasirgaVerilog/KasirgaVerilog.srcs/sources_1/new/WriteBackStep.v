@@ -22,7 +22,7 @@ localparam SECOND_CYCLE = 1'b1; // State for instruction result
 
 reg STATE = FIRST_CYCLE; // State for the module
 
-reg [31:0] writebacked_result = 32'b0; // writed result
+reg [31:0] writebacked_result; // writed result
 
 assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 

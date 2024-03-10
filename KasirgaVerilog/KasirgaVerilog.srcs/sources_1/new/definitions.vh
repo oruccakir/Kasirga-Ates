@@ -2,16 +2,25 @@
 // Purpose: Contains definitions for the pipeline processor.
 
 // Control Signals for ALU operations
-`define ALU_ADDITION            4'h0
-`define ALU_SUBTRACTION         4'h1
-`define ALU_XOR                 4'h2
-`define ALU_OR                  4'h3
-`define ALU_AND                 4'h4
-`define ALU_SLL                 4'h5
-`define ALU_SRL                 4'h6
-`define ALU_SRA                 4'h7
-`define ALU_SLT                 4'h8
-`define ALU_SLTU                4'h9
+`define ALU_ADDITION            5'h0
+`define ALU_SUBTRACTION         5'h1
+`define ALU_XOR                 5'h2
+`define ALU_OR                  5'h3
+`define ALU_AND                 5'h4
+`define ALU_SLL                 5'h5
+`define ALU_SRL                 5'h6
+`define ALU_SRA                 5'h7
+`define ALU_SLT                 5'h8
+`define ALU_SLTU                5'h9
+`define ALU_ADDI                5'h10
+`define ALU_SLTI                5'h11
+`define ALU_SLTIU               5'h12
+`define ALU_XORI                5'h13
+`define ALU_ORI                 5'h14
+`define ALU_ANDI                5'h15
+`define ALU_SLLI                5'h16
+`define ALU_SRLI                5'h17
+`define ALU_SRAI                5'h18
 
 // Control Signals integer multiplication and division operations
 `define INT_MUL                 4'h0

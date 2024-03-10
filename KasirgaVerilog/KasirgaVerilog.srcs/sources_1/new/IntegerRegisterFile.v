@@ -45,7 +45,9 @@ module IntegerRegisterFile (
       registers[28] <= 0; registers[29] <= 0; registers[30] <= 0; registers[31] <= 0;
     end
     else if (reg_write_i && rd_i != 0) begin // write to register 0 is not allowed
+      $display("Integer writed result",write_data_i); // writed result stored here
       registers[rd_i] <= write_data_i; // write data to register
+      //$display("Writed result",registers[rd_i]);
     end
   end
   

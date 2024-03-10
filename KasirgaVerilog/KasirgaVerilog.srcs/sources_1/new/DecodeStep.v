@@ -18,6 +18,7 @@ module DecodeStep (
     output wire [31:0] operand2_o, // Operand 2 output
     output wire [31:0] immediate_o, // Immediate output
     output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
+    output wire [4:0] instruction_type_o, // hold information of  which instruction
     output wire decode_finished_o // Flag for finishing decode step
 );
 
@@ -32,9 +33,11 @@ wire [31:0] operand2; // Operand 2
 wire [31:0] operand3; // Operand 3
 reg [31:0] immediate = 32'b0; // Immediate
 
-reg [3:0] unit_type = 4'b0000; // default zero will be changed later
+reg [3:0] unit_type = 4'b0000; //default zero will be changed later
 
-reg reg_write_integer = 1'b0; // Write data flag for integer register file
+reg  [4:0] instruction_type = 5'b00000;
+
+reg reg_write_integer = 1'b1; //Write data flag for integer register file
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
@@ -43,7 +46,7 @@ IntegerRegisterFile integerRegisterFile(
     .rs1_i(rs1),
     .rs2_i(rs2),
     .rd_i(rd),
-    .write_data_i(operand2),
+    .write_data_i(writebacked_result_i),
     .reg_write_i(reg_write_integer),
     .read_data1_o(operand1),
     .read_data2_o(operand2)
@@ -85,16 +88,27 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
+                        $display("WriteBackedResult",writebacked_result_i);
                         $display("-->Decoding instruction %h", instruction_i);
                         opcode <= instruction_i[6:0]; // Extract opcode
                         case(opcode)
-                            7'b0110011 :
-                                unit_type <= `FLOATING_POINT_UNIT;
+                            7'b0010011:
+                                begin
+                                    rs1 <= instruction_i[19:15]; // Extract source register 1
+                                    rd <= instruction_i[11:7];   // Extract destination register
+                                    immediate <= 32'h0;  
+                                    unit_type <= `ARITHMETIC_LOGIC_UNIT;
+                                    case(instruction_i[14:12])
+                                        3'b000 : instruction_type <= `ALU_ADDI;
+                                        3'b010 : instruction_type <= `ALU_SLTI;
+                                        3'b011 : instruction_type <= `ALU_SLTIU;
+                                        3'b110 : instruction_type <= `ALU_XORI;
+                                        3'b111 : instruction_type <= `ALU_ANDI;
+                                        3'b001 : instruction_type <= `ALU_SLLI;
+                                        3'b101 : instruction_type <= `ALU_ADDI;
+                                    endcase
+                                end
                         endcase
-                        rs1 <= instruction_i[19:15]; // Extract source register 1
-                        rs2 <= instruction_i[24:20]; // Extract source register 2
-                        rd <= instruction_i[11:7];   // Extract destination register
-                        immediate <= 32'h0;          // Set immediate to 0
                         STATE <= SECOND_CYCLE;       // Go to the second cycle
                         end
                 SECOND_CYCLE :
@@ -124,5 +138,5 @@ assign operand1_o = operand1;               // Assign operand 1
 assign operand2_o = operand2;               // Assign operand 2
 assign immediate_o = immediate;             // Assign immediate 
 assign unit_type_o = unit_type;             // Assign unit type       
-
+assign instruction_type_0 = instruction_type; // Assign instruction
 endmodule

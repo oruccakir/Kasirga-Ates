@@ -30,6 +30,8 @@ localparam SECOND_CYCLE = 1'b1; // State for instruction result
 
 reg STATE = FIRST_CYCLE; // State for the module
 
+reg [31:0] calculated_result = 1'b0;
+
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
 always @(posedge clk_i) begin
@@ -57,5 +59,6 @@ always @(posedge clk_i) begin
 end
 
 assign execute1_finished_o = execute1_finished;
+assign calculated_result_o = calculated_result;
 
 endmodule 
