@@ -16,6 +16,8 @@ module Processor(
 
 wire [31:0] writebacked_result; // will be writed to available register
 
+
+
 // Output signals
 wire [6:0] opcode; // Opcode
 wire [4:0] rs1;// Source register 1
@@ -54,6 +56,7 @@ reg enable_decode = 1'b0;
 wire decode_finished;
 
 wire reg_write_integer; // coming from writeback
+wire reg_write_float; // coming from writeback
 
 // Decode module
 DecodeStep decode(
@@ -63,6 +66,7 @@ DecodeStep decode(
     .instruction_i(instruction_to_decode),
     .writebacked_result_i(writebacked_result),
     .reg_write_integer_i(reg_write_integer),
+    .reg_write_float_i(reg_write_float),
     .opcode_o(opcode),
     .rs1_o(rs1),
     .rs2_o(rs2),

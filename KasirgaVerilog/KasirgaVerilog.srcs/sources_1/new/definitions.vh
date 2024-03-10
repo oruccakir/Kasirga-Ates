@@ -1,6 +1,10 @@
 // File: definitions.vh
 // Purpose: Contains definitions for the pipeline processor.
 
+// Control signals for registers
+`define INTEGER_REGISTER        2'b0
+`define FLOAT_REGISTER          2'b1
+`define CSR_REGISTER            2'b10
 // Control Signals for ALU operations
 `define ALU_ADD                 5'h0
 `define ALU_SUB                 5'h1

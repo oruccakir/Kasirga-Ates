@@ -31,6 +31,5 @@ module BitManipulationUnit (
                 end
         end    
 
-    
 
 endmodule

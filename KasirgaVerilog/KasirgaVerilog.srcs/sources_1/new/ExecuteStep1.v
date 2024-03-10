@@ -25,6 +25,7 @@ module ExecuteStep1 (
 wire [31:0] calculated_result;
 
 
+
 // ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
@@ -134,41 +135,49 @@ always @(posedge clk_i) begin
                         `ARITHMETIC_LOGIC_UNIT:
                             begin
                                 enable_alu_unit <= 1'b1; // Enable ALU unit
+
                             end
                         `INTEGER_MULTIPLICATION_UNIT:
                             begin
                                 // Enable integer multiplication unit
                                 enable_integer_multiplication_unit <= 1'b1;
+ 
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
                                 // Enable integer division unit
                                 enable_integer_division_unit <= 1'b1;
+
                             end
                         `FLOATING_POINT_UNIT:
                             begin
                                 // Enable floating point unit
                                 enable_floating_point_unit <= 1'b1;
+
                             end
                         `BRANCH_RESOLVER_UNIT:
                             begin
                                 // Enable branch resolver unit 
                                 enable_branch_resolver_unit <= 1'b1;
+
                             end 
                         `CONTROL_UNIT:
                             begin
                                 // Enable control unit
                                 enable_control_unit <= 1'b1;
+
                             end
                         `CONTROL_STATUS_UNIT:
                             begin
                                 // Enable control status unit
                                 enable_control_status_unit <= 1'b1;
+
                             end 
                         `ATOMIC_UNIT:
                             begin
                                 // Enable atomic unit
                                 enable_atomic_unit <= 1'b1;
+
                             end
                         `BIT_MANIPULATION_UNIT:
                             begin

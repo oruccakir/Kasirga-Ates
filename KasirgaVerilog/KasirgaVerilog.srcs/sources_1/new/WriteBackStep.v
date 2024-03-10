@@ -11,12 +11,13 @@ module WriteBackStep (
     input wire [31:0] calculated_result_i,// it comes from other steps
     output wire writeback_finished_o, // Flag for finishing writeback step
     output wire [31:0] writebacked_result_o, // final result after all calculations
-    output reg_write_integer_o // flag to write integer register
+    output wire reg_write_integer_o // flag to write integer register
 );
 
 // to decode
 reg reg_write_integer = 1'b0;
 
+ 
 // WriteBackStep module implementation
 reg writeback_finished = 1'b0; // Flag for finishing writeback step
 wire isWorking; // Flag for working

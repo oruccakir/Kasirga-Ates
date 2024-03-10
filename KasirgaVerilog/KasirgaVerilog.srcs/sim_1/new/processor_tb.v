@@ -47,7 +47,7 @@ initial begin
     // BUYRUKLAR ,
     //memory_write('h8000_0000,32'h003100b3);   // add x1, x2, x3
     memory_write('h8000_0000, 32'h00500093); // addi x1, x0, 5
-    //memory_write('h8000_0004, 32'h002081b3); // add  x3, x7, x8
+    memory_write('h8000_0004, 32'h008381b3); // add  x3, x7, x8
     //memory_write('h8000_0004, 32'h003282b3); // add  x5, x5, x3
 
     // PROGRAM dataSI
