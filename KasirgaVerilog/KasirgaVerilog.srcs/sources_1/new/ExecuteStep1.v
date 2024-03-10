@@ -38,7 +38,7 @@ reg enable_bit_manipulation_unit = 1'b0; // Enable signal for bit manipulation u
 
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
-    .enable_processing_i(enable_alu_unit),
+    .enable_i(enable_alu_unit),
     .operand1_i(operand1_i),
     .operand2_i(operand2_i),
     .aluOp_i(instruction_type_i),
@@ -72,42 +72,42 @@ always @(posedge clk_i) begin
                             begin
                                 enable_alu_unit <= 1'b1; // Enable ALU unit
                             end
-                        'INTEGER_MULTIPLICATION_UNIT:
+                        `INTEGER_MULTIPLICATION_UNIT:
                             begin
                                 // Enable integer multiplication unit
                                 enable_integer_multiplication_unit <= 1'b1;
                             end
-                        'INTEGER_DIVISION_UNIT:
+                        `INTEGER_DIVISION_UNIT:
                             begin
                                 // Enable integer division unit
                                 enable_integer_division_unit <= 1'b1;
                             end
-                        'FLOATING_POINT_UNIT:
+                        `FLOATING_POINT_UNIT:
                             begin
                                 // Enable floating point unit
                                 enable_floating_point_unit <= 1'b1;
                             end
-                        'BRANCH_RESOLVER_UNIT:
+                        `BRANCH_RESOLVER_UNIT:
                             begin
                                 // Enable branch resolver unit 
                                 enable_branch_resolver_unit <= 1'b1;
                             end 
-                        'CONTROL_UNIT:
+                        `CONTROL_UNIT:
                             begin
                                 // Enable control unit
                                 enable_control_unit <= 1'b1;
                             end
-                        'CONTROL_STATUS_UNIT:
+                        `CONTROL_STATUS_UNIT:
                             begin
                                 // Enable control status unit
                                 enable_control_status_unit <= 1'b1;
                             end 
-                        'ATOMIC_UNIT:
+                        `ATOMIC_UNIT:
                             begin
                                 // Enable atomic unit
                                 enable_atomic_unit <= 1'b1;
                             end
-                        'BIT_MANIPULATION_UNIT:
+                        `BIT_MANIPULATION_UNIT:
                             begin
                                 // Enable bit manipulation unit
                                 enable_bit_manipulation_unit <= 1'b1;

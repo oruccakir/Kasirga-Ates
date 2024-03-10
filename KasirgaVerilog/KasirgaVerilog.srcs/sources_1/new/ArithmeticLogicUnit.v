@@ -6,9 +6,9 @@
 `include "definitions.vh"
 
 module ArithmeticLogicUnit (
-    input wire enable_processing_i, // Enable input
     input wire [31:0] operand1_i, // First operand
     input wire [31:0] operand2_i, // Second operand
+    input wire enable_i, // Enable input
     input wire [4:0] aluOp_i, // ALU operation
     output wire [31:0] result_o // Result
 );
@@ -18,7 +18,7 @@ reg [31:0] result;
     
 // Perform the operation based on the aluOp
 
-always @(posedge enable_processing_i) begin
+always @(posedge enable_i) begin
     $display("ALU WORKING");
     case (aluOp_i)
         `ALU_ADD: result = operand1_i + operand2_i; // Addition
