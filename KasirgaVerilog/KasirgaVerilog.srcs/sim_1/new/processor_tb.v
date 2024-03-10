@@ -44,14 +44,11 @@ initial begin
     // Race condition engellemek icin sistem 1 cevrim calistirilir
     @(posedge clk_r); // reset sinyali aktif oldugu icin degisiklik olusmaz
     // https://luplab.gitlab.io/rvcodecjs/ <- assembly binary donusumu icin kullanabiliriniz
-    // BUYRUKLAR 
-    memory_write('h8000_0000, 32'h00500093); // addi x1, x0, 5
-    memory_write('h8000_0004, 32'h00a00113); // addi x2, x0, 10
-    memory_write('h8000_0008, 32'h002081b3); // add  x3, x1, x2
-    memory_write('h8000_000c, 32'h80000237); // lui  x4, 0x80000
-    memory_write('h8000_0010, 32'h40022283); // lw   x5, 0x400(x4)
-    memory_write('h8000_0014, 32'h003282b3); // add  x5, x5, x3
-    memory_write('h8000_0018, 32'h40522223); // sw   x5, 0x404(x4)
+    // BUYRUKLAR ,
+    memory_write('h8000_0000,32'h003100b3);   // add x1, x2, x3
+    //memory_write('h8000_0004, 32'h00500093); // addi x1, x0, 5
+    //memory_write('h8000_0008, 32'h002081b3); // add  x3, x1, x2
+    //memory_write('h8000_0012, 32'h003282b3); // add  x5, x5, x3
 
     // PROGRAM dataSI
     memory_write('h8000_0400, 32'hdeadbee0);

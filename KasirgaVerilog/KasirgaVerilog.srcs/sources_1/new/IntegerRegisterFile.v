@@ -27,6 +27,8 @@ module IntegerRegisterFile (
       registers[28] = 0; registers[29] = 0; registers[30] = 0; registers[31] = 0;
     registers[0] = 50;
     registers[5] = 88;
+    registers[3] = 22;
+    registers[2] = 13;
   end
 
   assign read_data1_o = registers[rs1_i]; // read data from register 1

@@ -10,6 +10,7 @@ module DecodeStep (
     input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input
     input wire [31:0] writebacked_result_i, // writebacked result to suitable register
+    input wire reg_write_integer_i, //Write data flag for integer register file
     output wire [6:0] opcode_o, // Opcode output
     output wire [4:0] rs1_o, // Source register 1 output
     output wire [4:0] rs2_o, // Source register 2 output
@@ -37,8 +38,6 @@ reg [3:0] unit_type = 4'b0000; //default zero will be changed later
 
 reg  [4:0] instruction_type = 5'b00000;
 
-reg reg_write_integer = 1'b1; //Write data flag for integer register file
-
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
     .clk_i(clk_i),
@@ -47,7 +46,7 @@ IntegerRegisterFile integerRegisterFile(
     .rs2_i(rs2),
     .rd_i(rd),
     .write_data_i(writebacked_result_i),
-    .reg_write_i(reg_write_integer),
+    .reg_write_i(reg_write_integer_i),
     .read_data1_o(operand1),
     .read_data2_o(operand2)
 );
@@ -88,24 +87,56 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("WriteBackedResult",writebacked_result_i);
                         $display("-->Decoding instruction %h", instruction_i);
-                        opcode <= instruction_i[6:0]; // Extract opcode
+                        opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                         case(opcode)
                             7'b0010011:
                                 begin
                                     rs1 <= instruction_i[19:15]; // Extract source register 1
                                     rd <= instruction_i[11:7];   // Extract destination register
-                                    immediate <= 32'h0;  
-                                    unit_type <= `ARITHMETIC_LOGIC_UNIT;
-                                    case(instruction_i[14:12])
-                                        3'b000 : instruction_type <= `ALU_ADDI;
-                                        3'b010 : instruction_type <= `ALU_SLTI;
-                                        3'b011 : instruction_type <= `ALU_SLTIU;
-                                        3'b110 : instruction_type <= `ALU_XORI;
-                                        3'b111 : instruction_type <= `ALU_ANDI;
-                                        3'b001 : instruction_type <= `ALU_SLLI;
-                                        3'b101 : instruction_type <= `ALU_ADDI;
+                                    immediate <= instruction_i[31:20]; // Extract immediate
+                                    unit_type <= `ARITHMETIC_LOGIC_UNIT; // Set the unit type
+                                    case(instruction_i[14:12]) // Extract the instruction type
+                                        3'b000 : instruction_type <= `ALU_ADDI; // Set the instruction type
+                                        3'b010 : instruction_type <= `ALU_SLTI; // Set the instruction type
+                                        3'b011 : instruction_type <= `ALU_SLTIU; // Set the instruction type
+                                        3'b100 : instruction_type <= `ALU_XORI; // Set the instruction type
+                                        3'b110 : instruction_type <= `ALU_ORI; // Set the instruction type
+                                        3'b111 : instruction_type <= `ALU_ANDI; // Set the instruction type
+                                        3'b001 : instruction_type <= `ALU_SLLI; // Set the instruction type
+                                        3'b101 : begin 
+                                            if(instruction_i[31:25] == 6'b000000) // Extract the instruction type
+                                                instruction_type <= `ALU_SRLI; // Set the instruction type
+                                            else
+                                                instruction_type <= `ALU_SRAI; // Set the instruction type
+                                        end
+                                    endcase
+                                end
+                            7'b0110011:
+                                begin
+                                    rs1 <= instruction_i[19:15]; // Extract source register 1
+                                    rs2 <= instruction_i[24:20]; // Extract source register 2
+                                    rd <= instruction_i[11:7];   // Extract destination register
+                                    unit_type <= `ARITHMETIC_LOGIC_UNIT; // Set the unit type
+                                    case(instruction_i[14:12]) // Extract the instruction type
+                                        3'b000 : begin
+                                            if(instruction_i[30] == 1'b0) // Extract the instruction type
+                                                instruction_type <= `ALU_ADD; // Set the instruction type
+                                            else
+                                                instruction_type <= `ALU_SUB; // Set the instruction type
+                                        end
+                                        3'b001 : instruction_type <= `ALU_SLL; // Set the instruction type
+                                        3'b010 : instruction_type <= `ALU_SLT; // Set the instruction type
+                                        3'b011 : instruction_type <= `ALU_SLTU; // Set the instruction type
+                                        3'b100 : instruction_type <= `ALU_XOR; // Set the instruction type
+                                        3'b101 : begin
+                                            if(instruction_i[30] == 1'b0) // Extract the instruction type
+                                                instruction_type <= `ALU_SRL; // Set the instruction type
+                                            else
+                                                instruction_type <= `ALU_SRA; // Set the instruction type
+                                        end
+                                        3'b110 : instruction_type <= `ALU_OR; // Set the instruction type
+                                        3'b111 : instruction_type <= `ALU_AND; // Set the instruction type
                                     endcase
                                 end
                         endcase
@@ -123,9 +154,7 @@ always @(posedge clk_i) begin
                         $display("--> Operand2 %d",operand2);     
                         STATE <= FIRST_CYCLE;            // Go back to the first cycle
                     end
-            endcase
-            
-           
+            endcase        
         end
 end
    
@@ -138,5 +167,5 @@ assign operand1_o = operand1;               // Assign operand 1
 assign operand2_o = operand2;               // Assign operand 2
 assign immediate_o = immediate;             // Assign immediate 
 assign unit_type_o = unit_type;             // Assign unit type       
-assign instruction_type_0 = instruction_type; // Assign instruction
+assign instruction_type_o = instruction_type; // Assign instruction
 endmodule

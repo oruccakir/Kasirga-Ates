@@ -10,8 +10,12 @@ module WriteBackStep (
     input wire enable_step_i, // Enable input
     input wire [31:0] calculated_result_i,// it comes from other steps
     output wire writeback_finished_o, // Flag for finishing writeback step
-    output wire [31:0] writebacked_result_o // final result after all calculations
+    output wire [31:0] writebacked_result_o, // final result after all calculations
+    output reg_write_integer_o // flag to write integer register
 );
+
+// to decode
+reg reg_write_integer = 1'b0;
 
 // WriteBackStep module implementation
 reg writeback_finished = 1'b0; // Flag for finishing writeback step
@@ -33,8 +37,9 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("-->Writing back to register file");
+                        $display("-->Writing back to register file %d",calculated_result_i);
                         writebacked_result <= calculated_result_i; 
+                        reg_write_integer <= 1'b1;
                         STATE <= SECOND_CYCLE; // Go to the second cycle
                     end
                 SECOND_CYCLE :
@@ -49,6 +54,6 @@ end
 
 assign writeback_finished_o = writeback_finished; // Assign writeback_finished
 assign writebacked_result_o = writebacked_result; // Assign calculated result
-
+assign reg_write_integer_o = reg_write_integer; // Assign write flag
 endmodule
 

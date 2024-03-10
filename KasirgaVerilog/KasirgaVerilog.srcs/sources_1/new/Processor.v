@@ -23,10 +23,15 @@ wire [4:0] rd; // Destination register
 wire [31:0] operand1; // Operand 1
 wire [31:0] operand2;// Operand 2 
 wire [31:0] immediate; // Immediate
-wire [3:0] unit_type;
 
 // Instruction to decode
 wire [31:0]instruction_to_decode;
+
+// get instruction type
+wire [4:0] instruction_type;
+
+// get unit type
+wire [3:0] unit_type;
 
 // Processor module implementation
 // Fetch stage
@@ -47,6 +52,8 @@ FetchStep fetch(
 reg enable_decode = 1'b0;
 wire decode_finished;
 
+wire reg_write_integer; // coming from writeback
+
 // Decode module
 DecodeStep decode(
     .clk_i(clk_i),
@@ -54,6 +61,7 @@ DecodeStep decode(
     .enable_step_i(enable_decode),
     .instruction_i(instruction_to_decode),
     .writebacked_result_i(writebacked_result),
+    .reg_write_integer_i(reg_write_integer),
     .opcode_o(opcode),
     .rs1_o(rs1),
     .rs2_o(rs2),
@@ -61,6 +69,8 @@ DecodeStep decode(
     .operand1_o(operand1),
     .operand2_o(operand2),
     .immediate_o(immediate),
+    .unit_type_o(unit_type),
+    .instruction_type_o(instruction_type),
     .decode_finished_o(decode_finished)
 );
 
@@ -84,6 +94,7 @@ ExecuteStep1 execute1(
     .operand2_i(operand2),
     .immediate_i(immediate),
     .unit_type_i(unit_type),
+    .instruction_type_i(instruction_type),
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished)
 );
@@ -117,7 +128,7 @@ MemoryStep memory(
     .enable_step_i(enable_memory),
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
-    .memOp_i(opcode),
+    //.memOp_i(opcode),
     .mem_data_o(mem_data),
     .mem_address_o(mem_address),
     .memory_finished_o(memory_finished)
@@ -134,7 +145,8 @@ WriteBackStep writeback(
     .enable_step_i(enable_writeback),
     .calculated_result_i(calculated_result),
     .writeback_finished_o(writeback_finished),
-    .writebacked_result_o(writebacked_result)
+    .writebacked_result_o(writebacked_result),
+    .reg_write_integer_o(reg_write_integer)
 );
 
 always@(posedge clk_i) begin
