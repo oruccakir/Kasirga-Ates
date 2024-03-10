@@ -2,7 +2,9 @@
 // Functionality: Decodes the instruction and reads the register file
 // File: DecodeStep.v
 
-include "definitions.vh";
+`include "definitions.vh";
+`include "functions.vh";
+
 
 module DecodeStep (
     input wire clk_i, // Clock input
@@ -77,6 +79,10 @@ localparam SECOND_CYCLE = 1'b1; // State for second cycle
 
 reg STATE = FIRST_CYCLE; // State for the module
 
+reg [31:0] imm_generated_operand2 = 32'b0; // imm generated operand2
+reg enable_generate = 1'b0;
+
+
 assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 
 // Decode module implementation
@@ -97,12 +103,23 @@ always @(posedge clk_i) begin
                                     immediate <= instruction_i[31:20]; // Extract immediate
                                     unit_type <= `ARITHMETIC_LOGIC_UNIT; // Set the unit type
                                     case(instruction_i[14:12]) // Extract the instruction type
-                                        3'b000 : instruction_type <= `ALU_ADDI; // Set the instruction type
-                                        3'b010 : instruction_type <= `ALU_SLTI; // Set the instruction type
-                                        3'b011 : instruction_type <= `ALU_SLTIU; // Set the instruction type
-                                        3'b100 : instruction_type <= `ALU_XORI; // Set the instruction type
-                                        3'b110 : instruction_type <= `ALU_ORI; // Set the instruction type
-                                        3'b111 : instruction_type <= `ALU_ANDI; // Set the instruction type
+                                        3'b000 : begin
+                                             instruction_type <= `ALU_ADDI; // Set the instruction type
+                                        end
+                                        3'b010 : begin  
+                                            instruction_type <= `ALU_SLTI; // Set the instruction type
+                                        end
+                                        3'b011 : begin 
+                                            instruction_type <= `ALU_SLTIU; // Set the instruction type
+                                        end
+                                        3'b100 : begin instruction_type <= `ALU_XORI; // Set the instruction type
+                                        end
+                                        3'b110 : begin 
+                                            instruction_type <= `ALU_ORI; // Set the instruction type
+                                        end
+                                        3'b111 : begin 
+                                            instruction_type <= `ALU_ANDI; // Set the instruction type
+                                        end
                                         3'b001 : instruction_type <= `ALU_SLLI; // Set the instruction type
                                         3'b101 : begin 
                                             if(instruction_i[31:25] == 6'b000000) // Extract the instruction type
@@ -145,6 +162,7 @@ always @(posedge clk_i) begin
                 SECOND_CYCLE :
                     begin
                         $display("-->Decoding completed");
+                        $display("-->IMM %d",imm_generated_operand2);
                         $display("-->Opcode: %b", opcode); // Display opcode
                         $display("-->rs1: %d", rs1);       // Display source register 1
                         $display("-->rs2: %d", rs2);       // Display source register 2
@@ -164,8 +182,22 @@ assign rs1_o = rs1;                         // Assign source register 1
 assign rs2_o = rs2;                         // Assign source register 2
 assign rd_o = rd;                           // Assign destination register
 assign operand1_o = operand1;               // Assign operand 1    
-assign operand2_o = operand2;               // Assign operand 2
+assign operand2_o = operand2;               //Assign operand 2
 assign immediate_o = immediate;             // Assign immediate 
 assign unit_type_o = unit_type;             // Assign unit type       
 assign instruction_type_o = instruction_type; // Assign instruction
+
+
+task generate_operand2(
+    input [31:0] instruction_i
+);
+
+    begin
+        imm_generated_operand2[11:0] = instruction_i[11:0]; // set value
+        if(instruction_i[11] == 1'b0)
+            imm_generated_operand2[31:12] = 20'b0; // extend with zero
+        else
+            imm_generated_operand2[31:12] = 20'b1; // extend with one
+    end
+endtask
 endmodule

@@ -2,7 +2,7 @@
 // Functionality: This module performs integer division.
 // File: IntegerDivisionUnit.v    
 
-module IntegerDivisionUnit(
+module FloatingDivisionUnit(
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_i, // Enable input

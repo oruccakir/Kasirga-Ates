@@ -8,7 +8,7 @@ module IntegerDivisionUnit(
     input wire enable_i, // Enable input
     input wire [31:0] operand1_i, // Operand 1 input
     input wire [31:0] operand2_i, // Operand 2 input 
-    output wire [63:0] result_o // Result output
+    output wire [31:0] result_o // Result output
 );
 
 endmodule

@@ -5,6 +5,7 @@
 module FloatingPointUnit (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
+    input wire enable_i, // Enable input
     input wire [4:0] floatOp_i, // Floating point operation input
     input wire [31:0] operand1_i, // Operand 1 input
     input wire [31:0] operand2_i, // Operand 2 input

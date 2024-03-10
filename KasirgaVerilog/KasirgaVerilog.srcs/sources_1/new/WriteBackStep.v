@@ -46,6 +46,7 @@ always @(posedge clk_i) begin
                     begin
                         $display("-->Writeback completed");
                         writeback_finished <= 1'b1;
+                        reg_write_integer <= 1'b0;
                         STATE <= FIRST_CYCLE; // Go to the first cycle
                     end
             endcase

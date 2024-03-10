@@ -93,6 +93,21 @@ ControlStatusUnit control_status_unit(
     .enable_i(enable_control_status_unit)
 );
 
+// Atomic Unit module
+AtomicUnit atomic_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_atomic_unit)
+);
+
+// Bit Manipulation Unit module
+BitManipulationUnit bit_manipulation_unit(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .enable_i(enable_bit_manipulation_unit)
+);
+
+
 // ExecuteStep1 module implementation
 reg execute1_finished = 1'b0; // Flag for finishing execute step 1
 wire isWorking; // Flag for working
