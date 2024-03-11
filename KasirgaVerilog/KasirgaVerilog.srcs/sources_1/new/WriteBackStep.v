@@ -27,7 +27,7 @@ localparam SECOND_CYCLE = 1'b1; // State for instruction result
 
 reg STATE = FIRST_CYCLE; // State for the module
 
-reg [31:0] writebacked_result; // writed result
+reg [31:0] writebacked_result = 32'b0; // writed result
 
 assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 
@@ -39,7 +39,7 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i);
+                        $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
                         $display("Instruction num %d",i);
                         writebacked_result <= calculated_result_i; 
                         reg_write_integer <= 1'b1;
@@ -47,7 +47,8 @@ always @(posedge clk_i) begin
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("-->Writeback completed");
+                        $display("-->Writeback completed for instruction num %d",i);
+                        $display("Writebacked result %d",writebacked_result_o);
                         writeback_finished <= 1'b1;
                         reg_write_integer <= 1'b0;
                         i=i+1;

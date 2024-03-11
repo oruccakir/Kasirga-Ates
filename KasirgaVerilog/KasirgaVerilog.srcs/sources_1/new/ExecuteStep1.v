@@ -22,7 +22,7 @@ module ExecuteStep1 (
     output wire execute1_finished_o // Flag for finishing execute step 1
 );
 
-wire [31:0] calculated_result;
+reg [31:0] calculated_result = 32'b0;
 
 // ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
@@ -192,7 +192,38 @@ always @(posedge clk_i) begin
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("-->Execution completed");
+                        case(unit_type_i)
+                        `ARITHMETIC_LOGIC_UNIT:
+                            begin
+                                calculated_result <= calculated_alu_result;
+                            end
+                        `INTEGER_MULTIPLICATION_UNIT:
+                            begin
+                                calculated_result <= calculated_int_mul_result;
+                            end
+                        `INTEGER_DIVISION_UNIT:
+                            begin
+                            end
+                        `FLOATING_POINT_UNIT:
+                            begin
+                            end
+                        `BRANCH_RESOLVER_UNIT:
+                            begin
+                            end 
+                        `CONTROL_UNIT:
+                            begin
+                            end
+                        `CONTROL_STATUS_UNIT:
+                            begin
+                            end
+                        `ATOMIC_UNIT:
+                            begin
+                            end
+                        `BIT_MANIPULATION_UNIT:
+                            begin;
+                            end
+                        endcase
+                        $display("-->Execution completed for instruction num %d",i);
                         $display("Result ALU %d",calculated_alu_result);
                         $display("Result MUL %d",calculated_int_mul_result);
                         $display("Result DIV %d",calculated_int_div_result);
@@ -207,8 +238,6 @@ always @(posedge clk_i) begin
 end
 
 assign execute1_finished_o = execute1_finished;
-assign calculated_result_o = (unit_type_i == `ARITHMETIC_LOGIC_UNIT) ? calculated_alu_result : 
-                                (unit_type_i == `INTEGER_MULTIPLICATION_UNIT) ? calculated_int_mul_result : 
-                                   calculated_int_div_result;
+assign calculated_result_o = calculated_result;
 
 endmodule 

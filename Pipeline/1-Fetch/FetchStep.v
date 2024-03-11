@@ -35,15 +35,14 @@ assign isWorking = enable_step_i && fetch_finished != 1'b1;
 always @(posedge clk_i) begin
     if(isWorking)
         begin
-            $display();
             case(STATE)
                 FIRST_CYCLE : begin
-                    $display("FETCH STEP Fetching instruction from memory %h", program_counter);
+                    $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); 
                     $display("Instruction num : %d",i);
                     STATE <= SECOND_CYCLE;
                 end
                 SECOND_CYCLE : begin
-                    $display("FETCH STEP Fetched Instruction %h", instruction_i); 
+                    $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i);
                     i = i+1;
                     instruction_to_decode <= instruction_i;
                     STATE <= FIRST_CYCLE;

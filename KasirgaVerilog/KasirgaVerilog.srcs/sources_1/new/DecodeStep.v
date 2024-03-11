@@ -98,7 +98,7 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("DECODE STEP Decoding instruction %h", instruction_i);
+                        $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i);
                         $display("Instruction num %d",i);
                         opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                         case(opcode)
@@ -118,7 +118,7 @@ always @(posedge clk_i) begin
                                         end
                                         3'b010 : begin 
                                             enable_generate = 1'b1;
-                                             generate_operand2(instruction_i); 
+                                            generate_operand2(instruction_i); 
                                             instruction_type <= `ALU_SLTI; // Set the instruction type
                                         end
                                         3'b011 : begin 
@@ -244,15 +244,15 @@ always @(posedge clk_i) begin
                         end
                 SECOND_CYCLE :
                     begin
-                        $display("-->Decoding completed");
+                        $display("-->Decoding completed for instruction  num %d",i);
                         $display("-->IMM %d",imm_generated_operand2);
                         $display("-->Opcode: %b", opcode); // Display opcode
                         $display("-->rs1: %d", rs1);       // Display source register 1
                         $display("-->rs2: %d", rs2);       // Display source register 2
                         $display("-->rd: %d", rd);         // Display destination register
-                        decode_finished <= 1'b1;        // Set the flag for finishing decode step  
                         $display("--> Operand1 %d",operand1_integer);  
                         $display("--> Operand2 %d",operand2_integer);     
+                        decode_finished <= 1'b1;         // Set the flag for finishing decode step  
                         STATE <= FIRST_CYCLE;            // Go back to the first cycle
                         i=i+1;
                     end

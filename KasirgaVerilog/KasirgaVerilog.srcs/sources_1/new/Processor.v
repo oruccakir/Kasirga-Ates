@@ -116,6 +116,9 @@ ExecuteStep2 execute2(
 );
 */
 // Memory stage
+
+wire [31:0] calculated_result_mem;
+
 reg enable_memory = 1'b0;
 wire memory_finished;
 reg mem_read_enable = 1'b0;
@@ -130,10 +133,12 @@ MemoryStep memory(
     .enable_step_i(enable_memory),
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
+    .calculated_result_i(calculated_result),
     //.memOp_i(opcode),
     .mem_data_o(mem_data),
     .mem_address_o(mem_address),
-    .memory_finished_o(memory_finished)
+    .memory_finished_o(memory_finished),
+    .calculated_result_o(calculated_result_mem)
 );
 
 // Writeback stage
@@ -145,7 +150,7 @@ WriteBackStep writeback(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_step_i(enable_writeback),
-    .calculated_result_i(calculated_result),
+    .calculated_result_i(calculated_result_mem),
     .writeback_finished_o(writeback_finished),
     .writebacked_result_o(writebacked_result),
     .reg_write_integer_o(reg_write_integer)
