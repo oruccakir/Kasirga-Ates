@@ -87,6 +87,7 @@ reg STATE = FIRST_CYCLE; // State for the module
 reg [31:0] imm_generated_operand2 = 32'b0; // imm generated operand2
 reg enable_generate = 1'b0;
 
+integer i = 1;
 
 assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 
@@ -94,11 +95,11 @@ assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 always @(posedge clk_i) begin
     if(isWorking)
         begin
-            $display("DECODE STEP");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("-->Decoding instruction %h", instruction_i);
+                        $display("DECODE STEP Decoding instruction %h", instruction_i);
+                        $display("Instruction num %d",i);
                         opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                         case(opcode)
                             7'b0010011:
@@ -159,23 +160,83 @@ always @(posedge clk_i) begin
                                     unit_type <= `ARITHMETIC_LOGIC_UNIT; // Set the unit type
                                     case(instruction_i[14:12]) // Extract the instruction type
                                         3'b000 : begin
-                                            if(instruction_i[30] == 1'b0) // Extract the instruction type
+                                            if(instruction_i[25] == 1'b1) // Extract the instruction type
+                                            begin
+                                                unit_type <= `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_MUL; // Set the instruction type
+                                            end
+                                            else if(instruction_i[30] == 1'b0)
                                                 instruction_type <= `ALU_ADD; // Set the instruction type
                                             else
                                                 instruction_type <= `ALU_SUB; // Set the instruction type
                                         end
-                                        3'b001 : instruction_type <= `ALU_SLL; // Set the instruction type
-                                        3'b010 : instruction_type <= `ALU_SLT; // Set the instruction type
-                                        3'b011 : instruction_type <= `ALU_SLTU; // Set the instruction type
-                                        3'b100 : instruction_type <= `ALU_XOR; // Set the instruction type
+                                        3'b001 : begin
+                                            if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_MULH; // Set the instruction type
+                                            end
+                                            else
+                                                instruction_type <= `ALU_SLL; // Set the instruction type
+                                        end
+                                        3'b010 : begin
+                                            if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_MULHSU; // Set the instruction type
+                                            end
+                                            else
+                                                instruction_type <= `ALU_SLT; // Set the instruction type
+                                        end
+                                        3'b011 : begin
+                                            if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_MULHU; // Set the instruction type
+                                            end
+                                            else
+                                                instruction_type <= `ALU_SLTU; // Set the instruction type
+                                        end
+                                        3'b100 : begin instruction_type <= `ALU_XOR; // Set the instruction type
+                                            if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_DIVISION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_DIV; // Set the instruction type
+                                            end
+                                            else
+                                                instruction_type <= `ALU_XOR; // Set the instruction type
+                                        end
                                         3'b101 : begin
                                             if(instruction_i[30] == 1'b0) // Extract the instruction type
                                                 instruction_type <= `ALU_SRL; // Set the instruction type
-                                            else
+                                            else if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_DIVISION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_DIVU; // Set the instruction type
+                                            end
+                                            else if(instruction_i[30] == 1'b1)
                                                 instruction_type <= `ALU_SRA; // Set the instruction type
+                                            else
+                                                instruction_type <= `ALU_SRL; // Set the instruction type
                                         end
-                                        3'b110 : instruction_type <= `ALU_OR; // Set the instruction type
-                                        3'b111 : instruction_type <= `ALU_AND; // Set the instruction type
+                                        3'b110 : begin
+                                            if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_DIVISION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_REM; // Set the instruction type
+                                            end
+                                            else
+                                                instruction_type <= `ALU_OR; // Set the instruction type
+                                        end
+                                        3'b111 : begin
+                                            if(instruction_i[25] == 1'b1)
+                                            begin
+                                                unit_type <= `INTEGER_DIVISION_UNIT; // Set the unit type
+                                                instruction_type <= `INT_REMU; // Set the instruction type
+                                            end
+                                            else
+                                                instruction_type <= `ALU_AND; // Set the instruction type
+                                        end
                                     endcase
                                 end
                         endcase
@@ -193,6 +254,7 @@ always @(posedge clk_i) begin
                         $display("--> Operand1 %d",operand1_integer);  
                         $display("--> Operand2 %d",operand2_integer);     
                         STATE <= FIRST_CYCLE;            // Go back to the first cycle
+                        i=i+1;
                     end
             endcase        
         end

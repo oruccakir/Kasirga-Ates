@@ -45,10 +45,9 @@ initial begin
     @(posedge clk_r); // reset sinyali aktif oldugu icin degisiklik olusmaz
     // https://luplab.gitlab.io/rvcodecjs/ <- assembly binary donusumu icin kullanabiliriniz
     // BUYRUKLAR ,
-    //memory_write('h8000_0000,32'h003100b3);   // add x1, x2, x3
     memory_write('h8000_0000, 32'h00500093); // addi x1, x0, 5
     memory_write('h8000_0004, 32'h008381b3); // add  x3, x7, x8
-    //memory_write('h8000_0004, 32'h003282b3); // add  x5, x5, x3
+    memory_write('h8000_0008, 32'h027302b3); // mul x5, x6, x7
 
     // PROGRAM dataSI
     memory_write('h8000_0400, 32'hdeadbee0);

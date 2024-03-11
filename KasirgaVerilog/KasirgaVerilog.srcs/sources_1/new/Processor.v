@@ -15,9 +15,6 @@ module Processor(
 
 
 wire [31:0] writebacked_result; // will be writed to available register
-
-
-
 // Output signals
 wire [6:0] opcode; // Opcode
 wire [4:0] rs1;// Source register 1
@@ -109,7 +106,7 @@ reg enable_execute2 = 1'b0;
 wire execute2_finished;
 
 
-
+/*
 // Execute2 module
 ExecuteStep2 execute2(
     .clk_i(clk_i),
@@ -117,7 +114,7 @@ ExecuteStep2 execute2(
     .enable_step_i(enable_execute2),
     .execute2_finished_o(execute2_finished)
 );
-
+*/
 // Memory stage
 reg enable_memory = 1'b0;
 wire memory_finished;
@@ -173,19 +170,12 @@ always@(posedge clk_i) begin
     begin
         enable_decode <= 1'b1;
         enable_execute1 <= 1'b0;
-        enable_execute2 <= 1'b1;
-        execute1.execute1_finished <= 1'b0;
-    end
-    else if(execute2_finished)
-    begin
-        enable_execute1 <= 1'b1;
         enable_memory <= 1'b1;
-        enable_execute2 <= 1'b0;
-        execute2.execute2_finished <= 1'b0;
+        execute1.execute1_finished <= 1'b0;
     end
     else if(memory_finished)
     begin
-        enable_execute2 <= 1'b1;
+        enable_execute1 <= 1'b1;
         enable_writeback <=1'b1;
         enable_memory <= 1'b0;
         memory.memory_finished <= 1'b0;

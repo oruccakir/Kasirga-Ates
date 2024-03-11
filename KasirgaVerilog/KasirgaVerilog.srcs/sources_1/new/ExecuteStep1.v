@@ -24,8 +24,6 @@ module ExecuteStep1 (
 
 wire [31:0] calculated_result;
 
-
-
 // ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
@@ -37,13 +35,24 @@ reg enable_control_status_unit = 1'b0; // Enable signal for control status unit
 reg enable_atomic_unit = 1'b0; // Enable signal for atomic unit
 reg enable_bit_manipulation_unit = 1'b0; // Enable signal for bit manipulation unit
 
+//results
+
+wire [31:0] calculated_alu_result;
+wire [31:0] calculated_int_mul_result;
+wire [31:0] calculated_int_div_result;
+wire [31:0] calculated_fpu_result;
+wire [31:0] calculated_branch_result;
+wire [31:0] calculated_bit_manip_result;
+wire [31:0] calculated_atomic_result;
+wire [31:0] calculated_control_status_result;
+
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
     .enable_i(enable_alu_unit),
     .operand1_i(operand1_i),
     .operand2_i(operand2_i),
     .aluOp_i(instruction_type_i),
-    .result_o(calculated_result)
+    .result_o(calculated_alu_result)
 );
 
 // Integer Multiplication Unit module
@@ -53,7 +62,7 @@ IntegerMultiplicationUnit integer_multiplication_unit(
     .enable_i(enable_integer_multiplication_unit),
     .operand1_i(operand1_i),
     .operand2_i(operand2_i),
-    .result_o(calculated_result)
+    .result_o(calculated_int_mul_result)
 );
 
 // Integer Division Unit module
@@ -63,7 +72,7 @@ IntegerDivisionUnit integer_division_unit(
     .enable_i(enable_integer_division_unit),
     .operand1_i(operand1_i),
     .operand2_i(operand2_i),
-    .result_o(calculated_result)
+    .result_o(calculated_int_div_result)
 );
 
 // Floating Point Unit module
@@ -118,66 +127,60 @@ localparam SECOND_CYCLE = 1'b1; // State for instruction result
 
 reg STATE = FIRST_CYCLE; // State for the module
 
+integer i = 1;
 
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
 always @(posedge clk_i) begin
     if(isWorking)
         begin
-            $display("EXECUTE STEP1");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("-->Executing instruction");
+                        $display("EXECUTE STEP Executing instruction");
                         $display("Type %d",instruction_type_i);
+                        $display("Instruction num %d",i);
                         $display("Unit Type %d",unit_type_i);
                         case(unit_type_i)
                         `ARITHMETIC_LOGIC_UNIT:
                             begin
-                                enable_alu_unit <= 1'b1; // Enable ALU unit
-
+                                 enable_alu_unit <= 1'b1; // Enable ALU unit
                             end
                         `INTEGER_MULTIPLICATION_UNIT:
                             begin
                                 // Enable integer multiplication unit
-                                enable_integer_multiplication_unit <= 1'b1;
- 
+                                if(enable_integer_multiplication_unit != 1'b1)
+                                    enable_integer_multiplication_unit <= 1'b1;
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
                                 // Enable integer division unit
                                 enable_integer_division_unit <= 1'b1;
-
                             end
                         `FLOATING_POINT_UNIT:
                             begin
                                 // Enable floating point unit
                                 enable_floating_point_unit <= 1'b1;
-
                             end
                         `BRANCH_RESOLVER_UNIT:
                             begin
                                 // Enable branch resolver unit 
                                 enable_branch_resolver_unit <= 1'b1;
-
                             end 
                         `CONTROL_UNIT:
                             begin
                                 // Enable control unit
                                 enable_control_unit <= 1'b1;
-
                             end
                         `CONTROL_STATUS_UNIT:
                             begin
                                 // Enable control status unit
                                 enable_control_status_unit <= 1'b1;
-
-                            end 
+                            end
                         `ATOMIC_UNIT:
                             begin
                                 // Enable atomic unit
                                 enable_atomic_unit <= 1'b1;
-
                             end
                         `BIT_MANIPULATION_UNIT:
                             begin
@@ -190,9 +193,13 @@ always @(posedge clk_i) begin
                 SECOND_CYCLE :
                     begin
                         $display("-->Execution completed");
-                        $display("Result %d",calculated_result);
+                        $display("Result ALU %d",calculated_alu_result);
+                        $display("Result MUL %d",calculated_int_mul_result);
+                        $display("Result DIV %d",calculated_int_div_result);
                         execute1_finished <= 1'b1;       // Set execute1_finished to 1
-                        enable_alu_unit <=0;
+                        enable_alu_unit <=1'b0;
+                        i=i+1;
+                        enable_integer_multiplication_unit <= 1'b0;
                         STATE <= FIRST_CYCLE;            // Go to the first cycle
                     end
             endcase
@@ -200,6 +207,8 @@ always @(posedge clk_i) begin
 end
 
 assign execute1_finished_o = execute1_finished;
-assign calculated_result_o = calculated_result;
+assign calculated_result_o = (unit_type_i == `ARITHMETIC_LOGIC_UNIT) ? calculated_alu_result : 
+                                (unit_type_i == `INTEGER_MULTIPLICATION_UNIT) ? calculated_int_mul_result : 
+                                   calculated_int_div_result;
 
 endmodule 

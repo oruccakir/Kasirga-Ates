@@ -31,14 +31,16 @@ reg [31:0] writebacked_result; // writed result
 
 assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 
+integer i = 1;
+
 always @(posedge clk_i) begin
     if(isWorking)
         begin
-            $display("WRITEBACK STEP");
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("-->Writing back to register file %d",calculated_result_i);
+                        $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i);
+                        $display("Instruction num %d",i);
                         writebacked_result <= calculated_result_i; 
                         reg_write_integer <= 1'b1;
                         STATE <= SECOND_CYCLE; // Go to the second cycle
@@ -48,6 +50,7 @@ always @(posedge clk_i) begin
                         $display("-->Writeback completed");
                         writeback_finished <= 1'b1;
                         reg_write_integer <= 1'b0;
+                        i=i+1;
                         STATE <= FIRST_CYCLE; // Go to the first cycle
                     end
             endcase

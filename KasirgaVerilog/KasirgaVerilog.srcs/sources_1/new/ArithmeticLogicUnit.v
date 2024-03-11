@@ -12,10 +12,8 @@ module ArithmeticLogicUnit (
     input wire [4:0] aluOp_i, // ALU operation
     output wire [31:0] result_o // Result
 );
-    
-// Declare the result wire
-reg [31:0] result;
-    
+
+reg [31:0] result = 32'b0;
 // Perform the operation based on the aluOp
 
 always @(posedge enable_i) begin
@@ -43,7 +41,6 @@ always @(posedge enable_i) begin
         default: result = 32'b0; // Default to 0
     endcase
 end
-
-assign result_o = result; // Assign the result to the output
+assign result_o = result;
 
 endmodule
