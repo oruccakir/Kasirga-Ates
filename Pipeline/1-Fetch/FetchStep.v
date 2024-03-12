@@ -38,7 +38,6 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE : begin
                     $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); 
-                    $display("Instruction num : %d",i);
                     STATE <= SECOND_CYCLE;
                 end
                 SECOND_CYCLE : begin

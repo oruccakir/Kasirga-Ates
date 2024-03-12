@@ -137,55 +137,60 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        $display("EXECUTE STEP Executing instruction");
-                        $display("Type %d",instruction_type_i);
-                        $display("Instruction num %d",i);
-                        $display("Unit Type %d",unit_type_i);
+                        $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                         case(unit_type_i)
                         `ARITHMETIC_LOGIC_UNIT:
                             begin
                                  enable_alu_unit <= 1'b1; // Enable ALU unit
+                                 $display("ALU Working");
                             end
                         `INTEGER_MULTIPLICATION_UNIT:
                             begin
                                 // Enable integer multiplication unit
-                                if(enable_integer_multiplication_unit != 1'b1)
-                                    enable_integer_multiplication_unit <= 1'b1;
+                                enable_integer_multiplication_unit <= 1'b1;
+                                $display("Integer Multiplication Unit working");
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
                                 // Enable integer division unit
                                 enable_integer_division_unit <= 1'b1;
+                                $display("Integer Division Unit working");
                             end
                         `FLOATING_POINT_UNIT:
                             begin
                                 // Enable floating point unit
                                 enable_floating_point_unit <= 1'b1;
+                                $display("Floating Point Unit working");
                             end
                         `BRANCH_RESOLVER_UNIT:
                             begin
                                 // Enable branch resolver unit 
                                 enable_branch_resolver_unit <= 1'b1;
+                                $display("Branch Resolver Unit working");
                             end 
                         `CONTROL_UNIT:
                             begin
                                 // Enable control unit
                                 enable_control_unit <= 1'b1;
+                                $display("Control Unit working");
                             end
                         `CONTROL_STATUS_UNIT:
                             begin
                                 // Enable control status unit
                                 enable_control_status_unit <= 1'b1;
+                                $display("Control Status Unit working");
                             end
                         `ATOMIC_UNIT:
                             begin
                                 // Enable atomic unit
                                 enable_atomic_unit <= 1'b1;
+                                $display("Atomic Unit working");
                             end
                         `BIT_MANIPULATION_UNIT:
                             begin
                                 // Enable bit manipulation unit
                                 enable_bit_manipulation_unit <= 1'b1;
+                                $display("Být Manipulation Unit working");
                             end
                         endcase
                         STATE <= SECOND_CYCLE; // Go to the second cycle
@@ -195,11 +200,11 @@ always @(posedge clk_i) begin
                         case(unit_type_i)
                         `ARITHMETIC_LOGIC_UNIT:
                             begin
-                                calculated_result <= calculated_alu_result;
+                                calculated_result = calculated_alu_result;
                             end
                         `INTEGER_MULTIPLICATION_UNIT:
                             begin
-                                calculated_result <= calculated_int_mul_result;
+                                calculated_result = calculated_int_mul_result;
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
@@ -224,9 +229,7 @@ always @(posedge clk_i) begin
                             end
                         endcase
                         $display("-->Execution completed for instruction num %d",i);
-                        $display("Result ALU %d",calculated_alu_result);
-                        $display("Result MUL %d",calculated_int_mul_result);
-                        $display("Result DIV %d",calculated_int_div_result);
+                        $display("Result after execution %d",calculated_result);
                         execute1_finished <= 1'b1;       // Set execute1_finished to 1
                         enable_alu_unit <=1'b0;
                         i=i+1;
@@ -239,5 +242,6 @@ end
 
 assign execute1_finished_o = execute1_finished;
 assign calculated_result_o = calculated_result;
+
 
 endmodule 

@@ -3,9 +3,6 @@
 // File: DecodeStep.v
 
 `include "definitions.vh";
-`include "functions.vh";
-
-
 module DecodeStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
@@ -99,7 +96,6 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i);
-                        $display("Instruction num %d",i);
                         opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                         case(opcode)
                             7'b0010011:
@@ -284,4 +280,7 @@ task generate_operand2(
             imm_generated_operand2[31:12] = 20'b1; // extend with one
     end
 endtask
+
+
+
 endmodule

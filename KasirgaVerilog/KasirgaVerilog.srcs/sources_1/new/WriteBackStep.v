@@ -40,7 +40,6 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
-                        $display("Instruction num %d",i);
                         writebacked_result <= calculated_result_i; 
                         reg_write_integer <= 1'b1;
                         STATE <= SECOND_CYCLE; // Go to the second cycle

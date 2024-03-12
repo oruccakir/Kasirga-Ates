@@ -17,7 +17,6 @@ reg [31:0] result = 32'b0;
 // Perform the operation based on the aluOp
 
 always @(posedge enable_i) begin
-    $display("ALU WORKING");
     case (aluOp_i)
         `ALU_ADD: result = operand1_i + operand2_i; // Addition
         `ALU_SUB: result = operand1_i - operand2_i; // Subtraction
