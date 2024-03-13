@@ -13,13 +13,23 @@ module ArithmeticLogicUnit (
     output wire [31:0] result_o // Result
 );
 
+wire [31:0] result_addition;
 reg [31:0] result = 32'b0;
+wire cout;
+RippleCarryAdder32 adder(
+    .a(operand1_i),
+    .b(operand2_i),
+    .sum(result_addition),
+    .cout(cout)
+);
 // Perform the operation based on the aluOp
 
 always @(posedge enable_i) begin
-    case (aluOp_i)
-        `ALU_ADD: result = operand1_i + operand2_i; // Addition
-        `ALU_SUB: result = operand1_i - operand2_i; // Subtraction
+
+    if(aluOp_i != `ALU_ADD)
+    begin
+      case (aluOp_i)
+        `ALU_SUB : result = operand1_i - operand2_i; // subtraction
         `ALU_AND: result = operand1_i & operand2_i; // Bitwise AND
         `ALU_OR: result = operand1_i | operand2_i; // Bitwise OR
         `ALU_XOR: result = operand1_i ^ operand2_i; // Bitwise XOR
@@ -38,8 +48,9 @@ always @(posedge enable_i) begin
         `ALU_SRLI : result = operand1_i >> operand2_i; // Shift right logical
         `ALU_SRAI : result = operand1_i >>> operand2_i; // Shift right arithmetic
         default: result = 32'b0; // Default to 0
-    endcase
+      endcase
+    end
 end
-assign result_o = result;
+assign result_o = (aluOp_i == `ALU_ADD) ? result_addition : result;
 
 endmodule
