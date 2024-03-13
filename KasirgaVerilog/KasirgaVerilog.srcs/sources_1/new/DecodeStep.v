@@ -11,6 +11,7 @@ module DecodeStep (
     input wire [31:0] writebacked_result_i, // writebacked result to suitable register
     input wire reg_write_integer_i, //Write data flag for integer register file
     input wire reg_write_float_i, // Write data flag for float register file
+    input wire reg_write_csr_i,  // Write data flag for csr register file
     output wire [6:0] opcode_o, // Opcode output
     output wire [4:0] rs1_o, // Source register 1 output
     output wire [4:0] rs2_o, // Source register 2 output

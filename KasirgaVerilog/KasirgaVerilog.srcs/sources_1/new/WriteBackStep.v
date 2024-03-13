@@ -11,11 +11,15 @@ module WriteBackStep (
     input wire [31:0] calculated_result_i,// it comes from other steps
     output wire writeback_finished_o, // Flag for finishing writeback step
     output wire [31:0] writebacked_result_o, // final result after all calculations
-    output wire reg_write_integer_o // flag to write integer register
+    output wire reg_write_integer_o, // flag to write integer register
+    output wire reg_write_float_o, // flag to write float register
+    output wire reg_write_csr_o //  flag to write csr register
 );
 
 // to decode
 reg reg_write_integer = 1'b0;
+reg reg_write_float = 1'b0;
+reg reg_write_csr = 1'b0;
 
  
 // WriteBackStep module implementation
@@ -59,6 +63,9 @@ end
 
 assign writeback_finished_o = writeback_finished; // Assign writeback_finished
 assign writebacked_result_o = writebacked_result; // Assign calculated result
-assign reg_write_integer_o = reg_write_integer; // Assign write flag
+assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer register
+assign reg_write_float_o = reg_write_float;     // Assign write flag for float register
+assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register
+
 endmodule
 

@@ -48,7 +48,7 @@ initial begin
     memory_write('h8000_0004, 32'h008381b3); // add  x3, x7, x8
     memory_write('h8000_0008, 32'h064a8593);  // addi x11, x21, 100
     memory_write('h8000_000c, 32'h40c457b3); //  sra x15, x8, x12
-    memory_write('h8000_000d, 32'h40c288b3); //  sub x17, x5, x12
+    memory_write('h8000_0010, 32'h40c288b3); //  sub x17, x5, x12
 
     // PROGRAM dataSI
     memory_write('h8000_0400, 32'hdeadbee0);

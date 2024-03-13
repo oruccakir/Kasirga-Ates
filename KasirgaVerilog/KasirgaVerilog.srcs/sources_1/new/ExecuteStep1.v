@@ -143,18 +143,51 @@ always @(posedge clk_i) begin
                             begin
                                  enable_alu_unit <= 1'b1; // Enable ALU unit
                                  $display("ALU Working");
+                                 case(instruction_type_i)
+                                    `ALU_ADD : $display("ADD");
+                                    `ALU_SUB: $display("SUB");
+                                    `ALU_AND: $display("AND");                            
+                                    `ALU_OR:  $display("OR");
+                                    `ALU_XOR: $display("XOR");
+                                    `ALU_SLL: $display("SLL");
+                                    `ALU_SRL: $display("SRL");
+                                    `ALU_SRA: $display("SRA");
+                                    `ALU_SLT: $display("SLT");
+                                    `ALU_SLTU: $display("SLTU");
+                                    `ALU_SLLI: $display("SLLI");
+                                    `ALU_SRLI: $display("SRLI");
+                                    `ALU_SRAI: $display("SRAI");
+                                    `ALU_ADDI: $display("ADDI");
+                                    `ALU_ANDI: $display("ANDI");
+                                    `ALU_ORI: $display("ORI");
+                                    `ALU_XORI: $display("XORI");
+                                    `ALU_SLTI: $display("SLTI");
+                                    `ALU_SLTIU: $display("SLTIU");
+                                 endcase
                             end
                         `INTEGER_MULTIPLICATION_UNIT:
                             begin
                                 // Enable integer multiplication unit
                                 enable_integer_multiplication_unit <= 1'b1;
                                 $display("Integer Multiplication Unit working");
+                                case(instruction_type_i)
+                                    `INT_MUL: $display("MUL");
+                                    `INT_MULH: $display("MULH");
+                                    `INT_MULHSU: $display("MULHSU");
+                                    `INT_MULHU: $display("MULHU");
+                                endcase
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
                                 // Enable integer division unit
                                 enable_integer_division_unit <= 1'b1;
                                 $display("Integer Division Unit working");
+                                case(instruction_type_i)
+                                    `INT_DIV: $display("DIV");
+                                    `INT_DIVU: $display("DIVU");
+                                    `INT_REM: $display("REM");
+                                    `INT_REMU: $display("REMU");
+                                endcase
                             end
                         `FLOATING_POINT_UNIT:
                             begin
@@ -190,7 +223,7 @@ always @(posedge clk_i) begin
                             begin
                                 // Enable bit manipulation unit
                                 enable_bit_manipulation_unit <= 1'b1;
-                                $display("Být Manipulation Unit working");
+                                $display("Bï¿½t Manipulation Unit working");
                             end
                         endcase
                         STATE <= SECOND_CYCLE; // Go to the second cycle

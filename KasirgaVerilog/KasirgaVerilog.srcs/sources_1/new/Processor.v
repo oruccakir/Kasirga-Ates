@@ -54,6 +54,7 @@ wire decode_finished;
 
 wire reg_write_integer; // coming from writeback
 wire reg_write_float; // coming from writeback
+wire reg_write_csr;    // coming from writeback step
 
 // Decode module
 DecodeStep decode(
@@ -64,6 +65,7 @@ DecodeStep decode(
     .writebacked_result_i(writebacked_result),
     .reg_write_integer_i(reg_write_integer),
     .reg_write_float_i(reg_write_float),
+    .reg_write_csr_i(reg_write_csr),
     .opcode_o(opcode),
     .rs1_o(rs1),
     .rs2_o(rs2),
@@ -153,7 +155,9 @@ WriteBackStep writeback(
     .calculated_result_i(calculated_result_mem),
     .writeback_finished_o(writeback_finished),
     .writebacked_result_o(writebacked_result),
-    .reg_write_integer_o(reg_write_integer)
+    .reg_write_integer_o(reg_write_integer),
+    .reg_write_float_o(reg_write_float),
+    .reg_write_csr_o(reg_write_csr)
 );
 
 always@(posedge clk_i) begin
