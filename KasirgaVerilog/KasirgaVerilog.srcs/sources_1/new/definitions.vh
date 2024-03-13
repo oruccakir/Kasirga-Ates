@@ -78,7 +78,7 @@
 `define FLT_FSGNJX              5'hD
 `define FLT_FMIN                5'hE
 `define FLT_FMAX                5'hF
-`define FLT_FCTVW               5'h10
+`define FLT_FCVTW               5'h10
 `define FLT_FCVTWU              5'h11
 `define FLT_FMVXW               5'h12
 `define FLT_FEQ                 5'h13

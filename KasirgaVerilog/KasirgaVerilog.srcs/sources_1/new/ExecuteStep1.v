@@ -13,8 +13,11 @@ module ExecuteStep1 (
     input wire [4:0] rs1_i, // Source register 1 input
     input wire [4:0] rs2_i, // Source register 2 input
     input wire [4:0] rd_i, // Destination register input
-    input wire [31:0] operand1_i, // Operand 1 input
-    input wire [31:0] operand2_i, // Operand 2 input
+    input wire [31:0] operand1_integer_i, // Operand 1 input
+    input wire [31:0] operand2_integer_i, // Operand 2 input
+    input wire [31:0] operand1_float_i,
+    input wire [31:0] operand2_float_i,
+    input wire [31:0] operand3_float_i,
     input wire [31:0] immediate_i, // Immediate input
     input wire [3:0] unit_type_i,  // for unit selection input
     input wire [4:0] instruction_type_i, // instruction type
@@ -49,8 +52,8 @@ wire [31:0] calculated_control_status_result;
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
     .enable_i(enable_alu_unit),
-    .operand1_i(operand1_i),
-    .operand2_i(operand2_i),
+    .operand1_i(operand1_integer_i),
+    .operand2_i(operand2_integer_i),
     .aluOp_i(instruction_type_i),
     .result_o(calculated_alu_result)
 );
@@ -60,8 +63,8 @@ IntegerMultiplicationUnit integer_multiplication_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_i(enable_integer_multiplication_unit),
-    .operand1_i(operand1_i),
-    .operand2_i(operand2_i),
+    .operand1_i(operand1_integer_i),
+    .operand2_i(operand2_integer_i),
     .result_o(calculated_int_mul_result)
 );
 
@@ -70,8 +73,8 @@ IntegerDivisionUnit integer_division_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_i(enable_integer_division_unit),
-    .operand1_i(operand1_i),
-    .operand2_i(operand2_i),
+    .operand1_i(operand1_integer_i),
+    .operand2_i(operand2_integer_i),
     .result_o(calculated_int_div_result)
 );
 

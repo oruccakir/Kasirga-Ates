@@ -20,8 +20,11 @@ wire [6:0] opcode; // Opcode
 wire [4:0] rs1;// Source register 1
 wire [4:0] rs2; // Source register 2 
 wire [4:0] rd; // Destination register
-wire [31:0] operand1; // Operand 1
-wire [31:0] operand2;// Operand 2 
+wire [31:0] integer_operand1; // Operand 1
+wire [31:0] integer_operand2;// Operand 2 
+wire [31:0] float_operand1;
+wire [31:0] float_operand2;
+wire [31:0] float_operand3;
 wire [31:0] immediate; // Immediate
 
 // Instruction to decode
@@ -70,8 +73,11 @@ DecodeStep decode(
     .rs1_o(rs1),
     .rs2_o(rs2),
     .rd_o(rd),
-    .operand1_o(operand1),
-    .operand2_o(operand2),
+    .integer_operand1_o(integer_operand1),
+    .integer_operand2_o(integer_operand2),
+    .float_operand1_o(float_operand1),
+    .float_operand2_o(float_operand2),
+    .float_operand3_o(float_operand3),
     .immediate_o(immediate),
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
@@ -94,8 +100,11 @@ ExecuteStep1 execute1(
     .rs1_i(rs1),
     .rs2_i(rs2),
     .rd_i(rd),
-    .operand1_i(operand1),
-    .operand2_i(operand2),
+    .operand1_integer_i(integer_operand1),
+    .operand2_integer_i(integer_operand2),
+    .operand1_float_i(float_operand1),
+    .operand2_float_i(float_operand2),
+    .operand3_float_i(float_operand3),
     .immediate_i(immediate),
     .unit_type_i(unit_type),
     .instruction_type_i(instruction_type),
