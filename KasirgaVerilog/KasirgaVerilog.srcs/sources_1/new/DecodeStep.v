@@ -24,7 +24,8 @@ module DecodeStep (
     output wire [31:0] immediate_o, // Immediate output
     output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
     output wire [4:0] instruction_type_o, // hold information of  which instruction
-    output wire decode_finished_o // Flag for finishing decode step
+    output wire decode_finished_o, // Flag for finishing decode step
+    output wire execute_activate_o
 );
 
 // Output signals
@@ -39,6 +40,8 @@ wire [31:0] operand1_float;
 wire [31:0] operand2_float;
 wire [31:0] operand3_float; // Operand 3
 reg [31:0] immediate = 32'b0; // Immediate
+
+reg execute_activate = 1'b0;
 
 reg [3:0] unit_type = 4'b0000; //default zero will be changed later
 
@@ -391,6 +394,7 @@ always @(posedge clk_i) begin
                         decode_finished <= 1'b1;         // Set the flag for finishing decode step  
                         STATE <= FIRST_CYCLE;            // Go back to the first cycle
                         i=i+1;
+                        execute_activate = 1'b1;
                     end
             endcase        
         end
@@ -409,6 +413,7 @@ assign float_operand3_o = operand3_float;
 assign immediate_o = immediate;             // Assign immediate 
 assign unit_type_o = unit_type;             // Assign unit type       
 assign instruction_type_o = instruction_type; // Assign instruction
+assign execute_activate_o = execute_activate;
 
 
 task generate_operand2(

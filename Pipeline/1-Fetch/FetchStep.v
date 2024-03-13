@@ -11,11 +11,14 @@ module FetchStep (
     input wire [31:0] instruction_i, // Instruction output
     output wire [31:0] mem_address_o, // Memory address output
     output wire fetch_finished_o, // flag for finishing fetch step
-    output wire [31:0] instruction_to_decode_o
+    output wire [31:0] instruction_to_decode_o,
+    output wire decode_activate_o
 );
 
 // decode
 reg [31:0] instruction_to_decode = 32'b0;
+
+reg decode_activate = 1'b0;
 
 
 // FetchStep module implementation
@@ -47,6 +50,7 @@ always @(posedge clk_i) begin
                     STATE <= FIRST_CYCLE;
                     program_counter <= program_counter + 4;
                     fetch_finished <= 1'b1;
+                    decode_activate = 1'b1;
                 end
             endcase
         end
@@ -55,5 +59,6 @@ end
 assign mem_address_o = program_counter;
 assign fetch_finished_o = fetch_finished;
 assign instruction_to_decode_o = instruction_to_decode;
+assign decode_activate_o = decode_activate;
 
 endmodule

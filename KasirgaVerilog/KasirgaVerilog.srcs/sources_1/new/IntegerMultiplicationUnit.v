@@ -8,24 +8,71 @@ module IntegerMultiplicationUnit(
     input wire enable_i, // Enable input
     input wire [31:0] operand1_i, // Operand 1 input
     input wire [31:0] operand2_i, // Operand 2 input 
-    output reg [31:0] result_o // Result output
+    output wire [31:0] result_o, // Result output
+    output wire is_finished_o // finish signal
 );
     
+reg [31:0] result = 32'b0;
+reg is_finished = 1'b0;
 
+wire isWorking;
+
+localparam CYCLE1 = 3'b000;
+localparam CYCLE2 = 3'b001;
+localparam CYCLE3 = 3'b010;
+localparam CYCLE4 = 3'b100;
+localparam CYCLE5 = 3'b101;
+
+reg [2:0] STATE = CYCLE1;
+
+assign isWorking = enable_i && is_finished != 1'b1; // Assign isWorking
 
 always @(posedge clk_i or posedge rst_i)
     begin
         if(rst_i)
             begin
-                result_o <= 32'b0; // Reset the result
+                result <= 32'b0; // Reset the result
             end
-        else if(enable_i)
+        else if(isWorking)
             begin
-                $display("Integer Multiplication Unit worked");
-                result_o <= operand1_i * operand2_i; // Perform the multiplication
+            
+                case(STATE)
+                    CYCLE1:
+                        begin
+                            result <= operand1_i * operand2_i; // Perform the multiplication
+                            $display("CYCLE 1");
+                            STATE = CYCLE2;
+                        end
+                    CYCLE2:
+                        begin
+                            result <= operand1_i * operand2_i; // Perform the multiplication
+                            $display("CYCLE 2");
+                            STATE = CYCLE3;
+                        end
+                    CYCLE3:
+                        begin
+                            result <= operand1_i * operand2_i; // Perform the multiplication
+                            $display("CYCLE 3");
+                            STATE = CYCLE4;
+                        end
+                    CYCLE4:
+                        begin
+                            result <= operand1_i * operand2_i; // Perform the multiplication
+                            $display("CYCLE 4");
+                            STATE = CYCLE5;
+                        end
+                    CYCLE5:
+                        begin
+                            is_finished = 1'b1;
+                            $display("CYCLE 5 END");
+                            STATE = CYCLE1;
+                        end
+                endcase
+                
             end
     end   
 
-
+assign result_o = result;
+assign is_finished_o = is_finished;
 
 endmodule

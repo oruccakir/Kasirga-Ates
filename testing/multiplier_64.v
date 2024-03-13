@@ -21,9 +21,9 @@
 
 
 module adder_64( a, b, sum, cout);
-input [31:0]a; 
-input [31:0]b;
-output [31:0]sum;
+input [63:0]a; 
+input [63:0]b;
+output [63:0]sum;
 output cout;
 
 wire t1,t2, t3,t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, t31, t32, t33, t34, t35, t36, t37, t38, t39, t40, t41, t42, t43, t44, t45, t46, t47, t48, t49, t50, t51, t52, t53, t54, t55, t56, t57, t58, t59, t60, t61, t62, t63, t64; 
@@ -58,8 +58,7 @@ fulladder f31(a[27], b[27], t27, sum[27], t28);
 fulladder f32(a[28], b[28], t28, sum[28], t29);
 fulladder f33(a[29], b[29], t29, sum[29], t30);
 fulladder f34(a[30], b[30], t30, sum[30], t31);
-fulladder f35(a[31], b[31], t31, sum[31], cout);
-/*
+fulladder f35(a[31], b[31], t31, sum[31], t32);
 fulladder f36(a[32], b[32], t32, sum[32], t33);
 fulladder f37(a[33], b[33], t33, sum[33], t34);
 fulladder f38(a[34], b[34], t34, sum[34], t35);
@@ -92,6 +91,6 @@ fulladder fdsf(a[60], b[60], t60, sum[60], t61);
 fulladder fd412(a[61], b[61], t61, sum[61], t62);
 fulladder fds(a[62], b[62], t62, sum[62], t63);
 fulladder fdf(a[63], b[63], t63, sum[63], cout);
-*/
+
 endmodule
 

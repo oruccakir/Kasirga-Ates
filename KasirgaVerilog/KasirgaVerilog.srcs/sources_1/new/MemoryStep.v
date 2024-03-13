@@ -15,9 +15,12 @@ module MemoryStep (
     output wire [31:0] mem_data_o, // Memory data output
     output wire [31:0] mem_address_o, // Memory address output
     output wire memory_finished_o, // Flag for finishing memory step
-    output wire [31:0] calculated_result_o // this will convey to writeback step
+    output wire [31:0] calculated_result_o, // this will convey to writeback step
+    output writeback_activate_o
 );
 
+
+reg writeback_activate = 1'b0;
 // MemoryStep module implementation
 
 reg [31:0] mem_data = 32'h0; // Memory data
@@ -55,6 +58,7 @@ always @(posedge clk_i) begin
                         i=i+1;
                         memory_finished <=1; // Set memory_finished to 1
                         STATE <= FIRST_CYCLE; // Go to the first cycle
+                        writeback_activate = 1'b1;
                     end
             endcase
         end
@@ -64,5 +68,6 @@ assign mem_data_o = mem_data; // Assign the memory data
 assign mem_address_o = mem_address; // Assign the memory address
 assign memory_finished_o = memory_finished;     // Assign the flag for finishing memory step
 assign calculated_result_o = calculated_result; // Assign conveyed info
+assign writeback_activate_o = writeback_activate;
 
 endmodule

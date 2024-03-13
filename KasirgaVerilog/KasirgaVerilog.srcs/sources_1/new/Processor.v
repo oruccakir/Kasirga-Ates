@@ -27,6 +27,14 @@ wire [31:0] float_operand2;
 wire [31:0] float_operand3;
 wire [31:0] immediate; // Immediate
 
+///////////////////////////
+wire fetch_activate = 1'b1;
+wire decode_activate;
+wire execute_activate;
+wire memory_activate;
+wire writeback_activate;
+//////////////////////////
+
 // Instruction to decode
 wire [31:0]instruction_to_decode;
 
@@ -48,7 +56,8 @@ FetchStep fetch(
     .instruction_i(instruction_i),
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
-    .instruction_to_decode_o(instruction_to_decode)
+    .instruction_to_decode_o(instruction_to_decode),
+    .decode_activate_o(decode_activate)
 );
 
 // Decode stage
@@ -81,7 +90,8 @@ DecodeStep decode(
     .immediate_o(immediate),
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
-    .decode_finished_o(decode_finished)
+    .decode_finished_o(decode_finished),
+    .execute_activate_o(execute_activate)
 );
 
 // Execute1 stage
@@ -109,7 +119,8 @@ ExecuteStep1 execute1(
     .unit_type_i(unit_type),
     .instruction_type_i(instruction_type),
     .calculated_result_o(calculated_result),
-    .execute1_finished_o(execute1_finished)
+    .execute1_finished_o(execute1_finished),
+    .memory_activate_o(memory_activate)
 );
 
 // Execute2 stage
@@ -149,7 +160,8 @@ MemoryStep memory(
     .mem_data_o(mem_data),
     .mem_address_o(mem_address),
     .memory_finished_o(memory_finished),
-    .calculated_result_o(calculated_result_mem)
+    .calculated_result_o(calculated_result_mem),
+    .writeback_activate_o(writeback_activate)
 );
 
 // Writeback stage
@@ -166,44 +178,51 @@ WriteBackStep writeback(
     .writebacked_result_o(writebacked_result),
     .reg_write_integer_o(reg_write_integer),
     .reg_write_float_o(reg_write_float),
-    .reg_write_csr_o(reg_write_csr)
+    .reg_write_csr_o(reg_write_csr),
+    .fetch_activate_o(fetch_activate)
 );
 
+integer i = 1;
 always@(posedge clk_i) begin
 
     if(fetch_finished)
     begin
-        enable_fetch <= 1'b0;
-        fetch.fetch_finished <= 1'b0;
-        enable_decode <= 1'b1;
+        enable_fetch = 1'b0;
+        fetch.fetch_finished = 1'b0;
+        enable_decode = 1'b1;
+        $display("DECODE ACTIVATED");
     end
     else if(decode_finished)
     begin
-        enable_execute1 <= 1'b1;
-        enable_fetch <= 1'b1;
-        enable_decode <= 1'b0; 
-        decode.decode_finished <= 1'b0;
+        enable_decode = 1'b0; 
+        decode.decode_finished = 1'b0;
+        enable_execute1 = 1'b1;
+        enable_fetch = 1'b1;
+        $display("EXECUTE ACTIVATED");
     end
     else if(execute1_finished)
     begin
-        enable_decode <= 1'b1;
         enable_execute1 <= 1'b0;
-        enable_memory <= 1'b1;
         execute1.execute1_finished <= 1'b0;
+        enable_memory <= 1'b1;
+        enable_decode <= 1'b1;
+        $display("MEMORY ACTIVATED");
     end
     else if(memory_finished)
     begin
-        enable_execute1 <= 1'b1;
-        enable_writeback <=1'b1;
         enable_memory <= 1'b0;
         memory.memory_finished <= 1'b0;
+        enable_writeback <=1'b1;
+        enable_execute1 <= 1'b1;
+        $display("WRITEBACK ACTIVATED");
     end
     else if(writeback_finished)
     begin
-        enable_memory <= 1'b1;
-        enable_fetch <= 1'b1;
         enable_writeback <= 1'b0;
         writeback.writeback_finished <= 1'b0;
+        enable_fetch <= 1'b1;
+        enable_memory <= 1'b1;
+        $display("FETCH ACTIVATED");
     end
     
 end
