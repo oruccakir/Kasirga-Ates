@@ -29,7 +29,7 @@ wire isWorking; // Flag for working
 
 reg [31:0] calculated_result = 32'b0;
 
-reg memory_finished = 1'b0; // Flag for finishing memory step
+reg memory_finished = 1'b1; // Flag for finishing memory step // impoertant change
 
 localparam FIRST_CYCLE = 1'b0; // State for desiring memory operation
 localparam SECOND_CYCLE = 1'b1; // State for memory operation result

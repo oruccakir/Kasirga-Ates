@@ -196,7 +196,7 @@ always@(posedge clk_i) begin
         enable_decode = 1'b0; 
         decode.decode_finished = 1'b0;
         enable_execute1 = 1'b1;
-        enable_fetch = 1'b1;
+        enable_fetch = 1'b1;   
     end
     else if(execute1_finished)
     begin

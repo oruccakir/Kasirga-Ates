@@ -24,7 +24,7 @@ reg reg_write_csr = 1'b0;
 
 reg fetch_activate = 1'b0;
 // WriteBackStep module implementation
-reg writeback_finished = 1'b0; // Flag for finishing writeback step
+reg writeback_finished = 1'b1; // Flag for finishing writeback step   // important change
 wire isWorking; // Flag for working
 
 localparam FIRST_CYCLE = 1'b0; // State for desiring instruction

@@ -79,7 +79,7 @@ FloatRegisterFile floatRegisterFile(
 );
 
 //Decode modul implementation
-reg decode_finished = 1'b0; // Flag for finishing decode step
+reg decode_finished = 1'b1; // Flag for finishing decode step // important change
 wire isWorking; // Flag for working
 
 localparam FIRST_CYCLE = 1'b0; // State for first cycle

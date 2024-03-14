@@ -136,7 +136,7 @@ BitManipulationUnit bit_manipulation_unit(
 
 
 // ExecuteStep1 module implementation
-reg execute1_finished = 1'b0; // Flag for finishing execute step 1
+reg execute1_finished = 1'b1; // Flag for finishing execute step 1 // important change
 wire isWorking; // Flag for working
 
 localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
