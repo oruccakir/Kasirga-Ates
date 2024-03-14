@@ -35,40 +35,8 @@ always @(posedge clk_i or posedge rst_i)
             end
         else if(isWorking)
             begin
-            
-                case(STATE)
-                    CYCLE1:
-                        begin
-                            result <= operand1_i * operand2_i; // Perform the multiplication
-                            $display("CYCLE 1");
-                            STATE = CYCLE2;
-                        end
-                    CYCLE2:
-                        begin
-                            result <= operand1_i * operand2_i; // Perform the multiplication
-                            $display("CYCLE 2");
-                            STATE = CYCLE3;
-                        end
-                    CYCLE3:
-                        begin
-                            result <= operand1_i * operand2_i; // Perform the multiplication
-                            $display("CYCLE 3");
-                            STATE = CYCLE4;
-                        end
-                    CYCLE4:
-                        begin
-                            result <= operand1_i * operand2_i; // Perform the multiplication
-                            $display("CYCLE 4");
-                            STATE = CYCLE5;
-                        end
-                    CYCLE5:
-                        begin
-                            is_finished = 1'b1;
-                            $display("CYCLE 5 END");
-                            STATE = CYCLE1;
-                        end
-                endcase
-                
+                result = operand1_i * operand2_i;
+                is_finished = 1'b1;
             end
     end   
 

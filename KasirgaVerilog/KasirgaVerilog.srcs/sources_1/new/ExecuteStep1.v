@@ -267,14 +267,13 @@ always @(posedge clk_i) begin
                                 if(finished_integer_multiplication_unit != 1'b1)
                                     begin
                                         $display("Still integer multiplication");
-                                        $display("STALL STATE Should Be run");
                                         STATE = STALL;
                                     end
                                 else
                                     begin
                                         calculated_result = calculated_int_mul_result;
-                                        integer_multiplication_unit.is_finished = 1'b0;
                                         enable_integer_multiplication_unit = 1'b0; 
+                                        integer_multiplication_unit.is_finished = 1'b0;
                                         $display("Integer Multiplication Unit Finished for instruction %d",i);
                                         $display("-->Execution completed for instruction num %d",i);
                                         $display("Result after execution %d",calculated_result);
@@ -286,7 +285,25 @@ always @(posedge clk_i) begin
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
-                                calculated_result = calculated_int_div_result;
+                                if(finished_integer_division_unit != 1'b1)
+                                    begin
+                                        $display("Still integer division");
+                                        STATE = STALL;
+                                    end
+                                else 
+                                   begin
+                                        calculated_result = calculated_int_div_result;
+                                        enable_integer_division_unit = 1'b0; 
+                                        integer_division_unit.is_finished = 1'b0;
+                                        $display("Integer Division Unit Finished for instruction %d",i);
+                                        $display("-->Execution completed for instruction num %d",i);
+                                        $display("Result after execution %d",calculated_result);
+                                        i=i+1;
+                                        execute1_finished = 1'b1; 
+                                        STATE = FIRST_CYCLE;
+                                        memory_activate = 1'b1;
+                                   end
+                                
                             end
                         `FLOATING_POINT_UNIT:
                             begin

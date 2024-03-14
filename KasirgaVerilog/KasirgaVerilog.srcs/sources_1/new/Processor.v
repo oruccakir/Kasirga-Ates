@@ -190,7 +190,6 @@ always@(posedge clk_i) begin
         enable_fetch = 1'b0;
         fetch.fetch_finished = 1'b0;
         enable_decode = 1'b1;
-        $display("DECODE ACTIVATED");
     end
     else if(decode_finished)
     begin
@@ -198,7 +197,6 @@ always@(posedge clk_i) begin
         decode.decode_finished = 1'b0;
         enable_execute1 = 1'b1;
         enable_fetch = 1'b1;
-        $display("EXECUTE ACTIVATED");
     end
     else if(execute1_finished)
     begin
@@ -206,7 +204,6 @@ always@(posedge clk_i) begin
         execute1.execute1_finished <= 1'b0;
         enable_memory <= 1'b1;
         enable_decode <= 1'b1;
-        $display("MEMORY ACTIVATED");
     end
     else if(memory_finished)
     begin
@@ -214,7 +211,6 @@ always@(posedge clk_i) begin
         memory.memory_finished <= 1'b0;
         enable_writeback <=1'b1;
         enable_execute1 <= 1'b1;
-        $display("WRITEBACK ACTIVATED");
     end
     else if(writeback_finished)
     begin
@@ -222,7 +218,6 @@ always@(posedge clk_i) begin
         writeback.writeback_finished <= 1'b0;
         enable_fetch <= 1'b1;
         enable_memory <= 1'b1;
-        $display("FETCH ACTIVATED");
     end
     
 end
