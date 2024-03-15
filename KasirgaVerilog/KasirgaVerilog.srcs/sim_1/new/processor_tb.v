@@ -50,8 +50,10 @@ initial begin
     memory_write('h8000_000c, 32'h40c457b3); //  sra x15, x8, x12
     memory_write('h8000_0010, 32'h40c288b3); //  sub x17, x5, x12
     memory_write('h8000_0014, 32'h003589b3); // add x19, x11, x3
-    memory_write('h8000_0018, 32'h09658a13); // addi x20, x11, 150
-
+   // memory_write('h8000_0018, 32'h003589b3); // add x19, x11, x3
+   // memory_write('h8000_001c, 32'h003589b3); // add x19, x11, x3
+    memory_write('h8000_0018, 32'h02f58ab3); // mul x21, x11, x15
+    memory_write('h8000_001c, 32'h02f58ab3); // mul x21, x11, x15
     // PROGRAM dataSI
     memory_write('h8000_0400, 32'hdeadbee0);
     memory_write('h8000_0404, 32'h55555555);

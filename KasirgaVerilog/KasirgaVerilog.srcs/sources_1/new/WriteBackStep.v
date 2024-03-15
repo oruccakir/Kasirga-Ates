@@ -8,15 +8,20 @@ module WriteBackStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
-    input wire [31:0] calculated_result_i,// it comes from other steps
+    input wire [31:0] calculated_result_i,// it comes from other steps,
+    
+    input wire fetch_working_info_i,
+    
     output wire writeback_finished_o, // Flag for finishing writeback step
     output wire [31:0] writebacked_result_o, // final result after all calculations
     output wire reg_write_integer_o, // flag to write integer register
     output wire reg_write_float_o, // flag to write float register
     output wire reg_write_csr_o, //  flag to write csr register
-    output wire fetch_activate_o
+    output wire fetch_activate_o,
+    output writeback_working_info_o
 );
 
+reg writeback_working_info;
 // to decode
 reg reg_write_integer = 1'b0;
 reg reg_write_float = 1'b0;
@@ -24,13 +29,13 @@ reg reg_write_csr = 1'b0;
 
 reg fetch_activate = 1'b0;
 // WriteBackStep module implementation
-reg writeback_finished = 1'b1; // Flag for finishing writeback step   // important change
+reg writeback_finished = 1'b0; // Flag for finishing writeback step   // important change
 wire isWorking; // Flag for working
 
-localparam FIRST_CYCLE = 1'b0; // State for desiring instruction
-localparam SECOND_CYCLE = 1'b1; // State for instruction result
-
-reg STATE = FIRST_CYCLE; // State for the module
+localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
+localparam SECOND_CYCLE = 3'b001; // State for instruction result
+localparam STALL = 3'b010;
+reg [2:0] STATE = FIRST_CYCLE; // State for the module
 
 reg [31:0] writebacked_result = 32'b0; // writed result
 
@@ -44,6 +49,8 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
+                        fetch_activate = 1'b0;
+                        writeback_working_info = 1'b1;
                         $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
                         writebacked_result <= calculated_result_i; 
                         reg_write_integer <= 1'b1;
@@ -51,14 +58,18 @@ always @(posedge clk_i) begin
                     end
                 SECOND_CYCLE :
                     begin
-                        $display("-->Writeback completed for instruction num %d",i);
-                        $display("Writebacked result %d",writebacked_result_o);
-                        writeback_finished <= 1'b1;
-                        reg_write_integer <= 1'b0;
-                        i=i+1;
-                        STATE <= FIRST_CYCLE; // Go to the first cycle
-                        fetch_activate = 1'b1;
+                            $display("-->Writeback completed for instruction num %d",i);
+                            $display("Writebacked result %d",writebacked_result_o);
+                            writeback_finished <= 1'b1;
+                            reg_write_integer <= 1'b0;
+                            i=i+1;
+                            STATE <= FIRST_CYCLE; // Go to the first cycle
+                            fetch_activate = 1'b1;
+                            writeback_working_info = 1'b0;
                     end
+                  STATE: begin
+                    STATE = SECOND_CYCLE;
+                  end
             endcase
         end
 end
@@ -69,6 +80,6 @@ assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer
 assign reg_write_float_o = reg_write_float;     // Assign write flag for float register
 assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register
 assign fetch_activate_o = fetch_activate;
-
+assign writeback_working_info_o = writeback_working_info;
 endmodule
 

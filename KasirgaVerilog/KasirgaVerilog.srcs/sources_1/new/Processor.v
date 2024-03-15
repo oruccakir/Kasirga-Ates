@@ -13,6 +13,12 @@ module Processor(
     output wire [31:0] mem_address_o
 );
 
+wire decode_working_info;
+wire execute_working_info;
+wire memory_working_info;
+wire writeback_working_info;
+wire fetch_working_info;
+
 
 wire [31:0] writebacked_result; // will be writed to available register
 // Output signals
@@ -29,10 +35,10 @@ wire [31:0] immediate; // Immediate
 
 ///////////////////////////
 wire fetch_activate = 1'b1;
-wire decode_activate;
-wire execute_activate;
-wire memory_activate;
-wire writeback_activate;
+wire decode_activate = 1'b0;
+wire execute_activate = 1'b0;
+wire memory_activate = 1'b0;
+wire writeback_activate = 1'b0;
 //////////////////////////
 
 // Instruction to decode
@@ -54,10 +60,12 @@ FetchStep fetch(
     .rst_i(rst_i),
     .enable_step_i(enable_fetch),
     .instruction_i(instruction_i),
+    .decode_working_info_i(decode_working_info),
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
-    .decode_activate_o(decode_activate)
+    .decode_activate_o(decode_activate),
+    .fetch_working_info_o(fetch_working_info)
 );
 
 // Decode stage
@@ -78,6 +86,7 @@ DecodeStep decode(
     .reg_write_integer_i(reg_write_integer),
     .reg_write_float_i(reg_write_float),
     .reg_write_csr_i(reg_write_csr),
+    .execute_working_info_i(execute_working_info),
     .opcode_o(opcode),
     .rs1_o(rs1),
     .rs2_o(rs2),
@@ -91,7 +100,8 @@ DecodeStep decode(
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
     .decode_finished_o(decode_finished),
-    .execute_activate_o(execute_activate)
+    .execute_activate_o(execute_activate),
+    .decode_working_info_o(decode_working_info)
 );
 
 // Execute1 stage
@@ -118,9 +128,11 @@ ExecuteStep1 execute1(
     .immediate_i(immediate),
     .unit_type_i(unit_type),
     .instruction_type_i(instruction_type),
+    .memory_working_info_i(memory_working_info),
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished),
-    .memory_activate_o(memory_activate)
+    .memory_activate_o(memory_activate),
+    .execute_working_info_o(execute_working_info)
 );
 
 // Execute2 stage
@@ -156,12 +168,14 @@ MemoryStep memory(
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
     .calculated_result_i(calculated_result),
+    .writeback_working_info_i(writeback_working_info),
     //.memOp_i(opcode),
     .mem_data_o(mem_data),
     .mem_address_o(mem_address),
     .memory_finished_o(memory_finished),
     .calculated_result_o(calculated_result_mem),
-    .writeback_activate_o(writeback_activate)
+    .writeback_activate_o(writeback_activate),
+    .memory_working_info_o(memory_working_info)
 );
 
 // Writeback stage
@@ -174,15 +188,23 @@ WriteBackStep writeback(
     .rst_i(rst_i),
     .enable_step_i(enable_writeback),
     .calculated_result_i(calculated_result_mem),
+    .fetch_working_info_i(fetch_working_info),
     .writeback_finished_o(writeback_finished),
     .writebacked_result_o(writebacked_result),
     .reg_write_integer_o(reg_write_integer),
     .reg_write_float_o(reg_write_float),
     .reg_write_csr_o(reg_write_csr),
-    .fetch_activate_o(fetch_activate)
+    .fetch_activate_o(fetch_activate),
+    .writeback_working_info_o(writeback_working_info)
 );
 
-integer i = 1;
+integer f = 1;
+integer d = 1;
+integer e = 1;
+integer m = 1;
+integer w = 1;
+
+
 always@(posedge clk_i) begin
 
     if(fetch_finished)
@@ -190,36 +212,99 @@ always@(posedge clk_i) begin
         enable_fetch = 1'b0;
         fetch.fetch_finished = 1'b0;
         enable_decode = 1'b1;
+        $display("fetch finished for instruction %d",f);
+        f=f+1;
     end
     else if(decode_finished)
     begin
         enable_decode = 1'b0; 
         decode.decode_finished = 1'b0;
         enable_execute1 = 1'b1;
-        enable_fetch = 1'b1;   
+        enable_fetch = 1'b1;
+        $display("decode finished forinstruction %d",d);
+        d = d + 1;  
     end
     else if(execute1_finished)
     begin
+        enable_execute1 = 1'b0;
+        execute1.execute1_finished = 1'b0;
+        enable_memory = 1'b1;
+        if(fetch_finished) begin
+            enable_decode = 1'b1;
+        end
+        $display("execute finished for instruction %d",e);
+        e=e+1;
+    end
+    else if(memory_finished)
+    begin
+        enable_memory = 1'b0;
+        memory.memory_finished = 1'b0;
+        enable_writeback =1'b1;
+        if(decode_finished) begin
+            enable_execute1 = 1'b1; // very important code section
+        end
+        $display("memory finished for instruction %d",m);
+        m=m+1;
+    end
+    else if(writeback_finished)
+    begin
+        enable_writeback = 1'b0;
+        writeback.writeback_finished = 1'b0;
+        enable_fetch = 1'b1;
+        if(execute1_finished) begin
+            enable_memory = 1'b1; // very important code
+        end
+        $display("writeback finished for instruction %d",w);
+        w=w+1;
+    end
+    
+end
+
+/*
+always@(posedge clk_i) begin
+    if(fetch_finished) begin
+        enable_fetch = 1'b0;
+        fetch.fetch_finished = 1'b0;
+        enable_decode = 1'b1;
+    end
+end
+
+always@(posedge clk_i) begin
+    if(decode_finished) begin
+        enable_decode = 1'b0; 
+        decode.decode_finished = 1'b0;
+        enable_execute1 = 1'b1;
+        enable_fetch = 1'b1;
+    end   
+end
+
+always@(posedge clk_i)begin
+    if(execute1_finished) begin
         enable_execute1 <= 1'b0;
         execute1.execute1_finished <= 1'b0;
         enable_memory <= 1'b1;
         enable_decode <= 1'b1;
     end
-    else if(memory_finished)
-    begin
+end
+
+always@(posedge clk_i) begin
+    if(memory_finished) begin
         enable_memory <= 1'b0;
         memory.memory_finished <= 1'b0;
         enable_writeback <=1'b1;
         enable_execute1 <= 1'b1;
     end
-    else if(writeback_finished)
-    begin
+end
+
+always@(posedge clk_i) begin
+    if(writeback_finished) begin
         enable_writeback <= 1'b0;
         writeback.writeback_finished <= 1'b0;
         enable_fetch <= 1'b1;
         enable_memory <= 1'b1;
     end
-    
 end
+*/
+
 
 endmodule

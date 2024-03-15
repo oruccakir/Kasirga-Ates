@@ -27,17 +27,40 @@ reg [2:0] STATE = CYCLE1;
 
 assign isWorking = enable_i && is_finished != 1'b1; // Assign isWorking
 
-always @(posedge clk_i or posedge rst_i)
-    begin
-        if(rst_i)
-            begin
-                result <= 32'b0; // Reset the result
-            end
-        else if(isWorking)
-            begin
-                result = operand1_i * operand2_i;
-                is_finished = 1'b1;
-            end
+always @(posedge clk_i or posedge rst_i) begin
+        if(rst_i)begin
+            result <= 32'b0; // Reset the result
+        end
+        else if(isWorking)begin
+            case(STATE)
+                CYCLE1: begin
+                    result = operand1_i * operand2_i;
+                    $display("CYCLE1");
+                    STATE = CYCLE2;
+                end
+                CYCLE2: begin
+                    result = operand1_i * operand2_i;
+                    $display("CYCLE2");
+                    STATE = CYCLE3;
+                end
+                CYCLE3: begin
+                    result = operand1_i * operand2_i;
+                    $display("CYCLE3");
+                    STATE = CYCLE4;
+                end
+                CYCLE4: begin
+                    result = operand1_i * operand2_i;
+                    $display("CYCLE4");
+                    STATE = CYCLE5;
+                end
+                CYCLE5: begin
+                    result = operand1_i * operand2_i;
+                    $display("CYCLE5");
+                    STATE = CYCLE1;
+                    is_finished <= 1'b1;
+                end
+            endcase
+        end
     end   
 
 assign result_o = result;
