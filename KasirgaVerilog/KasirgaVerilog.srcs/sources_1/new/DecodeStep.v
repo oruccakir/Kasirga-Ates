@@ -39,8 +39,8 @@ reg [4:0] rs3 = 5'b0; // Source register 3
 reg [4:0] rd = 5'b0; // Destination register
 wire [31:0] operand1_integer; // Operand 1
 wire [31:0] operand2_integer; // Operand 2 
-wire [31:0] operand1_float; 
-wire [31:0] operand2_float;
+wire [31:0] operand1_float;  // Operand 1 for float
+wire [31:0] operand2_float; // Operand 2 for float
 wire [31:0] operand3_float; // Operand 3
 reg [31:0] immediate = 32'b0; // Immediate
 
@@ -49,7 +49,7 @@ reg [3:0] unit_type = 4'b0000; //default zero will be changed later
 
 reg  [4:0] instruction_type = 5'b00000; // instruction type will be conveyed to execute step
 
-reg  [1:0] register_selection = `INTEGER_REGISTER; 
+reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for register file
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
@@ -408,15 +408,19 @@ assign rs1_o = rs1;                         // Assign source register 1
 assign rs2_o = rs2;                         // Assign source register 2
 assign rd_o = rd;                           // Assign destination register
 assign integer_operand1_o = operand1_integer;
-assign integer_operand2_o = (enable_generate)? imm_generated_operand2 : operand2_integer;
-assign float_operand1_o = operand1_float;
-assign float_operand2_o = operand2_float;
-assign float_operand3_o = operand3_float;
+assign integer_operand2_o = (enable_generate)? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction
+assign float_operand1_o = operand1_float;  // Assign float operand 1
+assign float_operand2_o = operand2_float; // Assign float operand 2
+assign float_operand3_o = operand3_float; // Assign float operand 3
 assign immediate_o = immediate;             // Assign immediate 
 assign unit_type_o = unit_type;             // Assign unit type       
 assign instruction_type_o = instruction_type; // Assign instruction
-assign decode_working_info_o = decode_working_info;
+assign decode_working_info_o = decode_working_info; // Assign decode working info
 
+/*
+    * Task to generate operand2
+    * @param instruction_i
+*/
 task generate_operand2(
     input [31:0] instruction_i
 );
