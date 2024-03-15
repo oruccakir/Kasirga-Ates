@@ -42,27 +42,25 @@ integer i = 1;
 always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
-            FIRST_CYCLE :
-                begin
-                    writeback_working_info = 1'b1;
-                    $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
-                    writebacked_result <= calculated_result_i; 
-                    reg_write_integer <= 1'b1;
-                    STATE <= SECOND_CYCLE; // Go to the second cycle
-                end
-            SECOND_CYCLE :
-                begin
-                        $display("-->Writeback completed for instruction num %d",i);
-                        $display("Writebacked result %d",writebacked_result_o);
-                        writeback_finished <= 1'b1;
-                        reg_write_integer <= 1'b0;
-                        i=i+1;
-                        STATE <= FIRST_CYCLE; // Go to the first cycle
-                        writeback_working_info = 1'b0;
-                end
-              STATE: begin
+            FIRST_CYCLE : begin
+                writeback_working_info = 1'b1;
+                $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
+                writebacked_result <= calculated_result_i; 
+                reg_write_integer <= 1'b1;
+                STATE <= SECOND_CYCLE; // Go to the second cycle
+            end
+            SECOND_CYCLE : begin
+                $display("-->Writeback completed for instruction num %d",i);
+                $display("Writebacked result %d",writebacked_result_o);
+                writeback_finished <= 1'b1;
+                reg_write_integer <= 1'b0;
+                i=i+1;
+                STATE <= FIRST_CYCLE; // Go to the first cycle
+                writeback_working_info = 1'b0;
+            end
+            STATE: begin
                 STATE = SECOND_CYCLE;
-              end
+            end
         endcase
     end
 end
