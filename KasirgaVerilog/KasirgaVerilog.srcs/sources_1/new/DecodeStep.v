@@ -53,31 +53,31 @@ reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for re
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
-    .clk_i(clk_i),
-    .rst_i(rst_i),
-    .rs1_i(rs1),
-    .rs2_i(rs2),
-    .rd_i(rd),
-    .write_data_i(writebacked_result_i),
-    .reg_write_i(reg_write_integer_i),
-    .read_data1_o(operand1_integer),
-    .read_data2_o(operand2_integer)
+    .clk_i(clk_i), // Clock input
+    .rst_i(rst_i), // Reset input
+    .rs1_i(rs1), // Source register 1   
+    .rs2_i(rs2), // Source register 2
+    .rd_i(rd), // Destination register
+    .write_data_i(writebacked_result_i), // Writebacked result
+    .reg_write_i(reg_write_integer_i), // Write data flag
+    .read_data1_o(operand1_integer),    // Operand 1
+    .read_data2_o(operand2_integer)   // Operand 2
 );
 
 
 // Float Register File module
 FloatRegisterFile floatRegisterFile(
-    .clk_i(clk_i),
-    .rst_i(rst_i),
-    .rs1_i(rs1),
-    .rs2_i(rs2),
-    .rs3_i(rs3),
-    .rd_i(rd),
-    .write_data_i(writebacked_result_i),
-    .reg_write_i(reg_write_float_i),
-    .read_data1_o(operand1_float),
-    .read_data2_o(operand2_float),
-    .read_data3_o(operand3_float)
+    .clk_i(clk_i), // Clock input
+    .rst_i(rst_i), // Reset input
+    .rs1_i(rs1), // Source register 1
+    .rs2_i(rs2), // Source register 2
+    .rs3_i(rs3), // Source register 3
+    .rd_i(rd), // Destination register
+    .write_data_i(writebacked_result_i),    // Writebacked result
+    .reg_write_i(reg_write_float_i), // Write data flag
+    .read_data1_o(operand1_float), // Operand 1
+    .read_data2_o(operand2_float), // Operand 2
+    .read_data3_o(operand3_float) // Operand 3
 );
 
 //Decode modul implementation
@@ -101,41 +101,41 @@ assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
-            FIRST_CYCLE : begin
-                decode_working_info = 1'b1;
-                $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i);
+            FIRST_CYCLE : begin // First cycle
+                decode_working_info = 1'b1; // Set the working info for decode step
+                $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i); // Display the instruction
                 opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
-                case(opcode)
+                case(opcode) // Extract the opcode
                     7'b0010011: begin
-                        register_selection <= `INTEGER_REGISTER;
+                        register_selection <= `INTEGER_REGISTER; // Set the register selection
                         rs1 <= instruction_i[19:15]; // Extract source register 1
                         rd <= instruction_i[11:7];   // Extract destination register
                         immediate <= instruction_i[31:20]; // Extract immediate
                         unit_type <= `ARITHMETIC_LOGIC_UNIT; // Set the unit type
-                        enable_generate = 1'b1;                                   
+                        enable_generate = 1'b1;    // enable generate                                
                         case(instruction_i[14:12]) // Extract the instruction type
                             3'b000 : begin
-                                 generate_operand2(instruction_i);
+                                 generate_operand2(instruction_i); // Generate operand 2
                                  instruction_type <= `ALU_ADDI; // Set the instruction type
                             end
                             3'b010 : begin 
-                                generate_operand2(instruction_i); 
+                                generate_operand2(instruction_i); // Generate operand 2
                                 instruction_type <= `ALU_SLTI; // Set the instruction type
                             end
                             3'b011 : begin 
-                                 generate_operand2(instruction_i);
+                                 generate_operand2(instruction_i); // Generate operand 2
                                 instruction_type <= `ALU_SLTIU; // Set the instruction type
                             end
                             3'b100 : begin 
-                                generate_operand2(instruction_i);
+                                generate_operand2(instruction_i); // Generate operand 2
                                 instruction_type <= `ALU_XORI; // Set the instruction type
                             end
                             3'b110 : begin 
-                                generate_operand2(instruction_i);
+                                generate_operand2(instruction_i); // Generate operand 2
                                 instruction_type <= `ALU_ORI; // Set the instruction type
                             end
                             3'b111 : begin
-                                generate_operand2(instruction_i); 
+                                generate_operand2(instruction_i);  // Generate operand 2
                                 instruction_type <= `ALU_ANDI; // Set the instruction type
                             end
                             3'b001 : instruction_type <= `ALU_SLLI; // Set the instruction type
@@ -148,8 +148,8 @@ always @(posedge clk_i) begin
                         endcase
                     end
                     7'b0110011: begin
-                        register_selection <= `INTEGER_REGISTER;
-                        enable_generate <=1'b0;
+                        register_selection <= `INTEGER_REGISTER; // Set the register selection
+                        enable_generate <=1'b0; // disable generate
                         rs1 <= instruction_i[19:15]; // Extract source register 1
                         rs2 <= instruction_i[24:20]; // Extract source register 2
                         rd <= instruction_i[11:7];   // Extract destination register
@@ -240,17 +240,17 @@ always @(posedge clk_i) begin
                        rd <= instruction_i[11:7];   // Extract destination register
                        unit_type <= `ATOMIC_UNIT;   // set unit type as atomic unit
                        case(instruction_i[31:27])
-                            5'b00010: instruction_type <= `ATOM_LOAD;
-                            5'b00011: instruction_type <= `ATOM_STORE;
-                            5'b00001: instruction_type <= `ATOM_SWAP;
-                            5'b00000: instruction_type <= `ATOM_ADD;
-                            5'b00100: instruction_type <= `ATOM_XOR;
-                            5'b01100: instruction_type <= `ATOM_AND;
-                            5'b01000: instruction_type <= `ATOM_OR;
-                            5'b10000: instruction_type <= `ATOM_MIN;
-                            5'b10100: instruction_type <= `ATOM_MAX;
-                            5'b11000: instruction_type <= `ATOM_MINU;
-                            5'b11100: instruction_type <= `ATOM_MAXU;
+                            5'b00010: instruction_type <= `ATOM_LOAD; // set instruction type
+                            5'b00011: instruction_type <= `ATOM_STORE; // set instruction type
+                            5'b00001: instruction_type <= `ATOM_SWAP;   // set instruction type
+                            5'b00000: instruction_type <= `ATOM_ADD;   // set instruction type
+                            5'b00100: instruction_type <= `ATOM_XOR;  // set instruction type
+                            5'b01100: instruction_type <= `ATOM_AND; // set instruction type
+                            5'b01000: instruction_type <= `ATOM_OR; // set instruction type
+                            5'b10000: instruction_type <= `ATOM_MIN; // set instruction type
+                            5'b10100: instruction_type <= `ATOM_MAX; // set instruction type
+                            5'b11000: instruction_type <= `ATOM_MINU; // set instruction type
+                            5'b11100: instruction_type <= `ATOM_MAXU; // set instruction type
                       endcase
                 end
                 7'b0000111: begin
@@ -258,21 +258,21 @@ always @(posedge clk_i) begin
                     rs2 <= instruction_i[24:20]; // Extract source register 2
                     rs3 <= instruction_i[31:27]; // Extract source register 3
                     rd <= instruction_i[11:7];   // Extract destination register
-                    instruction_type <= `FLT_LOAD;
-                    unit_type<= `FLOATING_POINT_UNIT;
-                    generate_operand2(instruction_i);
-                    enable_generate = 1'b1;
+                    instruction_type <= `FLT_LOAD; // set instruction type
+                    unit_type<= `FLOATING_POINT_UNIT; // set unit type
+                    generate_operand2(instruction_i); // generate operand 2
+                    enable_generate = 1'b1; // enable generate
                 end
                 7'b0100111: begin
                     rs1 <= instruction_i[19:15]; // Extract source register 1
                     rs2 <= instruction_i[24:20]; // Extract source register 2
                     rs3 <= instruction_i[31:27]; // Extract source register 3
                     rd <= instruction_i[11:7];   // Extract destination register
-                    instruction_type <= `FLT_STORE;
-                    unit_type<= `FLOATING_POINT_UNIT;
-                    imm_generated_operand2[4:0] <= instruction_i[11:7];
-                    imm_generated_operand2[11:5] <= instruction_i[31:25];
-                    if(instruction_i[31] == 1'b0)
+                    instruction_type <= `FLT_STORE; // set instruction type
+                    unit_type<= `FLOATING_POINT_UNIT; // set unit type
+                    imm_generated_operand2[4:0] <= instruction_i[11:7]; // set value
+                    imm_generated_operand2[11:5] <= instruction_i[31:25]; // set value
+                    if(instruction_i[31] == 1'b0) 
                         imm_generated_operand2[31:12] = 20'b0; // extend with zero
                     else
                         imm_generated_operand2[31:12] = 20'b1; // extend with one                               
@@ -282,8 +282,8 @@ always @(posedge clk_i) begin
                    rs2 <= instruction_i[24:20]; // Extract source register 2
                    rs3 <= instruction_i[31:27]; // Extract source register 3
                    rd <= instruction_i[11:7];   // Extract destination register
-                   instruction_type <= `FLT_FMADD;
-                   unit_type<= `FLOATING_POINT_UNIT;
+                   instruction_type <= `FLT_FMADD; // set instruction type
+                   unit_type<= `FLOATING_POINT_UNIT;    // set unit type
                end 
                7'b1000111:
                     begin
@@ -291,84 +291,84 @@ always @(posedge clk_i) begin
                        rs2 <= instruction_i[24:20]; // Extract source register 2
                        rs3 <= instruction_i[31:27]; // Extract source register 3
                        rd <= instruction_i[11:7];   // Extract destination register
-                       instruction_type <= `FLT_FMSUB; 
-                       unit_type<= `FLOATING_POINT_UNIT; 
+                       instruction_type <= `FLT_FMSUB;  // set instruction type
+                       unit_type<= `FLOATING_POINT_UNIT;  // set unit type
                     end
                7'b1001011: begin
                    rs1 <= instruction_i[19:15]; // Extract source register 1
                    rs2 <= instruction_i[24:20]; // Extract source register 2
                    rs3 <= instruction_i[31:27]; // Extract source register 3
                    rd <= instruction_i[11:7];   // Extract destination register
-                   instruction_type <= `FLT_FNMSUB; 
-                   unit_type<= `FLOATING_POINT_UNIT;                                
+                   instruction_type <= `FLT_FNMSUB;  // set instruction type
+                   unit_type<= `FLOATING_POINT_UNIT; // set unit type                                
                 end
                 7'b1001111: begin
                    rs1 <= instruction_i[19:15]; // Extract source register 1
                    rs2 <= instruction_i[24:20]; // Extract source register 2
                    rs3 <= instruction_i[31:27]; // Extract source register 3
                    rd <= instruction_i[11:7];   // Extract destination register
-                   instruction_type <= `FLT_FNMADD; 
-                   unit_type<= `FLOATING_POINT_UNIT;                                
+                   instruction_type <= `FLT_FNMADD; // set instruction type
+                   unit_type<= `FLOATING_POINT_UNIT; // set unit type                               
                 end
                 7'b1010011: begin
                    rs1 <= instruction_i[19:15]; // Extract source register 1
                    rs2 <= instruction_i[24:20]; // Extract source register 2
                    rs3 <= instruction_i[31:27]; // Extract source register 3
                    rd <= instruction_i[11:7];   // Extract destination register                           
-                   unit_type<= `FLOATING_POINT_UNIT;
+                   unit_type<= `FLOATING_POINT_UNIT; // set unit type
                    case(instruction_i[31:25])
-                        7'b0000000: instruction_type <= `FLT_FADD;
-                        7'b0000100: instruction_type <= `FLT_FSUB;
-                        7'b0001000: instruction_type <= `FLT_FMUL;
-                        7'b0001100: instruction_type <= `FLT_FDIV;
-                        7'b0101100: instruction_type <= `FLT_FSQRT;
+                        7'b0000000: instruction_type <= `FLT_FADD; // set instruction type
+                        7'b0000100: instruction_type <= `FLT_FSUB; // set instruction type
+                        7'b0001000: instruction_type <= `FLT_FMUL; // set instruction type
+                        7'b0001100: instruction_type <= `FLT_FDIV; // set instruction type
+                        7'b0101100: instruction_type <= `FLT_FSQRT; // set instruction type
                         7'b0010000:
                             begin
                                 if(instruction_i[14:12] == 3'b000)
-                                    instruction_type <= `FLT_FSGNJ;
+                                    instruction_type <= `FLT_FSGNJ; // set instruction type
                                 else if(instruction_i[14:12] == 3'b001)
-                                    instruction_type <= `FLT_FSGNJN;
-                                else 
-                                    instruction_type <= `FLT_FSGNJX;
+                                    instruction_type <= `FLT_FSGNJN;    // set instruction type
+                                else  
+                                    instruction_type <= `FLT_FSGNJX; // set instruction type
                             end
                        7'b0010100:
                             begin
                                 if(instruction_i[14:12] == 3'b000)
-                                    instruction_type <= `FLT_FMIN;
+                                    instruction_type <= `FLT_FMIN; // set instruction type
                                 else
-                                    instruction_type <= `FLT_FMAX;
+                                    instruction_type <= `FLT_FMAX; // set instruction type
                             end
                       7'b1100000:
                             begin
                                 if(instruction_i[24:20] == 5'b00000)
-                                    instruction_type <= `FLT_FCVTW;
+                                    instruction_type <= `FLT_FCVTW; // set instruction type
                                 else
-                                    instruction_type <= `FLT_FCVTWU;                                          
+                                    instruction_type <= `FLT_FCVTWU; // set instruction type                                          
                             end
                       7'b1110000:
                             begin
                                 if(instruction_i[14:12] == 3'b000)
-                                    instruction_type <= `FLT_FMVXW;
+                                    instruction_type <= `FLT_FMVXW; // set instruction type
                                 else
-                                    instruction_type <= `FLT_FCLASS;   
+                                    instruction_type <= `FLT_FCLASS;    // set instruction type
                             end
                       7'b1010000:
                             begin
                                 if(instruction_i[14:12] == 3'b010)
-                                    instruction_type <= `FLT_FEQ;
+                                    instruction_type <= `FLT_FEQ; // set instruction type
                                 else if(instruction_i[14:12] == 3'b001)
-                                    instruction_type <= `FLT_FLT;
+                                    instruction_type <= `FLT_FLT; // set instruction type
                                 else 
-                                    instruction_type <= `FLT_FLE;                   
+                                    instruction_type <= `FLT_FLE;       // set instruction type               
                             end
                       7'b1101000:
                             begin
                                 if(instruction_i[20] == 1'b0)
-                                    instruction_type <= `FLT_FCVTSW;
+                                    instruction_type <= `FLT_FCVTSW; // set instruction type
                                 else 
-                                    instruction_type <= `FLT_FCVTSWU;
+                                    instruction_type <= `FLT_FCVTSWU; // set instruction type
                             end
-                       7'b1111000: instruction_type <= `FLT_FMVWX;
+                       7'b1111000: instruction_type <= `FLT_FMVWX; // set instruction type
                    endcase                     
                   end
                 endcase
@@ -390,14 +390,14 @@ always @(posedge clk_i) begin
                         $display("--> Operand2 %d",operand2_integer);  
                         decode_finished <= 1'b1;         // Set the flag for finishing decode step  
                         STATE <= FIRST_CYCLE;            // Go back to the first cycle
-                        i=i+1;
-                        decode_working_info = 1'b0;
+                        i=i+1;                        // Increment the instruction number
+                        decode_working_info = 1'b0;     // Set the working info to 0
                     end
                 end
                 STALL : begin
-                    $display("STALL FOR DECODE");
-                    STATE = SECOND_CYCLE;
-                end
+                    $display("STALL FOR DECODE"); // Display the stall info
+                    STATE = SECOND_CYCLE; // Go to the second cycle
+                end 
             endcase        
         end
 end
