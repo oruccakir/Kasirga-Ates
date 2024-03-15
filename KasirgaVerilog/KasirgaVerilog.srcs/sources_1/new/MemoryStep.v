@@ -12,9 +12,7 @@ module MemoryStep (
     input wire mem_write_enable_i, // Memory write enable input
     input wire [3:0] memOp_i, // Memory operation input
     input wire [31:0] calculated_result_i, // this comefrom execute1 step
-    
     input wire writeback_working_info_i,
-    
     output wire [31:0] mem_data_o, // Memory data output
     output wire [31:0] mem_address_o, // Memory address output
     output wire memory_finished_o, // Flag for finishing memory step
@@ -45,42 +43,41 @@ assign isWorking = enable_step_i && memory_finished != 1'b1; // Assign isWorking
 integer i = 1;
 
 always @(posedge clk_i) begin
-    if(isWorking)
-        begin
-            $display("MEMORY STEP");
-            case(STATE)
-                FIRST_CYCLE :
-                    begin
-                        memory_working_info = 1'b1;
-                        calculated_result <= calculated_result_i;
-                        $display("-->Performing memory operation for instruction num %d",i);
-                        $display("--> INFO comes from execute step %d",calculated_result_i);
-                        STATE <= SECOND_CYCLE; // Go to the second cycle
-                    end
-                SECOND_CYCLE :
-                    begin
-                        if(writeback_working_info_i) begin
-                            $display("WRITEBACK STILL WORKING");
-                            STATE = STALL;
-                        end
-                        $display("-->Memory operation completed for instruction %d",i);
-                        i=i+1;
-                        memory_finished <=1; // Set memory_finished to 1
-                        STATE <= FIRST_CYCLE; // Go to the first cycle
-                        memory_working_info = 1'b0;
-                    end
-                STALL: begin
-                    $display("STALL FOR MEMORY");
-                    STATE = SECOND_CYCLE;
+    if(isWorking) begin
+        $display("MEMORY STEP");
+        case(STATE)
+            FIRST_CYCLE :
+                begin
+                    memory_working_info = 1'b1;
+                    calculated_result <= calculated_result_i;
+                    $display("-->Performing memory operation for instruction num %d",i);
+                    $display("--> INFO comes from execute step %d",calculated_result_i);
+                    STATE <= SECOND_CYCLE; // Go to the second cycle
                 end
-            endcase
-        end
+            SECOND_CYCLE :
+                begin
+                    if(writeback_working_info_i) begin
+                        $display("WRITEBACK STILL WORKING");
+                        STATE = STALL;
+                    end
+                    $display("-->Memory operation completed for instruction %d",i);
+                    i=i+1;
+                    memory_finished <=1; // Set memory_finished to 1
+                    STATE <= FIRST_CYCLE; // Go to the first cycle
+                    memory_working_info = 1'b0;
+                end
+            STALL: begin
+                $display("STALL FOR MEMORY");
+                STATE = SECOND_CYCLE;
+            end
+        endcase
+    end
 end
 
 assign mem_data_o = mem_data; // Assign the memory data
 assign mem_address_o = mem_address; // Assign the memory address
 assign memory_finished_o = memory_finished;     // Assign the flag for finishing memory step
 assign calculated_result_o = calculated_result; // Assign conveyed info
-assign memory_working_info_o = memory_working_info;
+assign memory_working_info_o = memory_working_info; // assign memory working info
 
 endmodule
