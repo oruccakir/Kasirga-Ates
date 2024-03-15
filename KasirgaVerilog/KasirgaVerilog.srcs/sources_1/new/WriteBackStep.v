@@ -58,7 +58,7 @@ always @(posedge clk_i) begin
                 STATE <= FIRST_CYCLE; // Go to the first cycle
                 writeback_working_info = 1'b0;
             end
-            STATE: begin
+            STALL : begin
                 STATE = SECOND_CYCLE;
             end
         endcase
