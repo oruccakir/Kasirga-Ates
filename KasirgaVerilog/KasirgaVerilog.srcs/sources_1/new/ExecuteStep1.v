@@ -27,9 +27,9 @@ module ExecuteStep1 (
     output wire execute_working_info_o
 );
 
-reg [31:0] calculated_result = 32'b0;
+reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
 
-reg execute_working_info = 1'b0;
+reg execute_working_info = 1'b0;   //  very important info for stalling 
 
 // ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
@@ -54,14 +54,14 @@ wire finished_bit_manipulation_unit;// finished signal for bit manipulation unit
 
 //results
 
-wire [31:0] calculated_alu_result;
-wire [31:0] calculated_int_mul_result;
-wire [31:0] calculated_int_div_result;
-wire [31:0] calculated_fpu_result;
-wire [31:0] calculated_branch_result;
-wire [31:0] calculated_bit_manip_result;
-wire [31:0] calculated_atomic_result;
-wire [31:0] calculated_control_status_result;
+wire [31:0] calculated_alu_result;    // alu result reg
+wire [31:0] calculated_int_mul_result; // int multiplication unit result reg
+wire [31:0] calculated_int_div_result;  // int division unit result reg
+wire [31:0] calculated_fpu_result;      // floating point unit result reg
+wire [31:0] calculated_branch_result;   // bransh resolver unit result reg
+wire [31:0] calculated_bit_manip_result;  //  bit manipulation unit result reg
+wire [31:0] calculated_atomic_result;      // atomic unit result reg
+wire [31:0] calculated_control_status_result; // control status unit result reg 
 
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
@@ -147,7 +147,7 @@ localparam END = 3'b011;          // State for end
 
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
 
-integer i = 1;
+integer i = 1; // it is just for debugging the instruction number
 
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
