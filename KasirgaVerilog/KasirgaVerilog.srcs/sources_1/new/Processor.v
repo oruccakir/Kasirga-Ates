@@ -34,11 +34,6 @@ wire [31:0] float_operand3;
 wire [31:0] immediate; // Immediate
 
 ///////////////////////////
-wire fetch_activate = 1'b1;
-wire decode_activate = 1'b0;
-wire execute_activate = 1'b0;
-wire memory_activate = 1'b0;
-wire writeback_activate = 1'b0;
 //////////////////////////
 
 // Instruction to decode
@@ -64,7 +59,6 @@ FetchStep fetch(
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
-    .decode_activate_o(decode_activate),
     .fetch_working_info_o(fetch_working_info)
 );
 
@@ -100,7 +94,6 @@ DecodeStep decode(
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
     .decode_finished_o(decode_finished),
-    .execute_activate_o(execute_activate),
     .decode_working_info_o(decode_working_info)
 );
 
@@ -131,7 +124,6 @@ ExecuteStep1 execute1(
     .memory_working_info_i(memory_working_info),
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished),
-    .memory_activate_o(memory_activate),
     .execute_working_info_o(execute_working_info)
 );
 
@@ -174,7 +166,6 @@ MemoryStep memory(
     .mem_address_o(mem_address),
     .memory_finished_o(memory_finished),
     .calculated_result_o(calculated_result_mem),
-    .writeback_activate_o(writeback_activate),
     .memory_working_info_o(memory_working_info)
 );
 
@@ -194,7 +185,6 @@ WriteBackStep writeback(
     .reg_write_integer_o(reg_write_integer),
     .reg_write_float_o(reg_write_float),
     .reg_write_csr_o(reg_write_csr),
-    .fetch_activate_o(fetch_activate),
     .writeback_working_info_o(writeback_working_info)
 );
 

@@ -9,15 +9,12 @@ module WriteBackStep (
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
     input wire [31:0] calculated_result_i,// it comes from other steps,
-    
     input wire fetch_working_info_i,
-    
     output wire writeback_finished_o, // Flag for finishing writeback step
     output wire [31:0] writebacked_result_o, // final result after all calculations
     output wire reg_write_integer_o, // flag to write integer register
     output wire reg_write_float_o, // flag to write float register
     output wire reg_write_csr_o, //  flag to write csr register
-    output wire fetch_activate_o,
     output writeback_working_info_o
 );
 
@@ -27,7 +24,6 @@ reg reg_write_integer = 1'b0;
 reg reg_write_float = 1'b0;
 reg reg_write_csr = 1'b0;
 
-reg fetch_activate = 1'b0;
 // WriteBackStep module implementation
 reg writeback_finished = 1'b0; // Flag for finishing writeback step   // important change
 wire isWorking; // Flag for working
@@ -49,7 +45,6 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        fetch_activate = 1'b0;
                         writeback_working_info = 1'b1;
                         $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
                         writebacked_result <= calculated_result_i; 
@@ -64,7 +59,6 @@ always @(posedge clk_i) begin
                             reg_write_integer <= 1'b0;
                             i=i+1;
                             STATE <= FIRST_CYCLE; // Go to the first cycle
-                            fetch_activate = 1'b1;
                             writeback_working_info = 1'b0;
                     end
                   STATE: begin
@@ -79,7 +73,6 @@ assign writebacked_result_o = writebacked_result; // Assign calculated result
 assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer register
 assign reg_write_float_o = reg_write_float;     // Assign write flag for float register
 assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register
-assign fetch_activate_o = fetch_activate;
 assign writeback_working_info_o = writeback_working_info;
 endmodule
 

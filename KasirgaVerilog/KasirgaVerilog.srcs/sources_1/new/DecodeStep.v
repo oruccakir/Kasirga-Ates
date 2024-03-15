@@ -12,9 +12,7 @@ module DecodeStep (
     input wire reg_write_integer_i, //Write data flag for integer register file
     input wire reg_write_float_i, // Write data flag for float register file
     input wire reg_write_csr_i,  // Write data flag for csr register file
-    
     input wire execute_working_info_i, // very important info for stalling
-    
     output wire [6:0] opcode_o, // Opcode output
     output wire [4:0] rs1_o, // Source register 1 output
     output wire [4:0] rs2_o, // Source register 2 output
@@ -28,7 +26,6 @@ module DecodeStep (
     output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
     output wire [4:0] instruction_type_o, // hold information of  which instruction
     output wire decode_finished_o, // Flag for finishing decode step
-    output wire execute_activate_o,
     output wire decode_working_info_o
 );
 
@@ -47,7 +44,6 @@ wire [31:0] operand2_float;
 wire [31:0] operand3_float; // Operand 3
 reg [31:0] immediate = 32'b0; // Immediate
 
-reg execute_activate = 1'b0;
 
 reg [3:0] unit_type = 4'b0000; //default zero will be changed later
 
@@ -108,7 +104,6 @@ always @(posedge clk_i) begin
             case(STATE)
                 FIRST_CYCLE :
                     begin
-                        execute_activate = 1'b0;
                         decode_working_info = 1'b1;
                         $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i);
                         opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
@@ -408,7 +403,6 @@ always @(posedge clk_i) begin
                             decode_finished <= 1'b1;         // Set the flag for finishing decode step  
                             STATE <= FIRST_CYCLE;            // Go back to the first cycle
                             i=i+1;
-                            execute_activate = 1'b1;
                             decode_working_info = 1'b0;
                         end
                     end
@@ -433,7 +427,6 @@ assign float_operand3_o = operand3_float;
 assign immediate_o = immediate;             // Assign immediate 
 assign unit_type_o = unit_type;             // Assign unit type       
 assign instruction_type_o = instruction_type; // Assign instruction
-assign execute_activate_o = execute_activate;
 assign decode_working_info_o = decode_working_info;
 
 task generate_operand2(

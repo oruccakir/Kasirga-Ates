@@ -21,20 +21,15 @@ module ExecuteStep1 (
     input wire [31:0] immediate_i, // Immediate input
     input wire [3:0] unit_type_i,  // for unit selection input
     input wire [4:0] instruction_type_i, // instruction type
-    
     input wire memory_working_info_i,
-    
     output wire [31:0] calculated_result_o, // resulted
     output wire execute1_finished_o, // Flag for finishing execute step 1
-    output wire memory_activate_o,
     output wire execute_working_info_o
 );
 
 reg [31:0] calculated_result = 32'b0;
 
 reg execute_working_info = 1'b0;
-
-reg memory_activate = 1'b0;
 
 // ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
@@ -163,7 +158,6 @@ always @(posedge clk_i) begin
                 FIRST_CYCLE :
                     begin
                         execute1_finished = 1'b0;
-                        memory_activate = 1'b0;
                         execute_working_info = 1'b1;
                         $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                         case(unit_type_i)
@@ -273,7 +267,6 @@ always @(posedge clk_i) begin
                                     $display("Result after execution %d",calculated_result);
                                     i=i+1;
                                     execute1_finished = 1'b1; 
-                                    memory_activate = 1'b1;
                                     STATE = FIRST_CYCLE;
                                     execute_working_info = 1'b0;
                                 end
@@ -299,7 +292,6 @@ always @(posedge clk_i) begin
                                             $display("Result after execution %d",calculated_result);
                                             i=i+1;
                                             STATE = FIRST_CYCLE;
-                                            memory_activate = 1'b1;
                                             execute_working_info = 1'b0;
                                             execute1_finished = 1'b1; 
                                         end
@@ -324,7 +316,6 @@ always @(posedge clk_i) begin
                                         i=i+1;
                                         execute1_finished = 1'b1; 
                                         STATE = FIRST_CYCLE;
-                                        memory_activate = 1'b1;
                                    end
                                 
                             end
@@ -359,7 +350,6 @@ end
 
 assign execute1_finished_o = execute1_finished;
 assign calculated_result_o = calculated_result;
-assign memory_activate_o = memory_activate;
 assign execute_working_info_o = execute_working_info;
 
 
