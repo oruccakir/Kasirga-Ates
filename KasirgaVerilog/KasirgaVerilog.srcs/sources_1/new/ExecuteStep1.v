@@ -77,6 +77,7 @@ IntegerMultiplicationUnit integer_multiplication_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_i(enable_integer_multiplication_unit),
+    .mulOp_i(instruction_type_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .result_o(calculated_int_mul_result),
