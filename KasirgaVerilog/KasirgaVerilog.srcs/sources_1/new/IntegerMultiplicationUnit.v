@@ -35,27 +35,18 @@ always @(posedge clk_i or posedge rst_i) begin
             case(STATE)
                 CYCLE1: begin
                     result = operand1_i * operand2_i;
-                    $display("CYCLE1");
                     STATE = CYCLE2;
                 end
                 CYCLE2: begin
-                    result = operand1_i * operand2_i;
-                    $display("CYCLE2");
                     STATE = CYCLE3;
                 end
                 CYCLE3: begin
-                    result = operand1_i * operand2_i;
-                    $display("CYCLE3");
                     STATE = CYCLE4;
                 end
                 CYCLE4: begin
-                    result = operand1_i * operand2_i;
-                    $display("CYCLE4");
                     STATE = CYCLE5;
                 end
                 CYCLE5: begin
-                    result = operand1_i * operand2_i;
-                    $display("CYCLE5");
                     STATE = CYCLE1;
                     is_finished <= 1'b1;
                 end

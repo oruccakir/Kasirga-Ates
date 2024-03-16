@@ -88,9 +88,11 @@ IntegerDivisionUnit integer_division_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_i(enable_integer_division_unit),
+    .divOp_i(instruction_type_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
-    .result_o(calculated_int_div_result)
+    .result_o(calculated_int_div_result),
+    .is_finished_o(finished_integer_division_unit)
 );
 
 // Floating Point Unit module
@@ -299,10 +301,13 @@ always @(posedge clk_i) begin
                             end
                         `INTEGER_DIVISION_UNIT:
                             begin
+                                if(memory_working_info_i) begin
+                                    STATE = STALL;
+                                end
+                                else begin
                                 if(finished_integer_division_unit != 1'b1)
                                     begin
                                         $display("Still integer division");
-                                        execute1_finished = 1'b0;
                                         STATE = STALL;
                                     end
                                 else 
@@ -316,8 +321,9 @@ always @(posedge clk_i) begin
                                         i=i+1;
                                         execute1_finished = 1'b1; 
                                         STATE = FIRST_CYCLE;
+                                        execute_working_info = 1'b0;
                                    end
-                                
+                                end
                             end
                         `FLOATING_POINT_UNIT:
                             begin

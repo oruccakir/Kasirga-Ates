@@ -103,6 +103,11 @@ always @(posedge clk_i) begin
         case(STATE)
             FIRST_CYCLE : begin // First cycle
                 decode_working_info = 1'b1; // Set the working info for decode step
+                if(execute_working_info_i) begin
+                    $display("EXECUTE STILL WORKING DECODE WAITING");
+                    STATE = STALL;
+                end
+                else begin
                 $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i); // Display the instruction
                 opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                 case(opcode) // Extract the opcode
@@ -372,31 +377,27 @@ always @(posedge clk_i) begin
                    endcase                     
                   end
                 endcase
+                
                     STATE <= SECOND_CYCLE;       // Go to the second cycle
+                    end //do not forget this
                 end
                 SECOND_CYCLE : begin
-                    if(execute_working_info_i) begin
-                        $display("EXECUTE STILL WORKING DECODE WAITING");
-                        STATE = STALL;
-                    end
-                    else begin
-                        $display("-->Decoding completed for instruction  num %d",i);
-                        $display("-->IMM %d",imm_generated_operand2);
-                        $display("-->Opcode: %b", opcode); // Display opcode
-                        $display("-->rs1: %d", rs1);       // Display source register 1
-                        $display("-->rs2: %d", rs2);       // Display source register 2
-                        $display("-->rd: %d", rd);         // Display destination register
-                        $display("--> Operand1 %d",operand1_integer);  
-                        $display("--> Operand2 %d",operand2_integer);  
-                        decode_finished <= 1'b1;         // Set the flag for finishing decode step  
-                        STATE <= FIRST_CYCLE;            // Go back to the first cycle
-                        i=i+1;                        // Increment the instruction number
-                        decode_working_info = 1'b0;     // Set the working info to 0
-                    end
+                    $display("-->Decoding completed for instruction  num %d",i);
+                    $display("-->IMM %d",imm_generated_operand2);
+                    $display("-->Opcode: %b", opcode); // Display opcode
+                    $display("-->rs1: %d", rs1);       // Display source register 1
+                    $display("-->rs2: %d", rs2);       // Display source register 2
+                    $display("-->rd: %d", rd);         // Display destination register
+                    $display("--> Operand1 %d",operand1_integer);  
+                    $display("--> Operand2 %d",operand2_integer);  
+                    decode_finished <= 1'b1;         // Set the flag for finishing decode step  
+                    STATE <= FIRST_CYCLE;            // Go back to the first cycle
+                    i=i+1;                        // Increment the instruction number
+                    decode_working_info = 1'b0;     // Set the working info to 0
                 end
                 STALL : begin
                     $display("STALL FOR DECODE"); // Display the stall info
-                    STATE = SECOND_CYCLE; // Go to the second cycle
+                    STATE = FIRST_CYCLE; // Go to the second cycle
                 end 
             endcase        
         end
