@@ -20,9 +20,9 @@ module WriteBackStep (
 
 reg writeback_working_info; // working info for writeback step
 // to decode
-reg reg_write_integer = 1'b0;
-reg reg_write_float = 1'b0;
-reg reg_write_csr = 1'b0;
+reg reg_write_integer = 1'b0; // flag to write integer register
+reg reg_write_float = 1'b0; // flag to write float register
+reg reg_write_csr = 1'b0; // flag to write csr register
 
 // WriteBackStep module implementation
 reg writeback_finished = 1'b0; // Flag for finishing writeback step   // important change
