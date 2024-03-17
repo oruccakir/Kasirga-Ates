@@ -20,7 +20,7 @@ module MemoryStep (
     output wire memory_working_info_o
 );
 
-reg memory_working_info = 1'b0;
+reg memory_working_info = 1'b0; // Working info for memory step
 
 // MemoryStep module implementation
 
@@ -28,7 +28,7 @@ reg [31:0] mem_data = 32'h0; // Memory data
 reg [31:0] mem_address = 32'h0; // Memory address
 wire isWorking; // Flag for working
 
-reg [31:0] calculated_result = 32'b0;
+reg [31:0] calculated_result = 32'b0; // Calculated result
 
 reg memory_finished = 1'b0; // Flag for finishing memory step // impoertant change
 
@@ -40,32 +40,30 @@ reg [2:0] STATE = FIRST_CYCLE; // State for the module
 
 assign isWorking = enable_step_i && memory_finished != 1'b1; // Assign isWorking
 
-integer i = 1;
+integer i = 1; // For debugging the instruction number
 
 always @(posedge clk_i) begin
     if(isWorking) begin
         $display("MEMORY STEP");
         case(STATE)
-            FIRST_CYCLE :
-                begin
-                    memory_working_info = 1'b1;
-                    calculated_result <= calculated_result_i;
-                    $display("-->Performing memory operation for instruction num %d",i);
-                    $display("--> INFO comes from execute step %d",calculated_result_i);
-                    STATE <= SECOND_CYCLE; // Go to the second cycle
+            FIRST_CYCLE:begin
+                memory_working_info = 1'b1;
+                calculated_result <= calculated_result_i;
+                $display("-->Performing memory operation for instruction num %d",i);
+                $display("--> INFO comes from execute step %d",calculated_result_i);
+                STATE <= SECOND_CYCLE; // Go to the second cycle
+            end
+            SECOND_CYCLE:begin
+                if(writeback_working_info_i) begin
+                    $display("WRITEBACK STILL WORKING");
+                    STATE = STALL;
                 end
-            SECOND_CYCLE :
-                begin
-                    if(writeback_working_info_i) begin
-                        $display("WRITEBACK STILL WORKING");
-                        STATE = STALL;
-                    end
-                    $display("-->Memory operation completed for instruction %d",i);
-                    i=i+1;
-                    memory_finished <=1; // Set memory_finished to 1
-                    STATE <= FIRST_CYCLE; // Go to the first cycle
-                    memory_working_info = 1'b0;
-                end
+                $display("-->Memory operation completed for instruction %d",i);
+                i=i+1;
+                memory_finished <=1; // Set memory_finished to 1
+                STATE <= FIRST_CYCLE; // Go to the first cycle
+                memory_working_info = 1'b0;
+            end
             STALL: begin
                 $display("STALL FOR MEMORY");
                 STATE = SECOND_CYCLE;
