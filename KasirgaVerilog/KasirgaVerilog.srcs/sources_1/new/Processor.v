@@ -7,48 +7,40 @@
 include "definitions.vh";
 
 module Processor(
-    input wire clk_i,
-    input wire rst_i,
-    input wire [31:0] instruction_i,
-    output wire [31:0] mem_address_o
+    input wire clk_i, // Clock signal
+    input wire rst_i, // Reset signal
+    input wire [31:0] instruction_i, // Instruction to be executed
+    output wire [31:0] mem_address_o // Memory address
 );
 
-wire decode_working_info;
-wire execute_working_info;
-wire memory_working_info;
-wire writeback_working_info;
-wire fetch_working_info;
+wire decode_working_info; // working info for decode stage
+wire execute_working_info; // working info for execute stage
+wire memory_working_info; // working info for memory stage
+wire writeback_working_info; // working info for writeback stage
+wire fetch_working_info; // working info for fetch stage
 
 
 wire [31:0] writebacked_result; // will be writed to available register
-// Output signals
 wire [6:0] opcode; // Opcode
 wire [4:0] rs1;// Source register 1
 wire [4:0] rs2; // Source register 2 
 wire [4:0] rd; // Destination register
-wire [31:0] integer_operand1; // Operand 1
-wire [31:0] integer_operand2;// Operand 2 
-wire [31:0] float_operand1;
-wire [31:0] float_operand2;
-wire [31:0] float_operand3;
-wire [31:0] immediate; // Immediate
-
-///////////////////////////
-//////////////////////////
-
+wire [31:0] integer_operand1; // Operand 1 in integer format
+wire [31:0] integer_operand2;// Operand 2 in integer format
+wire [31:0] float_operand1; // Operand 1 in float format
+wire [31:0] float_operand2;  // Operand 2 in float format
+wire [31:0] float_operand3; // Operand 3 in float format
+wire [31:0] immediate; // Immediate value
 // Instruction to decode
 wire [31:0]instruction_to_decode;
-
 // get instruction type
 wire [4:0] instruction_type;
-
 // get unit type
 wire [3:0] unit_type;
-
 // Processor module implementation
 // Fetch stage
-reg enable_fetch = 1'b1;
-wire fetch_finished;
+reg enable_fetch = 1'b1; // enable signal for fetch stage
+wire fetch_finished; // fetch finished signal
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -63,9 +55,8 @@ FetchStep fetch(
 );
 
 // Decode stage
-reg enable_decode = 1'b0;
-wire decode_finished;
-
+reg enable_decode = 1'b0; // enable signal for decode stage
+wire decode_finished; // decode finished signal
 wire reg_write_integer; // coming from writeback
 wire reg_write_float; // coming from writeback
 wire reg_write_csr;    // coming from writeback step
@@ -98,8 +89,8 @@ DecodeStep decode(
 );
 
 // Execute1 stage
-reg enable_execute1 = 1'b0;
-wire execute1_finished;
+reg enable_execute1 = 1'b0; // enable signal for execute1 stage
+wire execute1_finished; // execute1 finished signal
 
 wire [31:0] calculated_result; // calculated result by execute1
 
@@ -127,30 +118,16 @@ ExecuteStep1 execute1(
     .execute_working_info_o(execute_working_info)
 );
 
-// Execute2 stage
-reg enable_execute2 = 1'b0;
-wire execute2_finished;
 
-
-/*
-// Execute2 module
-ExecuteStep2 execute2(
-    .clk_i(clk_i),
-    .rst_i(rst_i),
-    .enable_step_i(enable_execute2),
-    .execute2_finished_o(execute2_finished)
-);
-*/
 // Memory stage
+wire [31:0] calculated_result_mem; // calculated result by memory
 
-wire [31:0] calculated_result_mem;
-
-reg enable_memory = 1'b0;
-wire memory_finished;
-reg mem_read_enable = 1'b0;
-reg mem_write_enable = 1'b0;
-wire [31:0] mem_data;
-wire [31:0] mem_address;
+reg enable_memory = 1'b0; // enable signal for memory stage
+wire memory_finished; // memory finished signal
+reg mem_read_enable = 1'b0; // memory read enable signal
+reg mem_write_enable = 1'b0; // memory write enable signal
+wire [31:0] mem_data; // memory data
+wire [31:0] mem_address; // memory address
 
 // Memory module
 MemoryStep memory(
@@ -170,8 +147,8 @@ MemoryStep memory(
 );
 
 // Writeback stage
-reg enable_writeback = 1'b0;
-wire writeback_finished;
+reg enable_writeback = 1'b0;    // enable signal for writeback stage
+wire writeback_finished; // writeback finished signal
 
 // Writeback module
 WriteBackStep writeback(
@@ -188,113 +165,62 @@ WriteBackStep writeback(
     .writeback_working_info_o(writeback_working_info)
 );
 
-integer f = 1;
-integer d = 1;
-integer e = 1;
-integer m = 1;
-integer w = 1;
+integer f = 1; // instruction number for fetch
+integer d = 1; // instruction number for decode
+integer e = 1; // instruction number for execute
+integer m = 1; // instruction number for memory
+integer w = 1; // instruction number for writeback
 
-
+/*
+    Working principle of the pipeline processor:
+*/
 always@(posedge clk_i) begin
 
-    if(fetch_finished)
-    begin
-        enable_fetch = 1'b0;
-        fetch.fetch_finished = 1'b0;
-        enable_decode = 1'b1;
-        $display("fetch finished for instruction %d",f);
-        f=f+1;
+    if(fetch_finished) begin
+        enable_fetch = 1'b0;     // if fetch finished, disable fetch stage
+        fetch.fetch_finished = 1'b0;  // reset fetch finished signal
+        enable_decode = 1'b1;  // enable decode stage
+        $display("fetch finished for instruction %d",f); // display the instruction number
+        f=f+1; // increment the instruction number
     end
-    else if(decode_finished)
-    begin
-        enable_decode = 1'b0; 
-        decode.decode_finished = 1'b0;
-        enable_execute1 = 1'b1;
-        enable_fetch = 1'b1;
-        $display("decode finished forinstruction %d",d);
-        d = d + 1;  
+    else if(decode_finished) begin
+        enable_decode = 1'b0;  // if decode finished, disable decode stage
+        decode.decode_finished = 1'b0; // reset decode finished signal
+        enable_execute1 = 1'b1; // enable execute1 stage
+        enable_fetch = 1'b1; // for implementing pipeline mechanism
+        $display("decode finished forinstruction %d",d); // display the instruction number
+        d = d + 1;   // increment the instruction number
     end
-    else if(execute1_finished)
-    begin
-        enable_execute1 = 1'b0;
-        execute1.execute1_finished = 1'b0;
-        enable_memory = 1'b1;
+    else if(execute1_finished) begin
+        enable_execute1 = 1'b0; // if execute1 finished, disable execute1 stage
+        execute1.execute1_finished = 1'b0; // reset execute1 finished signal
+        enable_memory = 1'b1; // enable memory stage
         if(fetch_finished) begin
-            enable_decode = 1'b1;
+            enable_decode = 1'b1; // for implementing stalling mechanism
         end
-        $display("execute finished for instruction %d",e);
-        e=e+1;
-    end
-    else if(memory_finished)
-    begin
-        enable_memory = 1'b0;
-        memory.memory_finished = 1'b0;
-        enable_writeback =1'b1;
+        $display("execute finished for instruction %d",e); // display the instruction number
+        e=e+1; // increment the instruction number
+    end 
+    else if(memory_finished) begin
+        enable_memory = 1'b0;  // if memory finished, disable memory stage
+        memory.memory_finished = 1'b0; // reset memory finished signal
+        enable_writeback =1'b1; // enable writeback stage
         if(decode_finished) begin
-            enable_execute1 = 1'b1; // very important code section
+            enable_execute1 = 1'b1;  // for implementing stalling mechanism
         end
-        $display("memory finished for instruction %d",m);
-        m=m+1;
+        $display("memory finished for instruction %d",m); // display the instruction number
+        m=m+1; // increment the instruction number
     end
-    else if(writeback_finished)
-    begin
-        enable_writeback = 1'b0;
-        writeback.writeback_finished = 1'b0;
-        enable_fetch = 1'b1;
+    else if(writeback_finished) begin
+        enable_writeback = 1'b0; // if writeback finished, disable writeback stage
+        writeback.writeback_finished = 1'b0; // reset writeback finished signal
+        enable_fetch = 1'b1; // enable fetch stage
         if(execute1_finished) begin
-            enable_memory = 1'b1; // very important code
+            enable_memory = 1'b1; // for implementing stalling mechanism
         end
         $display("writeback finished for instruction %d",w);
         w=w+1;
-    end
-    
-end
-
-/*
-always@(posedge clk_i) begin
-    if(fetch_finished) begin
-        enable_fetch = 1'b0;
-        fetch.fetch_finished = 1'b0;
-        enable_decode = 1'b1;
-    end
-end
-
-always@(posedge clk_i) begin
-    if(decode_finished) begin
-        enable_decode = 1'b0; 
-        decode.decode_finished = 1'b0;
-        enable_execute1 = 1'b1;
-        enable_fetch = 1'b1;
-    end   
-end
-
-always@(posedge clk_i)begin
-    if(execute1_finished) begin
-        enable_execute1 <= 1'b0;
-        execute1.execute1_finished <= 1'b0;
-        enable_memory <= 1'b1;
-        enable_decode <= 1'b1;
-    end
-end
-
-always@(posedge clk_i) begin
-    if(memory_finished) begin
-        enable_memory <= 1'b0;
-        memory.memory_finished <= 1'b0;
-        enable_writeback <=1'b1;
-        enable_execute1 <= 1'b1;
-    end
-end
-
-always@(posedge clk_i) begin
-    if(writeback_finished) begin
-        enable_writeback <= 1'b0;
-        writeback.writeback_finished <= 1'b0;
-        enable_fetch <= 1'b1;
-        enable_memory <= 1'b1;
-    end
-end
-*/
-
+    end  
+end // end of always block
 
 endmodule
