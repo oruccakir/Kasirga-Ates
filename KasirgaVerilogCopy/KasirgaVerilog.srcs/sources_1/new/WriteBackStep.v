@@ -19,13 +19,19 @@ module WriteBackStep (
 );
 
 reg writeback_working_info; // working info for writeback step
+reg writeback_working_info_next; // next working info for writeback step
 // to decode
 reg reg_write_integer = 1'b0; // flag to write integer register
 reg reg_write_float = 1'b0; // flag to write float register
 reg reg_write_csr = 1'b0; // flag to write csr register
 
+reg reg_write_integer_next = 1'b0; // next flag to write integer register
+reg reg_write_float_next = 1'b0; // next flag to write float register
+reg reg_write_csr_next = 1'b0; // next flag to write csr register
+
 // WriteBackStep module implementation
 reg writeback_finished = 1'b0; // Flag for finishing writeback step   // important change
+reg writeback_finished_next = 1'b0; // next flag for finishing writeback step
 wire isWorking; // Flag for working
 
 localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
@@ -34,7 +40,7 @@ localparam STALL = 3'b010;
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
 
 reg [31:0] writebacked_result = 32'b0; // writed result
-
+reg [31:0] writebacked_result_next = 32'b0; // writed result
 assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 
 integer i = 1; // For debugging the instruction number
@@ -43,25 +49,39 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
-                writeback_working_info = 1'b1;
-                $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
-                writebacked_result <= calculated_result_i; 
-                reg_write_integer <= 1'b1;
+                writeback_working_info_next = 1'b1; // Set working info next
+                $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i); // Debugging
+                writebacked_result_next = calculated_result_i; // Set writebacked result next
+                reg_write_integer_next = 1'b1; // Set reg_write_integer_next
                 STATE <= SECOND_CYCLE; // Go to the second cycle
             end
             SECOND_CYCLE : begin
-                $display("-->Writeback completed for instruction num %d",i);
-                $display("Writebacked result %d",writebacked_result_o);
-                writeback_finished <= 1'b1;
-                reg_write_integer <= 1'b0;
-                i=i+1;
-                STATE <= FIRST_CYCLE; // Go to the first cycle
-                writeback_working_info = 1'b0;
+                $display("-->Writeback completed for instruction num %d",i); // Debugging
+                $display("Writebacked result %d",writebacked_result_next); // Debugging
+                writeback_finished_next = 1'b1; // Set writeback_finished_next
+                reg_write_integer_next = 1'b0; // Set reg_write_integer_next
+                i=i+1; // For debugging the instruction number
+                STATE = FIRST_CYCLE; // Go to the first cycle
+                writeback_working_info_next = 1'b0; // Set working info next
             end
             STALL : begin
-                STATE = SECOND_CYCLE;
+                STATE = SECOND_CYCLE; // Go to the second cycle
             end
         endcase
+    end
+end
+
+/*
+*  Set the next values for the registers
+*/
+always@(posedge clk_i) begin
+    if(isWorking) begin
+        writeback_working_info_next <= writeback_working_info_next;  // Set writeback_working_info
+        reg_write_integer <= reg_write_integer_next;  // Set reg_write_integer
+        reg_write_float <= reg_write_float_next;  // Set reg_write_float
+        reg_write_csr <= reg_write_csr_next;  // Set reg_write_csr
+        writeback_finished <= writeback_finished_next; // Set writeback_finished
+        writebacked_result <= writebacked_result_next; // Set writebacked_result
     end
 end
 
