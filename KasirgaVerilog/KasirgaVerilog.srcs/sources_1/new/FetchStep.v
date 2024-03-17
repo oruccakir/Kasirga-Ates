@@ -36,8 +36,8 @@ integer i = 1; // for debugging the which instruction is fetched and conveyed
 assign isWorking = enable_step_i && fetch_finished != 1'b1;          // assign working info depending of enable and finish info
 
 always @(posedge clk_i) begin
-    if(isWorking) begin
-        case(STATE)
+    if(isWorking) begin // if working
+        case(STATE) // case for state
             FIRST_CYCLE : begin // first state
                 fetch_working_info = 1'b1; // working info for fetch step
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
@@ -62,9 +62,9 @@ always @(posedge clk_i) begin
                 $display("STALL FOR FETCH"); // debug info
                 STATE = SECOND_CYCLE; // change state to second state
             end 
-        endcase  
-    end  
-end 
+        endcase  // end of case
+    end // end of if working  
+end // end of always block
 
 assign mem_address_o = program_counter; // assign memory address to program counter
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished
