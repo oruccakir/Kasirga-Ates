@@ -53,7 +53,6 @@ wire finished_atomic_unit; // finished signal for atomic unit
 wire finished_bit_manipulation_unit;// finished signal for bit manipulation unit
 
 //results
-
 wire [31:0] calculated_alu_result;    // alu result reg
 wire [31:0] calculated_int_mul_result; // int multiplication unit result reg
 wire [31:0] calculated_int_div_result;  // int division unit result reg
@@ -146,7 +145,6 @@ wire isWorking; // Flag for working
 localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
 localparam SECOND_CYCLE = 3'b001; // State for instruction result
 localparam STALL = 3'b010;        // State for stalling the pipeline
-localparam END = 3'b011;          // State for end
 
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
 
@@ -155,117 +153,149 @@ integer i = 1; // it is just for debugging the instruction number
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
 always @(posedge clk_i) begin
-    if(isWorking)
-        begin
-            case(STATE)
-                FIRST_CYCLE :
-                    begin
-                        execute1_finished = 1'b0;
-                        execute_working_info = 1'b1;
-                        $display("EXECUTE STEP Executing instruction for instruction num %d",i);
-                        case(unit_type_i)
-                        `ARITHMETIC_LOGIC_UNIT:
-                            begin
-                                 enable_alu_unit = 1'b1; // Enable ALU unit
-                                 $display("ALU Working");
-                                 case(instruction_type_i)
-                                    `ALU_ADD : $display("ADD");
-                                    `ALU_SUB: $display("SUB");
-                                    `ALU_AND: $display("AND");                            
-                                    `ALU_OR:  $display("OR");
-                                    `ALU_XOR: $display("XOR");
-                                    `ALU_SLL: $display("SLL");
-                                    `ALU_SRL: $display("SRL");
-                                    `ALU_SRA: $display("SRA");
-                                    `ALU_SLT: $display("SLT");
-                                    `ALU_SLTU: $display("SLTU");
-                                    `ALU_SLLI: $display("SLLI");
-                                    `ALU_SRLI: $display("SRLI");
-                                    `ALU_SRAI: $display("SRAI");
-                                    `ALU_ADDI: $display("ADDI");
-                                    `ALU_ANDI: $display("ANDI");
-                                    `ALU_ORI: $display("ORI");
-                                    `ALU_XORI: $display("XORI");
-                                    `ALU_SLTI: $display("SLTI");
-                                    `ALU_SLTIU: $display("SLTIU");
-                                 endcase
-                            end
-                        `INTEGER_MULTIPLICATION_UNIT:
-                            begin
-                                // Enable integer multiplication unit
-                                enable_integer_multiplication_unit = 1'b1;
-                                $display("Integer Multiplication Unit working for instruction %d",i);
-                                case(instruction_type_i)
-                                    `INT_MUL: $display("MUL");
-                                    `INT_MULH: $display("MULH");
-                                    `INT_MULHSU: $display("MULHSU");
-                                    `INT_MULHU: $display("MULHU");
-                                endcase
-                            end
-                        `INTEGER_DIVISION_UNIT:
-                            begin
-                                // Enable integer division unit
-                                enable_integer_division_unit = 1'b1;
-                                $display("Integer Division Unit working");
-                                case(instruction_type_i)
-                                    `INT_DIV: $display("DIV");
-                                    `INT_DIVU: $display("DIVU");
-                                    `INT_REM: $display("REM");
-                                    `INT_REMU: $display("REMU");
-                                endcase
-                            end
-                        `FLOATING_POINT_UNIT:
-                            begin
-                                // Enable floating point unit
-                                enable_floating_point_unit = 1'b1;
-                                $display("Floating Point Unit working");
-                            end
-                        `BRANCH_RESOLVER_UNIT:
-                            begin
-                                // Enable branch resolver unit 
-                                enable_branch_resolver_unit = 1'b1;
-                                $display("Branch Resolver Unit working");
-                            end 
-                        `CONTROL_UNIT:
-                            begin
-                                // Enable control unit
-                                enable_control_unit = 1'b1;
-                                $display("Control Unit working");
-                            end
-                        `CONTROL_STATUS_UNIT:
-                            begin
-                                // Enable control status unit
-                                enable_control_status_unit = 1'b1;
-                                $display("Control Status Unit working");
-                            end
-                        `ATOMIC_UNIT:
-                            begin
-                                // Enable atomic unit
-                                enable_atomic_unit = 1'b1;
-                                $display("Atomic Unit working");
-                            end
-                        `BIT_MANIPULATION_UNIT:
-                            begin
-                                // Enable bit manipulation unit
-                                enable_bit_manipulation_unit = 1'b1;
-                                $display("Bit Manipulation Unit working");
-                            end
+    if(isWorking) begin
+        case(STATE)
+            FIRST_CYCLE : begin
+                execute1_finished = 1'b0;
+                execute_working_info = 1'b1;
+                $display("EXECUTE STEP Executing instruction for instruction num %d",i);
+                case(unit_type_i)
+                    `ARITHMETIC_LOGIC_UNIT: begin
+                        enable_alu_unit = 1'b1; // Enable ALU unit
+                        $display("ALU Working");
+                        case(instruction_type_i)
+                            `ALU_ADD : $display("ADD");
+                            `ALU_SUB: $display("SUB");
+                            `ALU_AND: $display("AND");                            
+                            `ALU_OR:  $display("OR");
+                            `ALU_XOR: $display("XOR");
+                            `ALU_SLL: $display("SLL");
+                            `ALU_SRL: $display("SRL");
+                            `ALU_SRA: $display("SRA");
+                            `ALU_SLT: $display("SLT");
+                            `ALU_SLTU: $display("SLTU");
+                            `ALU_SLLI: $display("SLLI");
+                            `ALU_SRLI: $display("SRLI");
+                            `ALU_SRAI: $display("SRAI");
+                            `ALU_ADDI: $display("ADDI");
+                            `ALU_ANDI: $display("ANDI");
+                            `ALU_ORI: $display("ORI");
+                            `ALU_XORI: $display("XORI");
+                            `ALU_SLTI: $display("SLTI");
+                            `ALU_SLTIU: $display("SLTIU");
                         endcase
-                        STATE = SECOND_CYCLE; // Go to the second cycle
                     end
-                SECOND_CYCLE :
-                    begin
-                        case(unit_type_i)
-                        `ARITHMETIC_LOGIC_UNIT:
-                            begin
-                                if(memory_working_info_i) begin
-                                    $display("MEMORY STILL WORKING EXECUTE WAITING");
+                    `INTEGER_MULTIPLICATION_UNIT: begin
+                        // Enable integer multiplication unit
+                        enable_integer_multiplication_unit = 1'b1;
+                        $display("Integer Multiplication Unit working for instruction %d",i);
+                        case(instruction_type_i)
+                            `INT_MUL: $display("MUL");
+                            `INT_MULH: $display("MULH");
+                            `INT_MULHSU: $display("MULHSU");
+                            `INT_MULHU: $display("MULHU");
+                        endcase
+                    end
+                    `INTEGER_DIVISION_UNIT: begin
+                        // Enable integer division unit
+                        enable_integer_division_unit = 1'b1;
+                        $display("Integer Division Unit working");
+                        case(instruction_type_i)
+                            `INT_DIV: $display("DIV");
+                            `INT_DIVU: $display("DIVU");
+                            `INT_REM: $display("REM");
+                            `INT_REMU: $display("REMU");
+                        endcase
+                    end
+                    `FLOATING_POINT_UNIT:begin
+                        // Enable floating point unit
+                        enable_floating_point_unit = 1'b1;
+                        $display("Floating Point Unit working");
+                    end
+                    `BRANCH_RESOLVER_UNIT: begin
+                        // Enable branch resolver unit 
+                        enable_branch_resolver_unit = 1'b1;
+                        $display("Branch Resolver Unit working");
+                    end 
+                    `CONTROL_UNIT: begin
+                        // Enable control unit
+                        enable_control_unit = 1'b1;
+                        $display("Control Unit working");
+                    end
+                    `CONTROL_STATUS_UNIT: begin
+                        // Enable control status unit
+                        enable_control_status_unit = 1'b1;
+                        $display("Control Status Unit working");
+                    end
+                    `ATOMIC_UNIT: begin
+                        // Enable atomic unit
+                        enable_atomic_unit = 1'b1;
+                        $display("Atomic Unit working");
+                    end
+                    `BIT_MANIPULATION_UNIT: begin
+                        // Enable bit manipulation unit
+                        enable_bit_manipulation_unit = 1'b1;
+                        $display("Bit Manipulation Unit working");
+                    end
+                endcase
+                STATE = SECOND_CYCLE; // Go to the second cycle
+            end
+            SECOND_CYCLE : begin
+                case(unit_type_i)
+                    `ARITHMETIC_LOGIC_UNIT: begin
+                        if(memory_working_info_i) begin
+                            $display("MEMORY STILL WORKING EXECUTE WAITING");
+                            STATE = STALL;
+                        end
+                        else begin
+                            calculated_result = calculated_alu_result;
+                            enable_alu_unit = 1'b0;
+                            $display("Arithmetic Logic Unit Finished");
+                            $display("-->Execution completed for instruction num %d",i);
+                            $display("Result after execution %d",calculated_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                        end
+                    end
+                    `INTEGER_MULTIPLICATION_UNIT: begin
+                        if(memory_working_info_i) begin
+                            STATE = STALL;
+                        end
+                        else begin
+                            if(finished_integer_multiplication_unit != 1'b1) begin
+                                $display("Still integer multiplication");
+                                STATE = STALL;
+                            end
+                            else begin
+                                calculated_result = calculated_int_mul_result;
+                                enable_integer_multiplication_unit = 1'b0; 
+                                integer_multiplication_unit.is_finished = 1'b0;
+                                $display("Integer Multiplication Unit Finished for instruction %d",i);
+                                $display("-->Execution completed for instruction num %d",i);
+                                $display("Result after execution %d",calculated_result);
+                                i=i+1;
+                                STATE = FIRST_CYCLE;
+                                execute_working_info = 1'b0;
+                                execute1_finished = 1'b1; 
+                            end
+                        end
+                    end
+                    `INTEGER_DIVISION_UNIT: begin
+                            if(memory_working_info_i) begin
+                                STATE = STALL;
+                            end
+                            else begin
+                                if(finished_integer_division_unit != 1'b1) begin
+                                    $display("Still integer division");
                                     STATE = STALL;
                                 end
                                 else begin
-                                    calculated_result = calculated_alu_result;
-                                    enable_alu_unit = 1'b0;
-                                    $display("Arithmetic Logic Unit Finished");
+                                    calculated_result = calculated_int_div_result;
+                                    enable_integer_division_unit = 1'b0; 
+                                    integer_division_unit.is_finished = 1'b0;
+                                    $display("Integer Division Unit Finished for instruction %d",i);
                                     $display("-->Execution completed for instruction num %d",i);
                                     $display("Result after execution %d",calculated_result);
                                     i=i+1;
@@ -274,85 +304,27 @@ always @(posedge clk_i) begin
                                     execute_working_info = 1'b0;
                                 end
                             end
-                        `INTEGER_MULTIPLICATION_UNIT:
-                            begin
-                                if(memory_working_info_i) begin
-                                    STATE = STALL;
-                                end
-                                else begin
-                                    if(finished_integer_multiplication_unit != 1'b1)
-                                        begin
-                                            $display("Still integer multiplication");
-                                            STATE = STALL;
-                                        end
-                                    else
-                                        begin
-                                            calculated_result = calculated_int_mul_result;
-                                            enable_integer_multiplication_unit = 1'b0; 
-                                            integer_multiplication_unit.is_finished = 1'b0;
-                                            $display("Integer Multiplication Unit Finished for instruction %d",i);
-                                            $display("-->Execution completed for instruction num %d",i);
-                                            $display("Result after execution %d",calculated_result);
-                                            i=i+1;
-                                            STATE = FIRST_CYCLE;
-                                            execute_working_info = 1'b0;
-                                            execute1_finished = 1'b1; 
-                                        end
-                                end
-                            end
-                        `INTEGER_DIVISION_UNIT:
-                            begin
-                                if(memory_working_info_i) begin
-                                    STATE = STALL;
-                                end
-                                else begin
-                                if(finished_integer_division_unit != 1'b1)
-                                    begin
-                                        $display("Still integer division");
-                                        STATE = STALL;
-                                    end
-                                else 
-                                   begin
-                                        calculated_result = calculated_int_div_result;
-                                        enable_integer_division_unit = 1'b0; 
-                                        integer_division_unit.is_finished = 1'b0;
-                                        $display("Integer Division Unit Finished for instruction %d",i);
-                                        $display("-->Execution completed for instruction num %d",i);
-                                        $display("Result after execution %d",calculated_result);
-                                        i=i+1;
-                                        execute1_finished = 1'b1; 
-                                        STATE = FIRST_CYCLE;
-                                        execute_working_info = 1'b0;
-                                   end
-                                end
-                            end
-                        `FLOATING_POINT_UNIT:
-                            begin
-                            end
-                        `BRANCH_RESOLVER_UNIT:
-                            begin
-                            end 
-                        `CONTROL_UNIT:
-                            begin
-                            end
-                        `CONTROL_STATUS_UNIT:
-                            begin
-                            end
-                        `ATOMIC_UNIT:
-                            begin
-                            end
-                        `BIT_MANIPULATION_UNIT:
-                            begin;
-                            end
-                        endcase
                     end
-                 STALL:
-                        begin
-                            $display("STALL FOR EXECUTE");
-                            STATE = SECOND_CYCLE;
-                        end
-            endcase
-        end
+                    `FLOATING_POINT_UNIT:begin
+                    end
+                    `BRANCH_RESOLVER_UNIT:begin
+                    end 
+                    `CONTROL_UNIT:begin
+                    end
+                    `CONTROL_STATUS_UNIT:begin
+                    end
+                    `ATOMIC_UNIT:begin
+                    end
+                    `BIT_MANIPULATION_UNIT:begin;
+                    end
+                endcase
+            end
+            STALL: begin
+                $display("STALL FOR EXECUTE");
+                STATE = SECOND_CYCLE;
+            end
+        endcase
+    end
 end
 
 assign execute1_finished_o = execute1_finished;
