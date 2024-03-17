@@ -15,10 +15,10 @@ module WriteBackStep (
     output wire reg_write_integer_o, // flag to write integer register
     output wire reg_write_float_o, // flag to write float register
     output wire reg_write_csr_o, //  flag to write csr register
-    output writeback_working_info_o
+    output writeback_working_info_o // working info for writeback step
 );
 
-reg writeback_working_info;
+reg writeback_working_info; // working info for writeback step
 // to decode
 reg reg_write_integer = 1'b0;
 reg reg_write_float = 1'b0;
@@ -37,7 +37,7 @@ reg [31:0] writebacked_result = 32'b0; // writed result
 
 assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 
-integer i = 1;
+integer i = 1; // For debugging the instruction number
 
 always @(posedge clk_i) begin
     if(isWorking) begin
@@ -70,6 +70,6 @@ assign writebacked_result_o = writebacked_result; // Assign calculated result
 assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer register
 assign reg_write_float_o = reg_write_float;     // Assign write flag for float register
 assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register
-assign writeback_working_info_o = writeback_working_info;
+assign writeback_working_info_o = writeback_working_info; // Assign working info for writeback step
 endmodule
 
