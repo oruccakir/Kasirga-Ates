@@ -76,7 +76,7 @@ end
 */
 always@(posedge clk_i) begin
     if(isWorking) begin
-        writeback_working_info_next <= writeback_working_info_next;  // Set writeback_working_info
+        writeback_working_info <= writeback_working_info_next;  // Set writeback_working_info
         reg_write_integer <= reg_write_integer_next;  // Set reg_write_integer
         reg_write_float <= reg_write_float_next;  // Set reg_write_float
         reg_write_csr <= reg_write_csr_next;  // Set reg_write_csr
