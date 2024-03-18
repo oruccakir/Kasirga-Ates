@@ -19,8 +19,8 @@ module FetchStep (
 reg fetch_working_info = 1'b0;  // working info for fetch step
 
 reg [31:0] instruction_to_decode = 32'b0; // instruction that will be convetyed to decode step
-
 // FetchStep module implementation
+
 reg [31:0] program_counter = 32'h8000_0000;  // program counter to access memory, data and instructions
 reg fetch_finished = 1'b0;       // flag for fetch finished info
 wire isWorking;                  // controling signal for working of this step
@@ -39,9 +39,9 @@ always @(posedge clk_i) begin
     if(isWorking) begin // if working
         case(STATE) // case for state
             FIRST_CYCLE : begin // first state
-                fetch_working_info = 1'b1; // working info for fetch step
+                fetch_working_info= 1'b1; // working info for fetch step
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
-                STATE = SECOND_CYCLE; // change state to second state
+                STATE <= SECOND_CYCLE; // change state to second state
             end
             SECOND_CYCLE : begin // second state
                 if(decode_working_info_i) begin // if decode step is working then stall
@@ -51,10 +51,10 @@ always @(posedge clk_i) begin
                 else begin
                     $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
                     i = i+1; // increment instruction number
-                    instruction_to_decode = instruction_i; // convey instruction to decode step
-                    STATE = FIRST_CYCLE; // change state to first state
-                    program_counter = program_counter + 4; // increment program counter
-                    fetch_finished = 1'b1; // set fetch finished info
+                    instruction_to_decode <= instruction_i; // convey instruction to decode step
+                    STATE <= FIRST_CYCLE; // change state to first state
+                    program_counter <= program_counter + 4; // increment program counter
+                    fetch_finished <= 1'b1; // set fetch finished info
                     fetch_working_info = 1'b0; // set working info to 0
                 end 
             end  
@@ -70,6 +70,5 @@ assign mem_address_o = program_counter; // assign memory address to program coun
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished
 assign instruction_to_decode_o = instruction_to_decode; // assign instruction to decode
 assign fetch_working_info_o = fetch_working_info; // assign working info to fetch working info
-
 
 endmodule
