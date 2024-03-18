@@ -2,7 +2,7 @@
 // Functionality: This module performs 32-bit integer multiplication.
 // File: FloatMultiplicationUnit.v
 
-module FloatMultiplicationUnit(
+module FloatingMultiplicationUnit(
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_i, // Enable input
