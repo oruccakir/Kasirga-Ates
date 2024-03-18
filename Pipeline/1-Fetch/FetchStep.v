@@ -19,8 +19,8 @@ module FetchStep (
 reg fetch_working_info = 1'b0;  // working info for fetch step
 
 reg [31:0] instruction_to_decode = 32'b0; // instruction that will be convetyed to decode step
-// FetchStep module implementation
 
+// FetchStep module implementation
 reg [31:0] program_counter = 32'h8000_0000;  // program counter to access memory, data and instructions
 reg fetch_finished = 1'b0;       // flag for fetch finished info
 wire isWorking;                  // controling signal for working of this step
@@ -51,9 +51,9 @@ always @(posedge clk_i) begin
                 else begin
                     $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
                     i = i+1; // increment instruction number
-                    instruction_to_decode <= instruction_i; // convey instruction to decode step
-                    STATE <= FIRST_CYCLE; // change state to first state
-                    program_counter <= program_counter + 4; // increment program counter
+                    instruction_to_decode = instruction_i; // convey instruction to decode step
+                    STATE = FIRST_CYCLE; // change state to first state
+                    program_counter = program_counter + 4; // increment program counter
                     fetch_finished <= 1'b1; // set fetch finished info
                     fetch_working_info = 1'b0; // set working info to 0
                 end 
