@@ -17,12 +17,16 @@ module FetchStep (
 );
 
 reg fetch_working_info = 1'b0;  // working info for fetch step
+reg fetch_working_info_next = 1'b0; // working info for fetch step for next cycle
 
 reg [31:0] instruction_to_decode = 32'b0; // instruction that will be convetyed to decode step
+reg [31:0] instruction_to_decode_next = 32'b0; // instruction that will be convetyed to decode step for next cycle  
 
 // FetchStep module implementation
 reg [31:0] program_counter = 32'h8000_0000;  // program counter to access memory, data and instructions
+reg [31:0] program_counter_next = 32'h8000_0000;  // program counter to access memory, data and instructions for next cycle
 reg fetch_finished = 1'b0;       // flag for fetch finished info
+reg fetch_finished_next = 1'b0;  // flag for fetch finished info for next cycle
 wire isWorking;                  // controling signal for working of this step
 
 localparam FIRST_CYCLE = 3'b000;     // first state
@@ -39,9 +43,9 @@ always @(posedge clk_i) begin
     if(isWorking) begin // if working
         case(STATE) // case for state
             FIRST_CYCLE : begin // first state
-                fetch_working_info = 1'b1; // working info for fetch step
+                fetch_working_info_next = 1'b1; // working info for fetch step
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
-                STATE <= SECOND_CYCLE; // change state to second state
+                STATE = SECOND_CYCLE; // change state to second state
             end
             SECOND_CYCLE : begin // second state
                 if(decode_working_info_i) begin // if decode step is working then stall
@@ -51,11 +55,11 @@ always @(posedge clk_i) begin
                 else begin
                     $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
                     i = i+1; // increment instruction number
-                    instruction_to_decode <= instruction_i; // convey instruction to decode step
-                    STATE <= FIRST_CYCLE; // change state to first state
-                    program_counter <= program_counter + 4; // increment program counter
-                    fetch_finished <= 1'b1; // set fetch finished info
-                    fetch_working_info = 1'b0; // set working info to 0
+                    instruction_to_decode_next = instruction_i; // convey instruction to decode step
+                    STATE = FIRST_CYCLE; // change state to first state
+                    program_counter_next = program_counter + 4; // increment program counter
+                    fetch_finished_next = 1'b1; // set fetch finished info
+                    fetch_working_info_next = 1'b0; // set working info to 0
                 end 
             end  
             STALL : begin // stall state
@@ -70,5 +74,16 @@ assign mem_address_o = program_counter; // assign memory address to program coun
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished
 assign instruction_to_decode_o = instruction_to_decode; // assign instruction to decode
 assign fetch_working_info_o = fetch_working_info; // assign working info to fetch working info
+
+always@(posedge clk_i) begin
+    if(isWorking) begin
+        fetch_working_info <= fetch_working_info_next; // assign working info to working info next
+        program_counter <= program_counter_next; // assign program counter to program counter next
+        fetch_finished <= fetch_finished_next; // assign fetch finished info to fetch finished next
+        instruction_to_decode <= instruction_to_decode_next; // assign instruction to decode to instruction to decode next
+    end
+end
+
+
 
 endmodule
