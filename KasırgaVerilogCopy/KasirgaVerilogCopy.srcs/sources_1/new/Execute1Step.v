@@ -107,7 +107,7 @@ FloatingPointUnit floating_point_unit(
     .operand2_i(operand2_float_i),
     .operand3_i(operand3_float_i),
     .floatOp_i(instruction_type_i),
-    .result_o(calculated_fpu_result),
+    .result_o(calculated_fpu_result)
 );
 
 // Branch Resolver Unit module
