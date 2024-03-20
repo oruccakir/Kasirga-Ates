@@ -102,7 +102,12 @@ IntegerDivisionUnit integer_division_unit(
 FloatingPointUnit floating_point_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_i(enable_floating_point_unit)
+    .enable_i(enable_floating_point_unit),
+    .operand1_i(operand1_float_i),
+    .operand2_i(operand2_float_i),
+    .operand3_i(operand3_float_i),
+    .floatOp_i(instruction_type_i),
+    .result_o(calculated_fpu_result),
 );
 
 // Branch Resolver Unit module
