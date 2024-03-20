@@ -28,10 +28,13 @@ module ExecuteStep1 (
 );
 
 reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
+reg [31:0] calculated_result_next = 32'b0; // reg for assign calculated result to calculated result putput
 
 reg execute_working_info = 1'b0;   //  very important info for stalling 
+reg execute_working_info_next = 1'b0; //  very important info for stalling
 
 // ALU module
+// Note this regs will not be conveyed to next stage, therefore it is not necessary to have a next reg
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
 reg enable_integer_division_unit = 1'b0; // Enable signal for integer division unit
@@ -140,6 +143,7 @@ BitManipulationUnit bit_manipulation_unit(
 
 // ExecuteStep1 module implementation
 reg execute1_finished = 1'b0; // Flag for finishing execute step 1 // important change
+reg execute1_finished_next = 1'b0; // Flag for finishing execute step 1 // important change
 wire isWorking; // Flag for working
 
 localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
@@ -147,6 +151,7 @@ localparam SECOND_CYCLE = 3'b001; // State for instruction result
 localparam STALL = 3'b010;        // State for stalling the pipeline
 
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
+reg [2:0] STATE_NEXT = FIRST_CYCLE; // Next state for the module
 
 integer i = 1; // it is just for debugging the instruction number
 
@@ -156,8 +161,16 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
-                execute1_finished = 1'b0;
-                execute_working_info = 1'b1;
+
+                // Update the next register values
+                execute1_finished_next = execute1_finished; // Assign execute1_finished to execute1_finished_next
+                execute_working_info_next = execute_working_info; // Assign execute_working_info to execute_working_info_next
+                calculated_result_next = calculated_result; // Assign calculated_result to calculated_result_next
+                STATE_NEXT = STATE; // Assign STATE to STATE_NEXT
+
+
+                execute1_finished_next = 1'b0;
+                execute_working_info_next = 1'b1;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
                     `ARITHMETIC_LOGIC_UNIT: begin
@@ -238,70 +251,70 @@ always @(posedge clk_i) begin
                         $display("Bit Manipulation Unit working");
                     end
                 endcase
-                STATE = SECOND_CYCLE; // Go to the second cycle
+                STATE_NEXT = SECOND_CYCLE; // Go to the second cycle
             end
             SECOND_CYCLE : begin
                 case(unit_type_i)
                     `ARITHMETIC_LOGIC_UNIT: begin
                         if(memory_working_info_i) begin
                             $display("MEMORY STILL WORKING EXECUTE WAITING");
-                            STATE = STALL;
+                            STATE_NEXT = STALL;
                         end
                         else begin
-                            calculated_result = calculated_alu_result;
+                            calculated_result_next = calculated_alu_result;
                             enable_alu_unit = 1'b0;
                             $display("Arithmetic Logic Unit Finished");
                             $display("-->Execution completed for instruction num %d",i);
                             $display("Result after execution %d",calculated_result);
                             i=i+1;
-                            execute1_finished = 1'b1; 
-                            STATE = FIRST_CYCLE;
-                            execute_working_info = 1'b0;
+                            execute1_finished_next = 1'b1; 
+                            STATE_NEXT = FIRST_CYCLE;
+                            execute_working_info_next = 1'b0;
                         end
                     end
                     `INTEGER_MULTIPLICATION_UNIT: begin
                         if(memory_working_info_i) begin
-                            STATE = STALL;
+                            STATE_NEXT = STALL;
                         end
                         else begin
                             if(finished_integer_multiplication_unit != 1'b1) begin
                                 $display("Still integer multiplication");
-                                STATE = STALL;
+                                STATE_NEXT = STALL;
                             end
                             else begin
-                                calculated_result = calculated_int_mul_result;
+                                calculated_result_next = calculated_int_mul_result;
                                 enable_integer_multiplication_unit = 1'b0; 
                                 integer_multiplication_unit.is_finished = 1'b0;
                                 $display("Integer Multiplication Unit Finished for instruction %d",i);
                                 $display("-->Execution completed for instruction num %d",i);
                                 $display("Result after execution %d",calculated_result);
                                 i=i+1;
-                                STATE = FIRST_CYCLE;
-                                execute_working_info = 1'b0;
-                                execute1_finished = 1'b1; 
+                                STATE_NEXT = FIRST_CYCLE;
+                                execute_working_info_next = 1'b0;
+                                execute1_finished_next = 1'b1; 
                             end
                         end
                     end
                     `INTEGER_DIVISION_UNIT: begin
                             if(memory_working_info_i) begin
-                                STATE = STALL;
+                                STATE_NEXT = STALL;
                             end
                             else begin
                                 if(finished_integer_division_unit != 1'b1) begin
                                     $display("Still integer division");
-                                    STATE = STALL;
+                                    STATE_NEXT = STALL;
                                 end
                                 else begin
-                                    calculated_result = calculated_int_div_result;
+                                    calculated_result_next = calculated_int_div_result;
                                     enable_integer_division_unit = 1'b0; 
                                     integer_division_unit.is_finished = 1'b0;
                                     $display("Integer Division Unit Finished for instruction %d",i);
                                     $display("-->Execution completed for instruction num %d",i);
                                     $display("Result after execution %d",calculated_result);
                                     i=i+1;
-                                    execute1_finished = 1'b1; 
-                                    STATE = FIRST_CYCLE;
-                                    execute_working_info = 1'b0;
+                                    execute1_finished_next = 1'b1; 
+                                    STATE_NEXT = FIRST_CYCLE;
+                                    execute_working_info_next = 1'b0;
                                 end
                             end
                     end
@@ -321,9 +334,19 @@ always @(posedge clk_i) begin
             end
             STALL: begin
                 $display("STALL FOR EXECUTE");
-                STATE = SECOND_CYCLE;
+                STATE_NEXT = SECOND_CYCLE;
             end
         endcase
+    end
+end
+
+// Update the register values
+always @(posedge clk_i) begin
+    if(isWorking) begin
+        execute1_finished <= execute1_finished_next;
+        execute_working_info <= execute_working_info_next;
+        calculated_result <= calculated_result_next;
+        STATE <= STATE_NEXT;
     end
 end
 
