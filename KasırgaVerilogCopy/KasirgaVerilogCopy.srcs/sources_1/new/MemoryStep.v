@@ -48,7 +48,7 @@ assign isWorking = enable_step_i && memory_finished != 1'b1; // Assign isWorking
 
 integer i = 1; // For debugging the instruction number
 
-always @(posedge clk_i) begin
+always @(*) begin
     if(isWorking) begin
         $display("MEMORY STEP");
         case(STATE)

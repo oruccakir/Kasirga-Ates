@@ -111,7 +111,7 @@ integer i = 1; // debugging for which instruction decoded
 assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 
 // Decode module implementation
-always @(posedge clk_i) begin
+always @(*) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin // First cycle
@@ -434,20 +434,36 @@ always @(posedge clk_i) begin
 end
 
 always@(posedge clk_i) begin
-    if(isWorking) begin
-        opcode <= opcode_next; // Assign next opcode to opcode
-        rs1 <= rs1_next; // Assign next source register 1 to source register 1
-        rs2 <= rs2_next; // Assign next source register 2 to source register 2
-        rs3 <= rs3_next; // Assign next source register 3 to source register 3
-        rd <= rd_next; // Assign next destination register to destination register
-        immediate <= immediate_next; // Assign next immediate to immediate
-        unit_type <= unit_type_next; // Assign next unit type to unit type
-        instruction_type <= instruction_type_next; // Assign next instruction type to instruction type
-        imm_generated_operand2 <= imm_generated_operand2_next; // Assign next imm generated operand2 to imm generated operand2
-        decode_finished <= decode_finished_next; // Assign next decode finished to decode finished
-        register_selection <= register_selection_next; // Assign next register selection to register selection
-        decode_working_info <= decode_working_info_next; // Assign next decode working info to decode working info
-        STATE <= STATE_NEXT; // Assign next state to state
+    if(rst_i) begin
+        opcode <= 7'b0; // Assign opcode to 0
+        rs1 <= 5'b0; // Assign source register 1 to 0
+        rs2 <= 5'b0; // Assign source register 2 to 0
+        rs3 <= 5'b0; // Assign source register 3 to 0
+        rd <= 5'b0; // Assign destination register to 0
+        immediate <= 32'b0; // Assign immediate to 0
+        unit_type <= 4'b0000; // Assign unit type to 0
+        instruction_type <= 5'b00000; // Assign instruction type to 0
+        imm_generated_operand2 <= 32'b0; // Assign imm generated operand2 to 0
+        decode_finished <= 1'b0; // Assign decode finished to 0
+        decode_working_info <= 1'b0; // Assign decode working info to 0
+        STATE <= FIRST_CYCLE; // Assign state to first cycle
+    end
+    else begin
+        if(isWorking) begin
+            opcode <= opcode_next; // Assign next opcode to opcode
+            rs1 <= rs1_next; // Assign next source register 1 to source register 1
+            rs2 <= rs2_next; // Assign next source register 2 to source register 2
+            rs3 <= rs3_next; // Assign next source register 3 to source register 3
+            rd <= rd_next; // Assign next destination register to destination register
+            immediate <= immediate_next; // Assign next immediate to immediate
+            unit_type <= unit_type_next; // Assign next unit type to unit type
+            instruction_type <= instruction_type_next; // Assign next instruction type to instruction type
+            imm_generated_operand2 <= imm_generated_operand2_next; // Assign next imm generated operand2 to imm generated operand2
+            decode_finished <= decode_finished_next; // Assign next decode finished to decode finished
+            register_selection <= register_selection_next; // Assign next register selection to register selection
+            decode_working_info <= decode_working_info_next; // Assign next decode working info to decode working info
+            STATE <= STATE_NEXT; // Assign next state to state
+        end
     end
 end
    

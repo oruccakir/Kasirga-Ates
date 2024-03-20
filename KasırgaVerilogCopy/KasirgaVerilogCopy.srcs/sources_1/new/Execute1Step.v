@@ -157,7 +157,7 @@ integer i = 1; // it is just for debugging the instruction number
 
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
-always @(posedge clk_i) begin
+always @(*) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
@@ -287,7 +287,7 @@ always @(posedge clk_i) begin
                                 integer_multiplication_unit.is_finished = 1'b0;
                                 $display("Integer Multiplication Unit Finished for instruction %d",i);
                                 $display("-->Execution completed for instruction num %d",i);
-                                $display("Result after execution %d",calculated_result);
+                                $display("Result after execution %d",calculated_result_next);
                                 i=i+1;
                                 STATE_NEXT = FIRST_CYCLE;
                                 execute_working_info_next = 1'b0;
@@ -310,7 +310,7 @@ always @(posedge clk_i) begin
                                     integer_division_unit.is_finished = 1'b0;
                                     $display("Integer Division Unit Finished for instruction %d",i);
                                     $display("-->Execution completed for instruction num %d",i);
-                                    $display("Result after execution %d",calculated_result);
+                                    $display("Result after execution %d",calculated_result_next);
                                     i=i+1;
                                     execute1_finished_next = 1'b1; 
                                     STATE_NEXT = FIRST_CYCLE;
@@ -342,11 +342,19 @@ end
 
 // Update the register values
 always @(posedge clk_i) begin
-    if(isWorking) begin
-        execute1_finished <= execute1_finished_next;
-        execute_working_info <= execute_working_info_next;
-        calculated_result <= calculated_result_next;
-        STATE <= STATE_NEXT;
+    if(rst_i) begin
+        calculated_result <= 32'b0;
+        execute1_finished <= 1'b0;
+        execute_working_info <= 1'b0;
+        STATE <= FIRST_CYCLE;
+    end
+    else begin
+        if(isWorking) begin
+            execute1_finished <= execute1_finished_next;
+            execute_working_info <= execute_working_info_next;
+            calculated_result <= calculated_result_next;
+            STATE <= STATE_NEXT;
+        end
     end
 end
 

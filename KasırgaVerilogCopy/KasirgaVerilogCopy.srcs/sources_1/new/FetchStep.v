@@ -38,12 +38,10 @@ integer i = 1; // for debugging the which instruction is fetched and conveyed
 
 assign isWorking = enable_step_i && fetch_finished != 1'b1;          // assign working info depending of enable and finish info
 
-always @(posedge clk_i) begin
-    if(isWorking) begin // if working
-       
-        case(STATE) // case for state
-            FIRST_CYCLE : begin // first state
-                
+always @(*) begin
+    if(isWorking) begin 
+        case(STATE)
+            FIRST_CYCLE : begin 
                 //update the next register values
                 program_counter_next = program_counter;               // assign program counter to next program counter
                 fetch_finished_next = fetch_finished;                 // assign fetch finished info to next fetch finished info
@@ -74,17 +72,26 @@ always @(posedge clk_i) begin
                 $display("STALL FOR FETCH"); // debug info
                 STATE_NEXT = SECOND_CYCLE; // change state to second state
             end 
-        endcase  // end of case
-    end // end of if working  
-end // end of always block
+        endcase
+    end 
+end 
 
 always @(posedge clk_i) begin
-    if(isWorking) begin // if working
-        program_counter <= program_counter_next; // assign next program counter to program counter
-        fetch_finished <= fetch_finished_next; // assign next fetch finished info to fetch finished
-        fetch_working_info <= fetch_working_info_next; // assign next working info to fetch working info
-        instruction_to_decode <= instruction_to_decode_next; // assign next instruction to decode to instruction to decode
-        STATE <= STATE_NEXT; // assign state info
+    if(rst_i) begin // if reset
+        program_counter <= 32'h8000_0000; // assign initial value to program counter
+        fetch_finished <= 1'b0; // assign initial value to fetch finished info
+        fetch_working_info <= 1'b0; // assign initial value to working info
+        instruction_to_decode <= 32'b0; // assign initial value to instruction to decode
+        STATE <= FIRST_CYCLE; // assign initial state
+    end
+    else begin
+        if(isWorking) begin // if working
+            program_counter <= program_counter_next; // assign next program counter to program counter
+            fetch_finished <= fetch_finished_next; // assign next fetch finished info to fetch finished
+            fetch_working_info <= fetch_working_info_next; // assign next working info to fetch working info
+            instruction_to_decode <= instruction_to_decode_next; // assign next instruction to decode to instruction to decode
+            STATE <= STATE_NEXT; // assign state info
+        end
     end
 end
 

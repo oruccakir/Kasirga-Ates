@@ -46,7 +46,7 @@ assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWork
 
 integer i = 1; // For debugging the instruction number
 
-always @(posedge clk_i) begin
+always @(*) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
