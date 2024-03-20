@@ -265,7 +265,7 @@ always @(posedge clk_i) begin
                             enable_alu_unit = 1'b0;
                             $display("Arithmetic Logic Unit Finished");
                             $display("-->Execution completed for instruction num %d",i);
-                            $display("Result after execution %d",calculated_result);
+                            $display("Result after execution %d",calculated_result_next);
                             i=i+1;
                             execute1_finished_next = 1'b1; 
                             STATE_NEXT = FIRST_CYCLE;
