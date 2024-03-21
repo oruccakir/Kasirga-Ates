@@ -39,16 +39,17 @@ integer i = 1; // for debugging the which instruction is fetched and conveyed
 assign isWorking = enable_step_i && fetch_finished != 1'b1;          // assign working info depending of enable and finish info
 
 always @(*) begin
-    if(isWorking) begin 
+    if(isWorking) begin
+        //update the next register values
+        program_counter_next = program_counter;               // assign program counter to next program counter
+        fetch_finished_next = fetch_finished;                 // assign fetch finished info to next fetch finished info
+        fetch_working_info_next = fetch_working_info;         // assign working info to next working info
+        instruction_to_decode_next = instruction_to_decode;   // assign instruction to decode to next instruction to decode
+        STATE_NEXT = STATE;     
+    
+        fetch_working_info_next= 1'b1; // working info for fetch step
         case(STATE)
             FIRST_CYCLE : begin 
-                //update the next register values
-                program_counter_next = program_counter;               // assign program counter to next program counter
-                fetch_finished_next = fetch_finished;                 // assign fetch finished info to next fetch finished info
-                fetch_working_info_next = fetch_working_info;         // assign working info to next working info
-                instruction_to_decode_next = instruction_to_decode;   // assign instruction to decode to next instruction to decode
-                STATE_NEXT = STATE;                                   // assign state to next state
-            
                 fetch_working_info_next= 1'b1; // working info for fetch step
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
                 STATE_NEXT = SECOND_CYCLE; // change state to second state
