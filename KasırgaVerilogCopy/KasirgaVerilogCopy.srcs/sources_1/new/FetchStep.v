@@ -39,18 +39,17 @@ integer i = 1; // for debugging the which instruction is fetched and conveyed
 assign isWorking = enable_step_i && fetch_finished != 1'b1;          // assign working info depending of enable and finish info
 
 always @(*) begin
+    
     if(isWorking) begin
-        //update the next register values
+    /*
         program_counter_next = program_counter;               // assign program counter to next program counter
         fetch_finished_next = fetch_finished;                 // assign fetch finished info to next fetch finished info
         fetch_working_info_next = fetch_working_info;         // assign working info to next working info
         instruction_to_decode_next = instruction_to_decode;   // assign instruction to decode to next instruction to decode
-        STATE_NEXT = STATE;     
-    
+        //update the next register values*/
         fetch_working_info_next= 1'b1; // working info for fetch step
         case(STATE)
             FIRST_CYCLE : begin 
-                fetch_working_info_next= 1'b1; // working info for fetch step
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
                 STATE_NEXT = SECOND_CYCLE; // change state to second state
             end
@@ -74,7 +73,7 @@ always @(*) begin
                 STATE_NEXT = SECOND_CYCLE; // change state to second state
             end 
         endcase
-    end 
+     end
 end 
 
 always @(posedge clk_i) begin
@@ -86,12 +85,12 @@ always @(posedge clk_i) begin
         STATE <= FIRST_CYCLE; // assign initial state
     end
     else begin
-        if(isWorking) begin // if working
+        if(isWorking) begin
             program_counter <= program_counter_next; // assign next program counter to program counter
             fetch_finished <= fetch_finished_next; // assign next fetch finished info to fetch finished
             fetch_working_info <= fetch_working_info_next; // assign next working info to fetch working info
             instruction_to_decode <= instruction_to_decode_next; // assign next instruction to decode to instruction to decode
-            STATE <= STATE_NEXT; // assign state info
+            STATE <= STATE_NEXT; // assign state info to next state info
         end
     end
 end

@@ -9,10 +9,6 @@ module ExecuteStep1 (
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input
-    input wire [6:0] opcode_i, // Opcode input
-    input wire [4:0] rs1_i, // Source register 1 input
-    input wire [4:0] rs2_i, // Source register 2 input
-    input wire [4:0] rd_i, // Destination register input
     input wire [31:0] operand1_integer_i, // Operand 1 input
     input wire [31:0] operand2_integer_i, // Operand 2 input
     input wire [31:0] operand1_float_i,
@@ -164,16 +160,17 @@ assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorki
 
 always @(*) begin
     if(isWorking) begin
+    
+
+    
         case(STATE)
             FIRST_CYCLE : begin
-
-                // Update the next register values
-                execute1_finished_next = execute1_finished; // Assign execute1_finished to execute1_finished_next
-                execute_working_info_next = execute_working_info; // Assign execute_working_info to execute_working_info_next
-                calculated_result_next = calculated_result; // Assign calculated_result to calculated_result_next
-                STATE_NEXT = STATE; // Assign STATE to STATE_NEXT
-
-
+            
+                        execute1_finished_next = execute1_finished; // Assign execute1_finished to execute1_finished_next
+        execute_working_info_next = execute_working_info; // Assign execute_working_info to execute_working_info_next
+        calculated_result_next = calculated_result; // Assign calculated_result to calculated_result_next
+        STATE_NEXT = STATE; // Assign STATE to STATE_NEXT
+            
                 execute1_finished_next = 1'b0;
                 execute_working_info_next = 1'b1;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);

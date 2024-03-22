@@ -112,26 +112,24 @@ assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 
 // Decode module implementation
 always @(*) begin
+
     if(isWorking) begin
+  // Update the next register values
+        opcode_next = opcode; // Assign opcode to next opcode
+        rs1_next = rs1; // Assign source register 1 to next source register 1
+        rs2_next = rs2; // Assign source register 2 to next source register 2
+        rs3_next = rs3; // Assign source register 3 to next source register 3
+        rd_next = rd; // Assign destination register to next destination register
+        immediate_next = immediate; // Assign immediate to next immediate
+        unit_type_next = unit_type; // Assign unit type to next unit type
+        instruction_type_next = instruction_type; // Assign instruction type to next instruction type
+        imm_generated_operand2_next = imm_generated_operand2; // Assign imm generated operand2 to next imm generated operand2
+        decode_finished_next = decode_finished; // Assign decode finished to next decode finished
+        STATE_NEXT = STATE; // Assign state to next state
+        register_selection_next = register_selection; // Assign register selection to next register selection
+
         case(STATE)
             FIRST_CYCLE : begin // First cycle
-
-                // Update the next register values
-                opcode_next = opcode; // Assign opcode to next opcode
-                rs1_next = rs1; // Assign source register 1 to next source register 1
-                rs2_next = rs2; // Assign source register 2 to next source register 2
-                rs3_next = rs3; // Assign source register 3 to next source register 3
-                rd_next = rd; // Assign destination register to next destination register
-                immediate_next = immediate; // Assign immediate to next immediate
-                unit_type_next = unit_type; // Assign unit type to next unit type
-                instruction_type_next = instruction_type; // Assign instruction type to next instruction type
-                imm_generated_operand2_next = imm_generated_operand2; // Assign imm generated operand2 to next imm generated operand2
-                decode_finished_next = decode_finished; // Assign decode finished to next decode finished
-                STATE_NEXT = STATE; // Assign state to next state
-                register_selection_next = register_selection; // Assign register selection to next register selection
-                decode_working_info_next = 1'b1; // Set the working info for decode stepS
-
-
                 decode_working_info_next = 1'b1; // Set the working info for decode step
                 if(execute_working_info_i) begin
                     $display("EXECUTE STILL WORKING DECODE WAITING");
@@ -429,8 +427,8 @@ always @(*) begin
                     $display("STALL FOR DECODE"); // Display the stall info
                     STATE_NEXT = FIRST_CYCLE; // Go to the second cycle
                 end 
-            endcase        
-        end
+            endcase
+       end        
 end
 
 always@(posedge clk_i) begin
@@ -449,7 +447,7 @@ always@(posedge clk_i) begin
         STATE <= FIRST_CYCLE; // Assign state to first cycle
     end
     else begin
-        if(isWorking) begin
+        if(isWorking && ~execute_working_info_i) begin
             opcode <= opcode_next; // Assign next opcode to opcode
             rs1 <= rs1_next; // Assign next source register 1 to source register 1
             rs2 <= rs2_next; // Assign next source register 2 to source register 2
