@@ -100,6 +100,7 @@ assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 // Decode module implementation
 always @(posedge clk_i) begin
     if(isWorking) begin
+        decode_working_info = 1'b1;
         case(STATE)
             FIRST_CYCLE : begin // First cycle
                 decode_working_info = 1'b1; // Set the working info for decode step

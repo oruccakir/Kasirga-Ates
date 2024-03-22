@@ -178,8 +178,8 @@ always@(posedge clk_i) begin
 
     if(fetch_finished) begin
         enable_fetch = 1'b0;     // if fetch finished, disable fetch stage
-        fetch.fetch_finished = 1'b0;  // reset fetch finished signal
         enable_decode = 1'b1;  // enable decode stage
+        fetch.fetch_finished = 1'b0;  // reset fetch finished signal
         $display("fetch finished for instruction %d",f); // display the instruction number
         f=f+1; // increment the instruction number
     end

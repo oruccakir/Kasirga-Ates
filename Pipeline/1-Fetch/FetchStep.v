@@ -56,7 +56,7 @@ always @(posedge clk_i) begin
                     program_counter = program_counter + 4; // increment program counter
                     fetch_finished <= 1'b1; // set fetch finished info
                     fetch_working_info = 1'b0; // set working info to 0
-                end 
+                end
             end  
             STALL : begin // stall state
                 $display("STALL FOR FETCH"); // debug info
