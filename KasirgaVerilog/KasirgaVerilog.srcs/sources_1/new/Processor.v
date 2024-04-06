@@ -188,7 +188,7 @@ always@(posedge clk_i) begin
         decode.decode_finished = 1'b0; // reset decode finished signal
         enable_execute1 = 1'b1; // enable execute1 stage
         enable_fetch = 1'b1; // for implementing pipeline mechanism
-        $display("decode finished forinstruction %d",d); // display the instruction number
+        $display("decode finished for instruction %d",d); // display the instruction number
         d = d + 1;   // increment the instruction number
     end
     else if(execute1_finished) begin
