@@ -10,7 +10,12 @@ module Processor(
     input wire clk_i, // Clock signal
     input wire rst_i, // Reset signal
     input wire [31:0] instruction_i, // Instruction to be executed
-    output wire [31:0] mem_address_o // Memory address
+    input wire data_completed_i,
+    input wire instruction_completed_i,
+    output wire [31:0] mem_address_o, // Memory address
+    output wire get_data_o,
+    output wire get_instruction_o
+    
 );
 
 wire decode_working_info; // working info for decode stage
@@ -48,10 +53,12 @@ FetchStep fetch(
     .enable_step_i(enable_fetch),
     .instruction_i(instruction_i),
     .decode_working_info_i(decode_working_info),
+    .instruction_completed_i(instruction_completed_i),
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
-    .fetch_working_info_o(fetch_working_info)
+    .fetch_working_info_o(fetch_working_info),
+    .get_instruction_o(get_instruction_o)
 );
 
 // Decode stage

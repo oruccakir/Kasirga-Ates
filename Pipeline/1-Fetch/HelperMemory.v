@@ -9,10 +9,17 @@ module HelperMemory #(
     input wire   [ADDRES_BIT-1:0]    address_i,
     input wire   [DATA_BIT-1:0]      write_data_i,
     input wire                       write_enable_i,
-    output wire  [DATA_BIT-1:0]      read_data_o
+    input wire                       get_instruction_i,
+    input wire                       get_data_i,
+    output wire  [DATA_BIT-1:0]      read_data_o,
+    output wire                      data_completed_o,
+    output wire                      instruction_completed_o   
 );
 
 localparam UNDEFINED = DEBUG == "TRUE" ? {DATA_BIT{1'bZ}} : {DATA_BIT{1'b0}};
+
+reg data_completed = 1'b0;
+reg instruction_completed = 1'b0;
 
 reg [DATA_BIT-1:0] memory [0:MEMORY_INDEX-1];
 reg [DATA_BIT-1:0] read_data_cmb;
@@ -27,11 +34,43 @@ initial begin
     end
 end
 
-always @* begin
+integer instruction_latency = 0;
+integer data_latency = 20;
+integer instruction_counter = 0;
+integer data_counter = 0;
+
+always @(*)begin
     read_data_cmb = UNDEFINED;
-    if (mem_access_valid) begin
-        read_data_cmb = memory[MEM_INDEX];
-    end
+        if(get_instruction_i) begin
+            $display("Getting instruction from memory");
+            if(instruction_counter == instruction_latency) begin
+                if(mem_access_valid)
+                    read_data_cmb = memory[MEM_INDEX];
+                $display("Instruction taken in ", instruction_counter);
+                instruction_counter = 0;
+                instruction_completed = 1'b1;
+            end
+            else begin
+                $display("Waiting for instruction");
+                instruction_counter = instruction_counter + 1;
+            end
+        end
+        else
+            instruction_completed = 1'b0;
+            
+        if(get_data_i) begin
+            if(data_counter == data_latency) begin
+                if(mem_access_valid)
+                    read_data_cmb = memory[MEM_INDEX];
+                data_counter = 0;
+                data_completed = 1'b1;
+            end
+            else begin
+                data_counter = data_counter + 1;
+            end
+        end
+        else
+            data_completed = 1'b0;
 end
 
 always @(posedge clk_i) begin
@@ -41,5 +80,7 @@ always @(posedge clk_i) begin
 end
 
 assign read_data_o = read_data_cmb;
+assign data_completed_o = data_completed;
+assign instruction_completed_o = instruction_completed;
 
 endmodule

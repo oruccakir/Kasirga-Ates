@@ -11,21 +11,32 @@ wire [31:0] processor_MEMORY_ADDRESS;
 wire [DATA_BIT-1:0] processor_memory_read_data;
 wire [DATA_BIT-1:0] processor_memory_write_data;
 wire processor_memory_write;
-
+wire get_data;
+wire get_instruction;
+wire data_completed;
+wire instruction_completed;
 
 HelperMemory memory (
     .clk_i(clk_r),
     .address_i(processor_MEMORY_ADDRESS),
     .read_data_o(processor_memory_read_data),
+    .get_data_i(get_data),
+    .get_instruction_i(get_instruction),
     .write_data_i(processor_memory_write_data),
-    .write_enable_i(processor_memory_write)
+    .write_enable_i(processor_memory_write),
+    .data_completed_o(data_completed),
+    .instruction_completed_o(instruction_completed)
 );
 
 Processor processor (
     .clk_i(clk_r),
     .rst_i(rst_r),
     .instruction_i(processor_memory_read_data),
-    .mem_address_o(processor_MEMORY_ADDRESS)
+    .data_completed_i(data_completed),
+    .instruction_completed_i(instruction_completed),
+    .mem_address_o(processor_MEMORY_ADDRESS),
+    .get_data_o(get_data),
+    .get_instruction_o(get_instruction)
 );
 
 always begin
