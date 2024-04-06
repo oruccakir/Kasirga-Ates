@@ -10,14 +10,17 @@ module WriteBackStep (
     input wire enable_step_i, // Enable input
     input wire [31:0] calculated_result_i,// it comes from other steps,
     input wire fetch_working_info_i,
+    input wire [4:0] rd_i, // writeback target register
     output wire writeback_finished_o, // Flag for finishing writeback step
     output wire [31:0] writebacked_result_o, // final result after all calculations
     output wire reg_write_integer_o, // flag to write integer register
     output wire reg_write_float_o, // flag to write float register
     output wire reg_write_csr_o, //  flag to write csr register
-    output writeback_working_info_o // working info for writeback step
+    output writeback_working_info_o, // working info for writeback step
+    output wire [4:0] rd_o             // target register 
 );
 
+reg [4:0] rd = 5'b0;
 reg writeback_working_info; // working info for writeback step
 // to decode
 reg reg_write_integer = 1'b0; // flag to write integer register
@@ -48,6 +51,7 @@ always @(posedge clk_i) begin
                 writebacked_result <= calculated_result_i; 
                 reg_write_integer <= 1'b1;
                 STATE <= SECOND_CYCLE; // Go to the second cycle
+                rd = rd_i;
             end
             SECOND_CYCLE : begin
                 $display("-->Writeback completed for instruction num %d",i);
@@ -71,5 +75,6 @@ assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer
 assign reg_write_float_o = reg_write_float;     // Assign write flag for float register
 assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register
 assign writeback_working_info_o = writeback_working_info; // Assign working info for writeback step
+assign rd_o = rd;
 endmodule
 

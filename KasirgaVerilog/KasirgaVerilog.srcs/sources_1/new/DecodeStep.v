@@ -12,6 +12,7 @@ module DecodeStep (
     input wire reg_write_integer_i, //Write data flag for integer register file
     input wire reg_write_float_i, // Write data flag for float register file
     input wire reg_write_csr_i,  // Write data flag for csr register file
+    input wire [4:0] target_register_i, // that info comes from writeback step
     input wire execute_working_info_i, // very important info for stalling
     output wire [6:0] opcode_o, // Opcode output
     output wire [4:0] rs1_o, // Source register 1 output
@@ -57,7 +58,7 @@ IntegerRegisterFile integerRegisterFile(
     .rst_i(rst_i), // Reset input
     .rs1_i(rs1), // Source register 1   
     .rs2_i(rs2), // Source register 2
-    .rd_i(rd), // Destination register
+    .rd_i(target_register_i), // Destination register
     .write_data_i(writebacked_result_i), // Writebacked result
     .reg_write_i(reg_write_integer_i), // Write data flag
     .read_data1_o(operand1_integer),    // Operand 1
@@ -72,7 +73,7 @@ FloatRegisterFile floatRegisterFile(
     .rs1_i(rs1), // Source register 1
     .rs2_i(rs2), // Source register 2
     .rs3_i(rs3), // Source register 3
-    .rd_i(rd), // Destination register
+    .rd_i(target_register_i), // Destination register
     .write_data_i(writebacked_result_i),    // Writebacked result
     .reg_write_i(reg_write_float_i), // Write data flag
     .read_data1_o(operand1_float), // Operand 1
@@ -385,8 +386,6 @@ always @(posedge clk_i) begin
                     $display("-->rs1: %d", rs1);       // Display source register 1
                     $display("-->rs2: %d", rs2);       // Display source register 2
                     $display("-->rd: %d", rd);         // Display destination register
-                    $display("--> Operand1 %d",operand1_integer);  
-                    $display("--> Operand2 %d",operand2_integer);  
                     decode_finished = 1'b1;         // Set the flag for finishing decode step  
                     STATE = FIRST_CYCLE;            // Go back to the first cycle
                     i=i+1;                        // Increment the instruction number

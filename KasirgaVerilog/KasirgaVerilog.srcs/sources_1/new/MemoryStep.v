@@ -13,11 +13,13 @@ module MemoryStep (
     input wire [3:0] memOp_i, // Memory operation input
     input wire [31:0] calculated_result_i, // this comefrom execute1 step
     input wire writeback_working_info_i,
+    input wire [4:0] rd_i, // come from execute step
     output wire [31:0] mem_data_o, // Memory data output
     output wire [31:0] mem_address_o, // Memory address output
     output wire memory_finished_o, // Flag for finishing memory step
     output wire [31:0] calculated_result_o, // this will convey to writeback step
-    output wire memory_working_info_o
+    output wire memory_working_info_o,
+    output wire [4:0] rd_o // goes to writeback step
 );
 
 reg memory_working_info = 1'b0; // Working info for memory step
@@ -29,6 +31,8 @@ reg [31:0] mem_address = 32'h0; // Memory address
 wire isWorking; // Flag for working
 
 reg [31:0] calculated_result = 32'b0; // Calculated result
+
+reg [4:0] rd = 5'b0;
 
 reg memory_finished = 1'b0; // Flag for finishing memory step // impoertant change
 
@@ -52,6 +56,7 @@ always @(posedge clk_i) begin
                 $display("-->Performing memory operation for instruction num %d",i);
                 $display("--> INFO comes from execute step %d",calculated_result_i);
                 STATE <= SECOND_CYCLE; // Go to the second cycle
+                rd = rd_i;
             end
             SECOND_CYCLE:begin
                 if(writeback_working_info_i) begin
@@ -77,5 +82,6 @@ assign mem_address_o = mem_address; // Assign the memory address
 assign memory_finished_o = memory_finished;     // Assign the flag for finishing memory step
 assign calculated_result_o = calculated_result; // Assign conveyed info
 assign memory_working_info_o = memory_working_info; // assign memory working info
+assign rd_o = rd;
 
 endmodule

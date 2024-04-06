@@ -24,10 +24,13 @@ module ExecuteStep1 (
     input wire memory_working_info_i,
     output wire [31:0] calculated_result_o, // resulted
     output wire execute1_finished_o, // Flag for finishing execute step 1
-    output wire execute_working_info_o
+    output wire execute_working_info_o,
+    output wire [4:0] rd_o
 );
 
 reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
+
+reg [4:0] rd = 5'b0;
 
 reg execute_working_info = 1'b0;   //  very important info for stalling 
 
@@ -156,6 +159,7 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
+                rd = rd_i;
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
@@ -320,6 +324,7 @@ end
 assign execute1_finished_o = execute1_finished;
 assign calculated_result_o = calculated_result;
 assign execute_working_info_o = execute_working_info;
+assign rd_o = rd;
 
 
 endmodule 

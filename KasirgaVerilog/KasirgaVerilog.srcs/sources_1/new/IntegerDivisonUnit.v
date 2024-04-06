@@ -27,7 +27,7 @@ wire isWorking;
 
 assign isWorking = enable_i && is_finished != 1'b1; // Assign isWorking
 
-always @(posedge clk_i or posedge rst_i) begin
+always @(posedge clk_i) begin
         if(rst_i) begin
             result <= 32'b0; // Reset the result
         end

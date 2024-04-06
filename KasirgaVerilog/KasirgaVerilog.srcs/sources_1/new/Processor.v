@@ -61,6 +61,7 @@ wire reg_write_integer; // coming from writeback
 wire reg_write_float; // coming from writeback
 wire reg_write_csr;    // coming from writeback step
 
+wire [4:0] target_register;
 // Decode module
 DecodeStep decode(
     .clk_i(clk_i),
@@ -71,6 +72,7 @@ DecodeStep decode(
     .reg_write_integer_i(reg_write_integer),
     .reg_write_float_i(reg_write_float),
     .reg_write_csr_i(reg_write_csr),
+    .target_register_i(target_register),
     .execute_working_info_i(execute_working_info),
     .opcode_o(opcode),
     .rs1_o(rs1),
@@ -94,6 +96,7 @@ wire execute1_finished; // execute1 finished signal
 
 wire [31:0] calculated_result; // calculated result by execute1
 
+wire [4:0] rd_to_memory;
 // Execute1 module
 ExecuteStep1 execute1(
     .clk_i(clk_i),
@@ -115,7 +118,8 @@ ExecuteStep1 execute1(
     .memory_working_info_i(memory_working_info),
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished),
-    .execute_working_info_o(execute_working_info)
+    .execute_working_info_o(execute_working_info),
+    .rd_o(rd_to_memory)
 );
 
 
@@ -129,6 +133,7 @@ reg mem_write_enable = 1'b0; // memory write enable signal
 wire [31:0] mem_data; // memory data
 wire [31:0] mem_address; // memory address
 
+wire [4:0] rd_to_writeback;
 // Memory module
 MemoryStep memory(
     .clk_i(clk_i),
@@ -137,18 +142,23 @@ MemoryStep memory(
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
     .calculated_result_i(calculated_result),
+    .rd_i(rd_to_memory),
     .writeback_working_info_i(writeback_working_info),
     //.memOp_i(opcode),
     .mem_data_o(mem_data),
     .mem_address_o(mem_address),
     .memory_finished_o(memory_finished),
     .calculated_result_o(calculated_result_mem),
-    .memory_working_info_o(memory_working_info)
+    .memory_working_info_o(memory_working_info),
+    .rd_o(rd_to_writeback)
 );
 
 // Writeback stage
 reg enable_writeback = 1'b0;    // enable signal for writeback stage
 wire writeback_finished; // writeback finished signal
+
+
+
 
 // Writeback module
 WriteBackStep writeback(
@@ -157,12 +167,14 @@ WriteBackStep writeback(
     .enable_step_i(enable_writeback),
     .calculated_result_i(calculated_result_mem),
     .fetch_working_info_i(fetch_working_info),
+    .rd_i(rd_to_writeback),
     .writeback_finished_o(writeback_finished),
     .writebacked_result_o(writebacked_result),
     .reg_write_integer_o(reg_write_integer),
     .reg_write_float_o(reg_write_float),
     .reg_write_csr_o(reg_write_csr),
-    .writeback_working_info_o(writeback_working_info)
+    .writeback_working_info_o(writeback_working_info),
+    .rd_o(target_register)
 );
 
 integer f = 1; // instruction number for fetch
@@ -174,10 +186,12 @@ integer w = 1; // instruction number for writeback
 /*
     Working principle of the pipeline processor:
 */
+integer control = 0;
+
 always@(posedge clk_i) begin
 
     if(fetch_finished) begin
-        enable_fetch = 1'b0;     // if fetch finished, disable fetch stage
+        enable_fetch = 1'b0;     // if fetch finished, disable fetch stage              
         enable_decode = 1'b1;  // enable decode stage
         fetch.fetch_finished = 1'b0;  // reset fetch finished signal
         $display("fetch finished for instruction %d",f); // display the instruction number
