@@ -52,7 +52,7 @@ module IntegerRegisterFile (
     end
     else if (reg_write_i && rd_i != 0) begin // write to register 0 is not allowed
       $display("Integer writed result",write_data_i); // writed result stored here
-      $display("Target register",rd_i); // writed result stored 
+      $display("Target register ",rd_i); // writed result stored 
       registers[rd_i] <= write_data_i; // write data to register
       //$display("Writed result",registers[rd_i]);
     end

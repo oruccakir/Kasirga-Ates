@@ -41,7 +41,7 @@ always @(posedge clk_i) begin
             FIRST_CYCLE : begin // first state
                 fetch_working_info= 1'b1; // working info for fetch step
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
-                STATE <= SECOND_CYCLE; // change state to second state
+                STATE = SECOND_CYCLE; // change state to second state
             end
             SECOND_CYCLE : begin // second state
                 if(decode_working_info_i) begin // if decode step is working then stall
@@ -54,7 +54,7 @@ always @(posedge clk_i) begin
                     instruction_to_decode = instruction_i; // convey instruction to decode step
                     STATE = FIRST_CYCLE; // change state to first state
                     program_counter = program_counter + 4; // increment program counter
-                    fetch_finished <= 1'b1; // set fetch finished info
+                    fetch_finished = 1'b1; // set fetch finished info
                     fetch_working_info = 1'b0; // set working info to 0
                 end
             end  

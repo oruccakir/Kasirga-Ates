@@ -241,13 +241,13 @@ always @(posedge clk_i) begin
                 STATE = SECOND_CYCLE; // Go to the second cycle
             end
             SECOND_CYCLE : begin
-                case(unit_type_i)
-                    `ARITHMETIC_LOGIC_UNIT: begin
-                        if(memory_working_info_i) begin
-                            $display("MEMORY STILL WORKING EXECUTE WAITING");
-                            STATE = STALL;
-                        end
-                        else begin
+                if(memory_working_info_i) begin
+                    $display("MEMORY STILL WORKING EXECUTE WAITING");
+                    STATE = STALL;
+                end
+                else begin
+                    case(unit_type_i)
+                        `ARITHMETIC_LOGIC_UNIT: begin
                             calculated_result = calculated_alu_result;
                             enable_alu_unit = 1'b0;
                             $display("Arithmetic Logic Unit Finished");
@@ -258,12 +258,7 @@ always @(posedge clk_i) begin
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                         end
-                    end
-                    `INTEGER_MULTIPLICATION_UNIT: begin
-                        if(memory_working_info_i) begin
-                            STATE = STALL;
-                        end
-                        else begin
+                        `INTEGER_MULTIPLICATION_UNIT: begin
                             if(finished_integer_multiplication_unit != 1'b1) begin
                                 $display("Still integer multiplication");
                                 STATE = STALL;
@@ -281,43 +276,38 @@ always @(posedge clk_i) begin
                                 execute1_finished = 1'b1; 
                             end
                         end
-                    end
-                    `INTEGER_DIVISION_UNIT: begin
-                            if(memory_working_info_i) begin
+                        `INTEGER_DIVISION_UNIT: begin
+                            if(finished_integer_division_unit != 1'b1) begin
+                                $display("Still integer division");
                                 STATE = STALL;
                             end
                             else begin
-                                if(finished_integer_division_unit != 1'b1) begin
-                                    $display("Still integer division");
-                                    STATE = STALL;
-                                end
-                                else begin
-                                    calculated_result = calculated_int_div_result;
-                                    enable_integer_division_unit = 1'b0; 
-                                    integer_division_unit.is_finished = 1'b0;
-                                    $display("Integer Division Unit Finished for instruction %d",i);
-                                    $display("-->Execution completed for instruction num %d",i);
-                                    $display("Result after execution %d",calculated_result);
-                                    i=i+1;
-                                    execute1_finished = 1'b1; 
-                                    STATE = FIRST_CYCLE;
-                                    execute_working_info = 1'b0;
-                                end
+                                calculated_result = calculated_int_div_result;
+                                enable_integer_division_unit = 1'b0; 
+                                integer_division_unit.is_finished = 1'b0;
+                                $display("Integer Division Unit Finished for instruction %d",i);
+                                $display("-->Execution completed for instruction num %d",i);
+                                $display("Result after execution %d",calculated_result);
+                                i=i+1;
+                                execute1_finished = 1'b1; 
+                                STATE = FIRST_CYCLE;
+                                execute_working_info = 1'b0;
                             end
-                    end
-                    `FLOATING_POINT_UNIT:begin
-                    end
-                    `BRANCH_RESOLVER_UNIT:begin
-                    end 
-                    `CONTROL_UNIT:begin
-                    end
-                    `CONTROL_STATUS_UNIT:begin
-                    end
-                    `ATOMIC_UNIT:begin
-                    end
-                    `BIT_MANIPULATION_UNIT:begin;
-                    end
-                endcase
+                        end
+                        `FLOATING_POINT_UNIT:begin
+                        end
+                        `BRANCH_RESOLVER_UNIT:begin
+                        end 
+                        `CONTROL_UNIT:begin
+                        end
+                        `CONTROL_STATUS_UNIT:begin
+                        end
+                        `ATOMIC_UNIT:begin
+                        end
+                        `BIT_MANIPULATION_UNIT:begin;
+                        end
+                    endcase
+               end
             end
             STALL: begin
                 $display("STALL FOR EXECUTE");
