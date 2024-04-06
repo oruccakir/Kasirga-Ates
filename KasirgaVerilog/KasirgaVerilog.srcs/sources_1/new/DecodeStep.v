@@ -137,11 +137,9 @@ always @(posedge clk_i) begin
                         rs1 = instruction_i[19:15]; // Extract source register 1
                         rs2 = instruction_i[24:20]; // Extract source register 2
                         rd = instruction_i[11:7];   // Extract destination register
-                        immediate [4:0] = instruction_i[31:20]; // Extract immediate
-                        immediate [11:5] = instruction_i[31:25]; // Extract immediate
-                        imm_generated_operand2 [4:0] = instruction_i[31:20]; // Extract immediate
+                        imm_generated_operand2 [4:0] = instruction_i[11:7]; // Extract immediate
                         imm_generated_operand2 [11:5] = instruction_i[31:25]; // Extract immediate
-                        if(instruction_i[31] == 1'b1)
+                        if(instruction_i[31] == 1'b0)
                             imm_generated_operand2[31:12] = 20'b0;
                         else
                             imm_generated_operand2[31:12] = 20'b1;
