@@ -113,6 +113,44 @@ always @(posedge clk_i) begin
                 $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i); // Display the instruction
                 opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                 case(opcode) // Extract the opcode
+                    
+                    7'b0000011: begin
+                        enable_generate = 1'b1;    // enable generate       
+                        unit_type = `MEMORY_STEP;
+                        register_selection = `INTEGER_REGISTER; // Set the register selection
+                        rs1 = instruction_i[19:15]; // Extract source register 1
+                        rd = instruction_i[11:7];   // Extract destination register
+                        immediate = instruction_i[31:20]; // Extract immediate
+                        generate_operand2(instruction_i);
+                        case(instruction_i[14:12])
+                            3'b000 : instruction_type[2:0] = `MEM_LB;
+                            3'b001 : instruction_type[2:0] = `MEM_LH;
+                            3'b010 : instruction_type[2:0] = `MEM_LW;
+                            3'b100 : instruction_type[2:0] = `MEM_LBU;
+                            3'b101 : instruction_type[2:0] = `MEM_LHU;
+                        endcase
+                    end
+                    7'b0100011: begin
+                        enable_generate = 1'b1;    // enable generate       
+                        unit_type = `MEMORY_STEP;
+                        register_selection = `INTEGER_REGISTER; // Set the register selection
+                        rs1 = instruction_i[19:15]; // Extract source register 1
+                        rs2 = instruction_i[24:20]; // Extract source register 2
+                        rd = instruction_i[11:7];   // Extract destination register
+                        immediate [4:0] = instruction_i[31:20]; // Extract immediate
+                        immediate [11:5] = instruction_i[31:25]; // Extract immediate
+                        imm_generated_operand2 [4:0] = instruction_i[31:20]; // Extract immediate
+                        imm_generated_operand2 [11:5] = instruction_i[31:25]; // Extract immediate
+                        if(instruction_i[31] == 1'b1)
+                            imm_generated_operand2[31:12] = 20'b0;
+                        else
+                            imm_generated_operand2[31:12] = 20'b1;
+                        case(instruction_i[14:12])
+                            3'b000 : instruction_type[2:0] = `MEM_SB;
+                            3'b001 : instruction_type[2:0] = `MEM_SH;
+                            3'b010 : instruction_type[2:0] = `MEM_SW;
+                        endcase
+                    end
                     7'b0010011: begin
                         register_selection = `INTEGER_REGISTER; // Set the register selection
                         rs1 = instruction_i[19:15]; // Extract source register 1

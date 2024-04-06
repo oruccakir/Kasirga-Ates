@@ -54,6 +54,7 @@ initial begin
     memory_write('h8000_001c, 32'h0235cb33); // div x22, x11, x3
     memory_write('h8000_0020, 32'h0222f533);  // remu x25, x18, x8
     memory_write('h8000_0024, 32'h025185b3);  // mul x11, x3, x5
+    memory_write('h8000_0028,32'h079fa223);   // sw x25, 100(x31)
     
    
     // PROGRAM dataSI

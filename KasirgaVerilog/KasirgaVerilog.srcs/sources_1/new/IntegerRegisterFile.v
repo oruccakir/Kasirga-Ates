@@ -33,6 +33,7 @@ module IntegerRegisterFile (
       registers[7] = 55;
       registers[8] = 15;
       registers[9] = 23;
+      registers[31] = 32'h8000_0000;
   end
 
   assign read_data1_o = registers[rs1_i]; // read data from register 1

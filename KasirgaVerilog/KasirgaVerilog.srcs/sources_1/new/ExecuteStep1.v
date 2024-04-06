@@ -65,12 +65,14 @@ wire [31:0] calculated_bit_manip_result;  //  bit manipulation unit result reg
 wire [31:0] calculated_atomic_result;      // atomic unit result reg
 wire [31:0] calculated_control_status_result; // control status unit result reg 
 
+reg other_resources = 1'b0;
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
     .enable_i(enable_alu_unit),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .aluOp_i(instruction_type_i),
+    .other_resources_i(other_resources),
     .result_o(calculated_alu_result)
 );
 
@@ -241,6 +243,12 @@ always @(posedge clk_i) begin
                         enable_bit_manipulation_unit = 1'b1;
                         $display("Bit Manipulation Unit working");
                     end
+                    `MEMORY_STEP: begin
+                        // for address calculation enable artihmetic logic unit
+                        enable_alu_unit = 1'b1; // no importance
+                        other_resources = 1'b1;
+                        $display("Memory address calculation is being done");
+                    end
                 endcase
                 STATE = SECOND_CYCLE; // Go to the second cycle
             end
@@ -309,6 +317,16 @@ always @(posedge clk_i) begin
                         `ATOMIC_UNIT:begin
                         end
                         `BIT_MANIPULATION_UNIT:begin;
+                        end
+                        `MEMORY_STEP: begin
+                            enable_alu_unit = 1'b0;
+                            calculated_result = calculated_alu_result;
+                            $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                            other_resources = 1'b0;
                         end
                     endcase
                end
