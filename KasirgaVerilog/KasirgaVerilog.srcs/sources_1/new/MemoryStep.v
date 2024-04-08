@@ -7,6 +7,7 @@ include "definitions.vh";
 module MemoryStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
+    input wire [31:0]data_i, // comes from memory
     input wire [3:0] unit_type_i,
     input wire enable_step_i, // Enable input
     input wire mem_instruction_i,
@@ -23,12 +24,14 @@ module MemoryStep (
     output wire [31:0] calculated_result_o, // this will convey to writeback step
     output wire memory_working_info_o,
     output wire [4:0] rd_o, // goes to writeback step
-    output wire write_enable_o // goes to processor from there goes to helper memory
+    output wire write_enable_o, // goes to processor from there goes to helper memory
+    output wire read_enable_o
 );
 
 reg memory_working_info = 1'b0; // Working info for memory step
 
 reg write_enable = 1'b0;
+reg read_enable = 1'b0;
 
 // MemoryStep module implementation
 
@@ -54,7 +57,7 @@ integer i = 1; // For debugging the instruction number
 
 always @(posedge clk_i) begin
     if(isWorking) begin
-        $display("MEMORY STEP");
+        $display("MEMORY STEP for ",i);
         case(STATE)
             FIRST_CYCLE:begin
                 memory_working_info = 1'b1;
@@ -70,6 +73,8 @@ always @(posedge clk_i) begin
                             $display("Memory SW Instruction writed address %h",mem_address);
                          end
                         `MEM_LW: begin
+                            read_enable = 1'b1;
+                            $display("Memory LW Instruction readed address %h",mem_address);
                          end
                         `MEM_LB: begin
                          end
@@ -100,6 +105,9 @@ always @(posedge clk_i) begin
                             $display("NO WRITE !!!!");
                          end
                         `MEM_LW: begin
+                            read_enable = 1'b0;
+                            $display("From Memory readed %h",data_i);
+                            //calculated_result = data_i;
                          end
                         `MEM_LB: begin
                          end
@@ -136,4 +144,5 @@ assign calculated_result_o = calculated_result; // Assign conveyed info
 assign memory_working_info_o = memory_working_info; // assign memory working info
 assign rd_o = rd;
 assign write_enable_o = write_enable;
+assign read_enable_o = read_enable;
 endmodule

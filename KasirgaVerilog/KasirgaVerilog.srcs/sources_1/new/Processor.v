@@ -10,9 +10,11 @@ module Processor(
     input wire clk_i, // Clock signal
     input wire rst_i, // Reset signal
     input wire [31:0] instruction_i, // Instruction to be executed
+    input wire [31:0] data_i,
     input wire data_completed_i,
     input wire instruction_completed_i,
     output wire [31:0] mem_address_o, // Memory address
+    output wire [31:0] data_address_o,
     output wire get_data_o,
     output wire get_instruction_o,
     output wire [31:0] write_data_o, //  data need to be writed to memory
@@ -156,6 +158,7 @@ wire [4:0] rd_to_writeback;
 MemoryStep memory(
     .clk_i(clk_i),
     .rst_i(rst_i),
+    .data_i(data_i),
     .enable_step_i(enable_memory),
     .mem_instruction_i(mem_instruction),
     .unit_type_i(unit_type),
@@ -167,12 +170,13 @@ MemoryStep memory(
     .writeback_working_info_i(writeback_working_info),
     .memOp_i(mem_op),
     .mem_data_o(write_data_o),
-    .mem_address_o(mem_address),
+    .mem_address_o(data_address_o),
     .memory_finished_o(memory_finished),
     .calculated_result_o(calculated_result_mem),
     .memory_working_info_o(memory_working_info),
     .rd_o(rd_to_writeback),
-    .write_enable_o(write_enable_o)
+    .write_enable_o(write_enable_o),
+    .read_enable_o(get_data_o)
 );
 
 // Writeback stage
