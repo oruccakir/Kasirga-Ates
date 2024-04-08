@@ -27,7 +27,8 @@ module DecodeStep (
     output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
     output wire [4:0] instruction_type_o, // hold information of  which instruction
     output wire decode_finished_o, // Flag for finishing decode step
-    output wire decode_working_info_o // output for decoding working info
+    output wire decode_working_info_o, // output for decoding working info
+    output wire [31:0] rs2_value_o
 );
 
 reg decode_working_info = 1'b0; // very important info for stalling the decode and pipeline
@@ -113,7 +114,6 @@ always @(posedge clk_i) begin
                 $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i); // Display the instruction
                 opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                 case(opcode) // Extract the opcode
-                    
                     7'b0000011: begin
                         enable_generate = 1'b1;    // enable generate       
                         unit_type = `MEMORY_STEP;
@@ -444,6 +444,7 @@ assign rs2_o = rs2;                         // Assign source register 2
 assign rd_o = rd;                           // Assign destination register
 assign integer_operand1_o = operand1_integer;
 assign integer_operand2_o = (enable_generate)? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction
+assign rs2_value_o = operand2_integer;
 assign float_operand1_o = operand1_float;  // Assign float operand 1
 assign float_operand2_o = operand2_float; // Assign float operand 2
 assign float_operand3_o = operand3_float; // Assign float operand 3

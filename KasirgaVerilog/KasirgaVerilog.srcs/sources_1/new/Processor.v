@@ -14,7 +14,9 @@ module Processor(
     input wire instruction_completed_i,
     output wire [31:0] mem_address_o, // Memory address
     output wire get_data_o,
-    output wire get_instruction_o
+    output wire get_instruction_o,
+    output wire [31:0] write_data_o, //  data need to be writed to memory
+    output wire write_enable_o // write data enable output that will be conveyed as input to memory
     
 );
 
@@ -32,6 +34,7 @@ wire [4:0] rs2; // Source register 2
 wire [4:0] rd; // Destination register
 wire [31:0] integer_operand1; // Operand 1 in integer format
 wire [31:0] integer_operand2;// Operand 2 in integer format
+wire [31:0] rs2_value;
 wire [31:0] float_operand1; // Operand 1 in float format
 wire [31:0] float_operand2;  // Operand 2 in float format
 wire [31:0] float_operand3; // Operand 3 in float format
@@ -94,7 +97,8 @@ DecodeStep decode(
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
     .decode_finished_o(decode_finished),
-    .decode_working_info_o(decode_working_info)
+    .decode_working_info_o(decode_working_info),
+    .rs2_value_o(rs2_value)
 );
 
 // Execute1 stage
@@ -104,6 +108,9 @@ wire execute1_finished; // execute1 finished signal
 wire [31:0] calculated_result; // calculated result by execute1
 
 wire [4:0] rd_to_memory;
+wire [2:0] mem_op;
+wire [31:0] mem_data; // memory data
+wire mem_instruction;
 // Execute1 module
 ExecuteStep1 execute1(
     .clk_i(clk_i),
@@ -116,6 +123,7 @@ ExecuteStep1 execute1(
     .rd_i(rd),
     .operand1_integer_i(integer_operand1),
     .operand2_integer_i(integer_operand2),
+    .rs2_value_i(rs2_value),
     .operand1_float_i(float_operand1),
     .operand2_float_i(float_operand2),
     .operand3_float_i(float_operand3),
@@ -126,7 +134,10 @@ ExecuteStep1 execute1(
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished),
     .execute_working_info_o(execute_working_info),
-    .rd_o(rd_to_memory)
+    .rd_o(rd_to_memory),
+    .mem_data_o(mem_data),
+    .mem_op_o(mem_op),
+    .mem_instruction_o(mem_instruction)
 );
 
 
@@ -137,7 +148,7 @@ reg enable_memory = 1'b0; // enable signal for memory stage
 wire memory_finished; // memory finished signal
 reg mem_read_enable = 1'b0; // memory read enable signal
 reg mem_write_enable = 1'b0; // memory write enable signal
-wire [31:0] mem_data; // memory data
+
 wire [31:0] mem_address; // memory address
 
 wire [4:0] rd_to_writeback;
@@ -146,18 +157,22 @@ MemoryStep memory(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_step_i(enable_memory),
+    .mem_instruction_i(mem_instruction),
+    .unit_type_i(unit_type),
+    .mem_data_i(mem_data),
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
     .calculated_result_i(calculated_result),
     .rd_i(rd_to_memory),
     .writeback_working_info_i(writeback_working_info),
-    //.memOp_i(opcode),
-    .mem_data_o(mem_data),
+    .memOp_i(mem_op),
+    .mem_data_o(write_data_o),
     .mem_address_o(mem_address),
     .memory_finished_o(memory_finished),
     .calculated_result_o(calculated_result_mem),
     .memory_working_info_o(memory_working_info),
-    .rd_o(rd_to_writeback)
+    .rd_o(rd_to_writeback),
+    .write_enable_o(write_enable_o)
 );
 
 // Writeback stage
@@ -223,6 +238,7 @@ always@(posedge clk_i) begin
         e=e+1; // increment the instruction number
     end 
     else if(memory_finished) begin
+        
         enable_memory = 1'b0;  // if memory finished, disable memory stage
         memory.memory_finished = 1'b0; // reset memory finished signal
         enable_writeback =1'b1; // enable writeback stage
@@ -231,6 +247,7 @@ always@(posedge clk_i) begin
         end
         $display("memory finished for instruction %d",m); // display the instruction number
         m=m+1; // increment the instruction number
+        
     end
     else if(writeback_finished) begin
         enable_writeback = 1'b0; // if writeback finished, disable writeback stage

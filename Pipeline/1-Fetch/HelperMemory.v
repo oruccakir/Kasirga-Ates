@@ -42,16 +42,13 @@ integer data_counter = 0;
 always @(*)begin
     read_data_cmb = UNDEFINED;
         if(get_instruction_i) begin
-            $display("Getting instruction from memory");
             if(instruction_counter == instruction_latency) begin
                 if(mem_access_valid)
                     read_data_cmb = memory[MEM_INDEX];
-                $display("Instruction taken in ", instruction_counter);
                 instruction_counter = 0;
                 instruction_completed = 1'b1;
             end
             else begin
-                $display("Waiting for instruction");
                 instruction_counter = instruction_counter + 1;
             end
         end
@@ -75,6 +72,7 @@ end
 
 always @(posedge clk_i) begin
     if (mem_access_valid && write_enable_i) begin
+        $display("Memory WRITE writed data ",write_data_i);
         memory[MEM_INDEX] <= write_data_i;
     end
 end

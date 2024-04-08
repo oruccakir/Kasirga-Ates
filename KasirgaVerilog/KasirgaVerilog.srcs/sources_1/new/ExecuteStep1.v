@@ -15,6 +15,7 @@ module ExecuteStep1 (
     input wire [4:0] rd_i, // Destination register input
     input wire [31:0] operand1_integer_i, // Operand 1 input
     input wire [31:0] operand2_integer_i, // Operand 2 input
+    input wire [31:0] rs2_value_i,
     input wire [31:0] operand1_float_i,
     input wire [31:0] operand2_float_i,
     input wire [31:0] operand3_float_i,
@@ -25,8 +26,15 @@ module ExecuteStep1 (
     output wire [31:0] calculated_result_o, // resulted
     output wire execute1_finished_o, // Flag for finishing execute step 1
     output wire execute_working_info_o,
-    output wire [4:0] rd_o
+    output wire [4:0] rd_o,
+    output wire [31:0] mem_data_o,
+    output wire [2:0] mem_op_o,
+    output wire mem_instruction_o
 );
+
+reg [2:0] mem_op = 3'b000;
+
+reg mem_instruction = 1'b0;
 
 reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
 
@@ -161,6 +169,7 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
+                mem_instruction = 1'b0; // important for mem operations
                 rd = rd_i;
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
@@ -248,6 +257,8 @@ always @(posedge clk_i) begin
                         enable_alu_unit = 1'b1; // no importance
                         other_resources = 1'b1;
                         $display("Memory address calculation is being done");
+                        mem_op = instruction_type_i[2:0];
+                        mem_instruction = 1'b1;
                     end
                 endcase
                 STATE = SECOND_CYCLE; // Go to the second cycle
@@ -343,6 +354,9 @@ assign execute1_finished_o = execute1_finished;
 assign calculated_result_o = calculated_result;
 assign execute_working_info_o = execute_working_info;
 assign rd_o = rd;
+assign mem_data_o = rs2_value_i;
+assign mem_op_o = mem_op;
+assign mem_instruction_o = mem_instruction;
 
 
 endmodule 

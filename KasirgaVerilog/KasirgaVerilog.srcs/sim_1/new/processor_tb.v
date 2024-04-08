@@ -36,7 +36,9 @@ Processor processor (
     .instruction_completed_i(instruction_completed),
     .mem_address_o(processor_MEMORY_ADDRESS),
     .get_data_o(get_data),
-    .get_instruction_o(get_instruction)
+    .get_instruction_o(get_instruction),
+    .write_data_o(processor_memory_write_data),
+    .write_enable_o(processor_memory_write)
 );
 
 always begin
@@ -61,11 +63,12 @@ initial begin
     memory_write('h8000_000c, 32'h40c457b3); //  sra x15, x8, x12
     memory_write('h8000_0010, 32'h40c288b3); //  sub x17, x5, x12
     memory_write('h8000_0014, 32'h003589b3); // add x19, x11, x3
-    memory_write('h8000_0018, 32'h02f58ab3); // mul x21, x11, x15
+    memory_write('h8000_0018, 32'h03158ab3); // mul x21, x11, x17
     memory_write('h8000_001c, 32'h0235cb33); // div x22, x11, x3
-    memory_write('h8000_0020, 32'h0222f533);  // remu x25, x18, x8
+    memory_write('h8000_0020, 32'h02897cb3);  // remu x25, x18, x8
     memory_write('h8000_0024, 32'h025185b3);  // mul x11, x3, x5
-    memory_write('h8000_0028,32'h079fa223);   // sw x25, 100(x31)
+    memory_write('h8000_0028,32'h06cfa223);   // sw x12, 100(x31)
+    memory_write('h8000_002c,32'h016586b3);   //add x13, x11, x22
     
    
     // PROGRAM dataSI
