@@ -7,10 +7,10 @@ include "definitions.vh";
 module WriteBackStep (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
-    input wire enable_step_i, // Enable input
+    //input wire enable_step_i, // Enable input
     input wire [31:0] calculated_result_i,// it comes from other steps,
     input wire fetch_working_info_i,
-    output wire writeback_finished_o, // Flag for finishing writeback step
+    //output wire writeback_finished_o, // Flag for finishing writeback step
     output wire [31:0] writebacked_result_o, // final result after all calculations
     output wire reg_write_integer_o, // flag to write integer register
     output wire reg_write_float_o, // flag to write float register
@@ -42,43 +42,38 @@ reg [2:0] STATE_NEXT = FIRST_CYCLE; // Next state for the module
 reg [31:0] writebacked_result = 32'b0; // writed result
 reg [31:0] writebacked_result_next = 32'b0; // next writed result
 
-assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
+//assign isWorking = enable_step_i && writeback_finished != 1'b1; // Assign isWorking
 
 integer i = 1; // For debugging the instruction number
 
 always @(*) begin
-    if(isWorking) begin
-        case(STATE)
-            FIRST_CYCLE : begin
 
-                writeback_finished_next = writeback_finished;
-                writeback_working_info_next = writeback_working_info;
-                writebacked_result_next = writebacked_result;
-                reg_write_integer_next = reg_write_integer;
-                reg_write_float_next = reg_write_float;
-                reg_write_csr_next = reg_write_csr;
-                STATE_NEXT = STATE;
-
-                writeback_working_info_next = 1'b1;
-                $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
-                writebacked_result_next = calculated_result_i; 
-                reg_write_integer_next = 1'b1;
-                STATE_NEXT = SECOND_CYCLE; // Go to the second cycle
-            end
-            SECOND_CYCLE : begin
-                $display("-->Writeback completed for instruction num %d",i);
-                $display("Writebacked result %d",writebacked_result_o);
-                writeback_finished_next = 1'b1;
-                reg_write_integer_next = 1'b0;
-                i=i+1;
-                STATE_NEXT = FIRST_CYCLE; // Go to the first cycle
-                writeback_working_info_next = 1'b0;
-            end
-            STALL : begin
-                STATE_NEXT = SECOND_CYCLE;
-            end
-        endcase
-    end
+    writeback_working_info_next = writeback_working_info;
+    writebacked_result_next = writebacked_result;
+    reg_write_integer_next = reg_write_integer;
+    reg_write_float_next = reg_write_float;
+    reg_write_csr_next = reg_write_csr;
+    STATE_NEXT = STATE;
+    case(STATE)
+        FIRST_CYCLE : begin
+            writeback_working_info_next = 1'b1;
+            $display(" WRITEBACK STEP Writing back to register file %d",calculated_result_i," for instruction %d",i);
+            writebacked_result_next = calculated_result_i; 
+            reg_write_integer_next = 1'b1;
+            STATE_NEXT = SECOND_CYCLE; // Go to the second cycle
+        end
+        SECOND_CYCLE : begin
+            $display("-->Writeback completed for instruction num %d",i);
+            $display("Writebacked result %d",writebacked_result_o);
+            reg_write_integer_next = 1'b0;
+            i=i+1;
+            STATE_NEXT = FIRST_CYCLE; // Go to the first cycle
+            writeback_working_info_next = 1'b0;
+        end
+        STALL : begin
+            STATE_NEXT = SECOND_CYCLE;
+        end
+    endcase
 end
 
 always@(posedge clk_i) begin
@@ -92,21 +87,17 @@ always@(posedge clk_i) begin
         STATE <= FIRST_CYCLE;
     end
     else begin
-        if(isWorking) begin
-            writeback_finished <= writeback_finished_next;
-            writeback_working_info <= writeback_working_info_next;
-            writebacked_result <= writebacked_result_next;
-            reg_write_integer <= reg_write_integer_next;
-            reg_write_float <= reg_write_float_next;
-            reg_write_csr <= reg_write_csr_next;
-            STATE <= STATE_NEXT;
-        end
+        writeback_finished <= writeback_finished_next;
+        writeback_working_info <= writeback_working_info_next;
+        writebacked_result <= writebacked_result_next;
+        reg_write_integer <= reg_write_integer_next;
+        reg_write_float <= reg_write_float_next;
+        reg_write_csr <= reg_write_csr_next;
+        STATE <= STATE_NEXT;
     end
-
-
 end
 
-assign writeback_finished_o = writeback_finished; // Assign writeback_finished
+//assign writeback_finished_o = writeback_finished; // Assign writeback_finished
 assign writebacked_result_o = writebacked_result; // Assign calculated result
 assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer register
 assign reg_write_float_o = reg_write_float;     // Assign write flag for float register

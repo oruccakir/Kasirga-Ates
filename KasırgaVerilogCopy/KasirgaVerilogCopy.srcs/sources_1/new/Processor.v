@@ -45,11 +45,11 @@ wire fetch_finished; // fetch finished signal
 FetchStep fetch(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_step_i(enable_fetch),
+    //.enable_step_i(enable_fetch),
     .instruction_i(instruction_i),
     .decode_working_info_i(decode_working_info),
     .mem_address_o(mem_address_o),
-    .fetch_finished_o(fetch_finished),
+    //.fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
     .fetch_working_info_o(fetch_working_info)
 );
@@ -65,7 +65,7 @@ wire reg_write_csr;    // coming from writeback step
 DecodeStep decode(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_step_i(enable_decode),
+    //.enable_step_i(fetch_finished),
     .instruction_i(instruction_to_decode),
     .writebacked_result_i(writebacked_result),
     .reg_write_integer_i(reg_write_integer),
@@ -84,7 +84,7 @@ DecodeStep decode(
     .immediate_o(immediate),
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
-    .decode_finished_o(decode_finished),
+   // .decode_finished_o(decode_finished),
     .decode_working_info_o(decode_working_info)
 );
 
@@ -98,7 +98,7 @@ wire [31:0] calculated_result; // calculated result by execute1
 ExecuteStep1 execute1(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_step_i(enable_execute1),
+   // .enable_step_i(decode_finished),
     .instruction_i(instruction_to_decode),
     .operand1_integer_i(integer_operand1),
     .operand2_integer_i(integer_operand2),
@@ -110,7 +110,7 @@ ExecuteStep1 execute1(
     .instruction_type_i(instruction_type),
     .memory_working_info_i(memory_working_info),
     .calculated_result_o(calculated_result),
-    .execute1_finished_o(execute1_finished),
+    //.execute1_finished_o(execute1_finished),
     .execute_working_info_o(execute_working_info)
 );
 
@@ -129,7 +129,7 @@ wire [31:0] mem_address; // memory address
 MemoryStep memory(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_step_i(enable_memory),
+    //.enable_step_i(execute1_finished),
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
     .calculated_result_i(calculated_result),
@@ -137,7 +137,7 @@ MemoryStep memory(
     //.memOp_i(opcode),
     .mem_data_o(mem_data),
     .mem_address_o(mem_address),
-    .memory_finished_o(memory_finished),
+   // .memory_finished_o(memory_finished),
     .calculated_result_o(calculated_result_mem),
     .memory_working_info_o(memory_working_info)
 );
@@ -150,10 +150,10 @@ wire writeback_finished; // writeback finished signal
 WriteBackStep writeback(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_step_i(enable_writeback),
+    //.enable_step_i(memory_finished),
     .calculated_result_i(calculated_result_mem),
     .fetch_working_info_i(fetch_working_info),
-    .writeback_finished_o(writeback_finished),
+    //.writeback_finished_o(writeback_finished),
     .writebacked_result_o(writebacked_result),
     .reg_write_integer_o(reg_write_integer),
     .reg_write_float_o(reg_write_float),
@@ -170,8 +170,14 @@ integer w = 1; // instruction number for writeback
 /*
     Working principle of the pipeline processor:
 */
+/*
 always@(posedge clk_i) begin
 
+    if(fetch_finished)
+        fetch.fetch_finished = 1'b0;
+    
+    if(decode_finished)
+        decode.decode_finished = 1'b0;
     if(fetch_finished) begin
         enable_fetch = 1'b0;     // if fetch finished, disable fetch stage
         fetch.fetch_finished = 1'b0;  // reset fetch finished signal
@@ -217,6 +223,7 @@ always@(posedge clk_i) begin
         $display("writeback finished for instruction %d",w);
         w=w+1;
     end  
+    
 end // end of always block
-
+*/
 endmodule

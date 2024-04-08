@@ -7,7 +7,7 @@ include "definitions.vh";
 module ExecuteStep1 (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
-    input wire enable_step_i, // Enable input
+    //input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input
     input wire [31:0] operand1_integer_i, // Operand 1 input
     input wire [31:0] operand2_integer_i, // Operand 2 input
@@ -19,7 +19,7 @@ module ExecuteStep1 (
     input wire [4:0] instruction_type_i, // instruction type
     input wire memory_working_info_i,
     output wire [31:0] calculated_result_o, // resulted
-    output wire execute1_finished_o, // Flag for finishing execute step 1
+    //output wire execute1_finished_o, // Flag for finishing execute step 1
     output wire execute_working_info_o
 );
 
@@ -156,22 +156,16 @@ reg [2:0] STATE_NEXT = FIRST_CYCLE; // Next state for the module
 
 integer i = 1; // it is just for debugging the instruction number
 
-assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
+//assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
 always @(*) begin
-    if(isWorking) begin
-    
 
-    
-        case(STATE)
-            FIRST_CYCLE : begin
-            
-                        execute1_finished_next = execute1_finished; // Assign execute1_finished to execute1_finished_next
         execute_working_info_next = execute_working_info; // Assign execute_working_info to execute_working_info_next
         calculated_result_next = calculated_result; // Assign calculated_result to calculated_result_next
         STATE_NEXT = STATE; // Assign STATE to STATE_NEXT
-            
-                execute1_finished_next = 1'b0;
+
+        case(STATE)
+            FIRST_CYCLE : begin
                 execute_working_info_next = 1'b1;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
@@ -267,9 +261,8 @@ always @(*) begin
                             enable_alu_unit = 1'b0;
                             $display("Arithmetic Logic Unit Finished");
                             $display("-->Execution completed for instruction num %d",i);
-                            $display("Result after execution %d",calculated_result_next);
+                            $display("Result after execution %d",calculated_result);
                             i=i+1;
-                            execute1_finished_next = 1'b1; 
                             STATE_NEXT = FIRST_CYCLE;
                             execute_working_info_next = 1'b0;
                         end
@@ -289,11 +282,10 @@ always @(*) begin
                                 integer_multiplication_unit.is_finished = 1'b0;
                                 $display("Integer Multiplication Unit Finished for instruction %d",i);
                                 $display("-->Execution completed for instruction num %d",i);
-                                $display("Result after execution %d",calculated_result_next);
+                                $display("Result after execution %d",calculated_result);
                                 i=i+1;
                                 STATE_NEXT = FIRST_CYCLE;
                                 execute_working_info_next = 1'b0;
-                                execute1_finished_next = 1'b1; 
                             end
                         end
                     end
@@ -312,11 +304,10 @@ always @(*) begin
                                     integer_division_unit.is_finished = 1'b0;
                                     $display("Integer Division Unit Finished for instruction %d",i);
                                     $display("-->Execution completed for instruction num %d",i);
-                                    $display("Result after execution %d",calculated_result_next);
+                                    $display("Result after execution %d",calculated_result);
                                     i=i+1;
-                                    execute1_finished_next = 1'b1; 
                                     STATE_NEXT = FIRST_CYCLE;
-                                    execute_working_info_next = 1'b0;
+                                    execute_working_info_next  = 1'b0;
                                 end
                             end
                     end
@@ -340,7 +331,7 @@ always @(*) begin
             end
         endcase
     end
-end
+
 
 // Update the register values
 always @(posedge clk_i) begin
@@ -351,16 +342,14 @@ always @(posedge clk_i) begin
         STATE <= FIRST_CYCLE;
     end
     else begin
-        if(isWorking) begin
-            execute1_finished <= execute1_finished_next;
-            execute_working_info <= execute_working_info_next;
-            calculated_result <= calculated_result_next;
-            STATE <= STATE_NEXT;
-        end
+        execute1_finished <= execute1_finished_next;
+        execute_working_info <= execute_working_info_next;
+        calculated_result <= calculated_result_next;
+        STATE <= STATE_NEXT;
     end
 end
 
-assign execute1_finished_o = execute1_finished;
+//assign execute1_finished_o = execute1_finished;
 assign calculated_result_o = calculated_result;
 assign execute_working_info_o = execute_working_info;
 
