@@ -10,6 +10,7 @@ module ArithmeticLogicUnit (
     input wire [31:0] operand2_i, // Second operand
     input wire enable_i, // Enable input
     input wire [4:0] aluOp_i, // ALU operation
+    input wire other_resources_i, // we can use arithmetic logic for memory address calculation
     output wire [31:0] result_o // Result
 );
 
@@ -23,11 +24,7 @@ RippleCarryAdder32 adder(
     .cout(cout)
 );
 // Perform the operation based on the aluOp
-
 always @(posedge enable_i) begin
-
-    if(aluOp_i != `ALU_ADD)
-    begin
       case (aluOp_i)
         `ALU_SUB : result = operand1_i - operand2_i; // subtraction
         `ALU_AND: result = operand1_i & operand2_i; // Bitwise AND
@@ -49,8 +46,8 @@ always @(posedge enable_i) begin
         `ALU_SRAI : result = operand1_i >>> operand2_i; // Shift right arithmetic
         default: result = 32'b0; // Default to 0
       endcase
-    end
 end
-assign result_o = (aluOp_i == `ALU_ADD) ? result_addition : result;
+
+assign result_o = (aluOp_i == `ALU_ADD || other_resources_i) ? result_addition : result;
 
 endmodule

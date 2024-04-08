@@ -15,6 +15,7 @@ module ExecuteStep1 (
     input wire [4:0] rd_i, // Destination register input
     input wire [31:0] operand1_integer_i, // Operand 1 input
     input wire [31:0] operand2_integer_i, // Operand 2 input
+    input wire [31:0] rs2_value_i,
     input wire [31:0] operand1_float_i,
     input wire [31:0] operand2_float_i,
     input wire [31:0] operand3_float_i,
@@ -24,10 +25,20 @@ module ExecuteStep1 (
     input wire memory_working_info_i,
     output wire [31:0] calculated_result_o, // resulted
     output wire execute1_finished_o, // Flag for finishing execute step 1
-    output wire execute_working_info_o
+    output wire execute_working_info_o,
+    output wire [4:0] rd_o,
+    output wire [31:0] mem_data_o,
+    output wire [2:0] mem_op_o,
+    output wire mem_instruction_o
 );
 
+reg [2:0] mem_op = 3'b000;
+
+reg mem_instruction = 1'b0;
+
 reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
+
+reg [4:0] rd = 5'b0;
 
 reg execute_working_info = 1'b0;   //  very important info for stalling 
 
@@ -62,12 +73,14 @@ wire [31:0] calculated_bit_manip_result;  //  bit manipulation unit result reg
 wire [31:0] calculated_atomic_result;      // atomic unit result reg
 wire [31:0] calculated_control_status_result; // control status unit result reg 
 
+reg other_resources = 1'b0;
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
     .enable_i(enable_alu_unit),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .aluOp_i(instruction_type_i),
+    .other_resources_i(other_resources),
     .result_o(calculated_alu_result)
 );
 
@@ -156,6 +169,8 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
+                mem_instruction = 1'b0; // important for mem operations
+                rd = rd_i;
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
@@ -237,17 +252,25 @@ always @(posedge clk_i) begin
                         enable_bit_manipulation_unit = 1'b1;
                         $display("Bit Manipulation Unit working");
                     end
+                    `MEMORY_STEP: begin
+                        // for address calculation enable artihmetic logic unit
+                        enable_alu_unit = 1'b1; // no importance
+                        other_resources = 1'b1;
+                        $display("Memory address calculation is being done");
+                        mem_op = instruction_type_i[2:0];
+                        mem_instruction = 1'b1;
+                    end
                 endcase
                 STATE = SECOND_CYCLE; // Go to the second cycle
             end
             SECOND_CYCLE : begin
-                case(unit_type_i)
-                    `ARITHMETIC_LOGIC_UNIT: begin
-                        if(memory_working_info_i) begin
-                            $display("MEMORY STILL WORKING EXECUTE WAITING");
-                            STATE = STALL;
-                        end
-                        else begin
+                if(memory_working_info_i) begin
+                    $display("MEMORY STILL WORKING EXECUTE WAITING");
+                    STATE = STALL;
+                end
+                else begin
+                    case(unit_type_i)
+                        `ARITHMETIC_LOGIC_UNIT: begin
                             calculated_result = calculated_alu_result;
                             enable_alu_unit = 1'b0;
                             $display("Arithmetic Logic Unit Finished");
@@ -258,12 +281,7 @@ always @(posedge clk_i) begin
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                         end
-                    end
-                    `INTEGER_MULTIPLICATION_UNIT: begin
-                        if(memory_working_info_i) begin
-                            STATE = STALL;
-                        end
-                        else begin
+                        `INTEGER_MULTIPLICATION_UNIT: begin
                             if(finished_integer_multiplication_unit != 1'b1) begin
                                 $display("Still integer multiplication");
                                 STATE = STALL;
@@ -281,43 +299,48 @@ always @(posedge clk_i) begin
                                 execute1_finished = 1'b1; 
                             end
                         end
-                    end
-                    `INTEGER_DIVISION_UNIT: begin
-                            if(memory_working_info_i) begin
+                        `INTEGER_DIVISION_UNIT: begin
+                            if(finished_integer_division_unit != 1'b1) begin
+                                $display("Still integer division");
                                 STATE = STALL;
                             end
                             else begin
-                                if(finished_integer_division_unit != 1'b1) begin
-                                    $display("Still integer division");
-                                    STATE = STALL;
-                                end
-                                else begin
-                                    calculated_result = calculated_int_div_result;
-                                    enable_integer_division_unit = 1'b0; 
-                                    integer_division_unit.is_finished = 1'b0;
-                                    $display("Integer Division Unit Finished for instruction %d",i);
-                                    $display("-->Execution completed for instruction num %d",i);
-                                    $display("Result after execution %d",calculated_result);
-                                    i=i+1;
-                                    execute1_finished = 1'b1; 
-                                    STATE = FIRST_CYCLE;
-                                    execute_working_info = 1'b0;
-                                end
+                                calculated_result = calculated_int_div_result;
+                                enable_integer_division_unit = 1'b0; 
+                                integer_division_unit.is_finished = 1'b0;
+                                $display("Integer Division Unit Finished for instruction %d",i);
+                                $display("-->Execution completed for instruction num %d",i);
+                                $display("Result after execution %d",calculated_result);
+                                i=i+1;
+                                execute1_finished = 1'b1; 
+                                STATE = FIRST_CYCLE;
+                                execute_working_info = 1'b0;
                             end
-                    end
-                    `FLOATING_POINT_UNIT:begin
-                    end
-                    `BRANCH_RESOLVER_UNIT:begin
-                    end 
-                    `CONTROL_UNIT:begin
-                    end
-                    `CONTROL_STATUS_UNIT:begin
-                    end
-                    `ATOMIC_UNIT:begin
-                    end
-                    `BIT_MANIPULATION_UNIT:begin;
-                    end
-                endcase
+                        end
+                        `FLOATING_POINT_UNIT:begin
+                        end
+                        `BRANCH_RESOLVER_UNIT:begin
+                        end 
+                        `CONTROL_UNIT:begin
+                        end
+                        `CONTROL_STATUS_UNIT:begin
+                        end
+                        `ATOMIC_UNIT:begin
+                        end
+                        `BIT_MANIPULATION_UNIT:begin;
+                        end
+                        `MEMORY_STEP: begin
+                            enable_alu_unit = 1'b0;
+                            calculated_result = calculated_alu_result;
+                            $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                            other_resources = 1'b0;
+                        end
+                    endcase
+               end
             end
             STALL: begin
                 $display("STALL FOR EXECUTE");
@@ -330,6 +353,10 @@ end
 assign execute1_finished_o = execute1_finished;
 assign calculated_result_o = calculated_result;
 assign execute_working_info_o = execute_working_info;
+assign rd_o = rd;
+assign mem_data_o = rs2_value_i;
+assign mem_op_o = mem_op;
+assign mem_instruction_o = mem_instruction;
 
 
 endmodule 
