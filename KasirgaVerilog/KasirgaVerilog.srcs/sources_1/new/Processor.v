@@ -243,7 +243,7 @@ always@(posedge clk_i) begin
         e=e+1; // increment the instruction number
     end 
     else if(memory_finished) begin
-        
+        // heyoo
         enable_memory = 1'b0;  // if memory finished, disable memory stage
         memory.memory_finished = 1'b0; // reset memory finished signal
         enable_writeback =1'b1; // enable writeback stage
@@ -257,7 +257,7 @@ always@(posedge clk_i) begin
     else if(writeback_finished) begin
         enable_writeback = 1'b0; // if writeback finished, disable writeback stage
         writeback.writeback_finished = 1'b0; // reset writeback finished signal
-        enable_fetch = 1'b1; // enable fetch stage this is the huge mistake that I have made so far
+        //enable_fetch = 1'b1; // enable fetch stage this is the huge mistake that I have made so far
         if(execute1_finished) begin
             enable_memory = 1'b1; // for implementing stalling mechanism
         end
