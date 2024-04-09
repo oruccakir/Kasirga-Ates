@@ -18,11 +18,6 @@ module FetchStep (
     output wire get_instruction_o
 );
 
-
-
-
-reg fetch_working_info = 1'b0;  // working info for fetch step
-
 reg get_instruction = 1'b0;
 reg get_instruction_next = 1'b0;
 
@@ -54,7 +49,7 @@ always @(*) begin
     program_counter_next = program_counter;
     STATE_NEXT = STATE;
     
-    case(STATE) // case for state
+    case(STATE_NEXT) // case for state
         FIRST_CYCLE : begin // first state
             //fetch_working_info= 1'b1; // working info for fetch step
             get_instruction_next = 1'b1;
@@ -108,7 +103,6 @@ end
 assign mem_address_o = program_counter; // assign memory address to program counter
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished
 assign instruction_to_decode_o = instruction_to_decode; // assign instruction to decode
-assign fetch_working_info_o = fetch_working_info; // assign working info to fetch working info
-assign get_instruction_o = get_instruction;
+assign get_instruction_o = get_instruction;     // assign get instruction output
 
 endmodule
