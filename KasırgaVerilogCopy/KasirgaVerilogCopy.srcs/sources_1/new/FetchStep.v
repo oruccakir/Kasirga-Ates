@@ -18,16 +18,14 @@ module FetchStep (
     output wire get_instruction_o
 );
 
+reg fetch_working_info = 1'b0;  // working info for fetch step
+
 reg get_instruction = 1'b0;
-reg get_instruction_next = 1'b0;
 
 reg [31:0] instruction_to_decode = 32'b0; // instruction that will be convetyed to decode step
-reg [31:0] instruction_to_decode_next = 32'b0;
 
 // FetchStep module implementation
 reg [31:0] program_counter = 32'h8000_0000;  // program counter to access memory, data and instructions
-reg [31:0] program_counter_next = 32'h8000_0000;
-
 reg fetch_finished = 1'b0;       // flag for fetch finished info
 wire isWorking;                  // controling signal for working of this step
 
@@ -36,73 +34,54 @@ localparam SECOND_CYCLE = 3'b001;    // secodn state
 localparam STALL = 3'b010;           // stall state
 
 reg [2:0] STATE = FIRST_CYCLE;      // set first state as first state
-reg [2:0] STATE_NEXT = FIRST_CYCLE;
 
 integer i = 1; // for debugging the which instruction is fetched and conveyed
 
 assign isWorking = enable_step_i && fetch_finished != 1'b1;          // assign working info depending of enable and finish info
 
-always @(*) begin
-    
-    get_instruction_next = get_instruction;
-    instruction_to_decode_next = instruction_to_decode;
-    program_counter_next = program_counter;
-    STATE_NEXT = STATE;
-    
-    case(STATE_NEXT) // case for state
-        FIRST_CYCLE : begin // first state
-            //fetch_working_info= 1'b1; // working info for fetch step
-            get_instruction_next = 1'b1;
-            $display("FETCH STEP Fetching instruction from memory %h", program_counter_next, " for instruction %d",i); // debug info
-            STATE_NEXT = SECOND_CYCLE; // change state to second state
-        end
-        SECOND_CYCLE : begin // second state
-            if(decode_working_info_i) begin // if decode step is working then stall
-                $display("DECODE STILL WORKING FETCH WAITING for ",i); // debug info
-                STATE_NEXT = STALL; // change state to stall
+always @(posedge clk_i) begin
+    if(isWorking) begin // if working
+        case(STATE) // case for state
+            FIRST_CYCLE : begin // first state
+                fetch_working_info= 1'b1; // working info for fetch step
+                get_instruction = 1'b1;
+                $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
+                STATE = SECOND_CYCLE; // change state to second state
             end
-            else begin
-                if(instruction_completed_i) begin
-                    $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
-                    i = i+1; // increment instruction number
-                    instruction_to_decode_next = instruction_i; // convey instruction to decode step
-                    STATE_NEXT = FIRST_CYCLE; // change state to first state
-                    program_counter_next = program_counter + 4; // increment program counter
-                    //fetch_finished = 1'b1; // set fetch finished info
-                    //fetch_working_info = 1'b0; // set working info to 0
-                    get_instruction_next = 1'b0;
+            SECOND_CYCLE : begin // second state
+                if(decode_working_info_i) begin // if decode step is working then stall
+                    $display("DECODE STILL WORKING FETCH WAITING for ",i); // debug info
+                    STATE = STALL; // change state to stall
                 end
                 else begin
-                    STATE_NEXT = STALL;
-                    $display("Instruction have not arrived yet");
+                    if(instruction_completed_i) begin
+                        $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
+                        i = i+1; // increment instruction number
+                        instruction_to_decode = instruction_i; // convey instruction to decode step
+                        STATE = FIRST_CYCLE; // change state to first state
+                        program_counter = program_counter + 4; // increment program counter
+                        fetch_finished = 1'b1; // set fetch finished info
+                        fetch_working_info = 1'b0; // set working info to 0
+                        get_instruction = 1'b0;
+                    end
+                    else begin
+                        STATE = STALL;
+                         $display("Instruction have not arrived yet");
+                    end
                 end
-            end
-        end  
-        STALL : begin // stall state
-            $display("STALL FOR FETCH"); // debug info
-            STATE_NEXT = SECOND_CYCLE; // change state to second state
-        end 
-    endcase  // end of case
+            end  
+            STALL : begin // stall state
+                $display("STALL FOR FETCH"); // debug info
+                STATE = SECOND_CYCLE; // change state to second state
+            end 
+        endcase  // end of case
+    end // end of if working  
 end // end of always block
-
-always @(posedge clk_i) begin
-    if(rst_i) begin
-        get_instruction = 1'b0;
-        instruction_to_decode = 32'b0;
-        program_counter = 32'h8000_0000;
-        STATE = FIRST_CYCLE;
-    end
-    else begin
-        get_instruction <= get_instruction_next;
-        instruction_to_decode <= instruction_to_decode_next;
-        program_counter <= program_counter_next;
-        STATE <= STATE_NEXT;
-    end
-end
 
 assign mem_address_o = program_counter; // assign memory address to program counter
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished
 assign instruction_to_decode_o = instruction_to_decode; // assign instruction to decode
-assign get_instruction_o = get_instruction;     // assign get instruction output
+assign fetch_working_info_o = fetch_working_info; // assign working info to fetch working info
+assign get_instruction_o = get_instruction;
 
 endmodule
