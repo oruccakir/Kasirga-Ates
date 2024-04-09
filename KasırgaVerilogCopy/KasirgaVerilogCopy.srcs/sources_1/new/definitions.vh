@@ -134,11 +134,21 @@
 `define CONTROL_STATUS_UNIT             4'h6
 `define ATOMIC_UNIT                     4'h7
 `define BIT_MANIPULATION_UNIT           4'h8
+`define MEMORY_STEP                     4'h9
 
 // FLOATING POINT UNIT SELECTION
 `define FLOATING_MULTIPLICATION_UNIT    1'b0
 `define FLOATING_DIVISION_UNIT          1'b1
 
+// For memory instructions
+`define MEM_LB                          3'h0
+`define MEM_LH                          3'h1
+`define MEM_LW                          3'h2
+`define MEM_LBU                         3'h3
+`define MEM_LHU                         3'h4
+`define MEM_SB                          3'h5
+`define MEM_SH                          3'h6
+`define MEM_SW                          3'h7
 
 
 
