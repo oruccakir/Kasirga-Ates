@@ -55,7 +55,7 @@ always @(posedge clk_i) begin
             end
             SECOND_CYCLE : begin
                 $display("-->Writeback completed for instruction num %d",i);
-                $display("Writebacked result %d",writebacked_result_o);
+                $display("Writebacked result %d",writebacked_result);
                 writeback_finished <= 1'b1;
                 reg_write_integer <= 1'b0;
                 i=i+1;

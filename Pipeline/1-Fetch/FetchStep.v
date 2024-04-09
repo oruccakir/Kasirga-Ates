@@ -50,7 +50,7 @@ always @(posedge clk_i) begin
             end
             SECOND_CYCLE : begin // second state
                 if(decode_working_info_i) begin // if decode step is working then stall
-                    $display("DECODE STILL WORKING FETCH WAITING"); // debug info
+                    $display("DECODE STILL WORKING FETCH WAITING for ",i); // debug info
                     STATE = STALL; // change state to stall
                 end
                 else begin
@@ -64,8 +64,10 @@ always @(posedge clk_i) begin
                         fetch_working_info = 1'b0; // set working info to 0
                         get_instruction = 1'b0;
                     end
-                    else
+                    else begin
                         STATE = STALL;
+                         $display("Instruction have not arrived yet");
+                    end
                 end
             end  
             STALL : begin // stall state

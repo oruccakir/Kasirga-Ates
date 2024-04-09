@@ -107,7 +107,7 @@ always @(posedge clk_i) begin
             FIRST_CYCLE : begin // First cycle
                 decode_working_info = 1'b1; // Set the working info for decode step
                 if(execute_working_info_i) begin
-                    $display("EXECUTE STILL WORKING DECODE WAITING");
+                    $display("EXECUTE STILL WORKING DECODE WAITING for instruction ",i);
                     STATE = STALL;
                 end
                 else begin
@@ -442,9 +442,9 @@ assign opcode_o = opcode;                   // Assign the opcode
 assign rs1_o = rs1;                         // Assign source register 1
 assign rs2_o = rs2;                         // Assign source register 2
 assign rd_o = rd;                           // Assign destination register
-assign integer_operand1_o = operand1_integer;
+assign integer_operand1_o = operand1_integer;   // assign operand1 output
 assign integer_operand2_o = (enable_generate)? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction
-assign rs2_value_o = operand2_integer;
+assign rs2_value_o = operand2_integer;        // assign operand2_integer to rs2_value for memory operations
 assign float_operand1_o = operand1_float;  // Assign float operand 1
 assign float_operand2_o = operand2_float; // Assign float operand 2
 assign float_operand3_o = operand3_float; // Assign float operand 3

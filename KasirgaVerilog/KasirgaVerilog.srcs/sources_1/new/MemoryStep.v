@@ -10,6 +10,7 @@ module MemoryStep (
     input wire [31:0]data_i, // comes from memory
     input wire [3:0] unit_type_i,
     input wire enable_step_i, // Enable input
+    input wire data_completed_i, // data completed comes from helper memory
     input wire mem_instruction_i,
     input wire mem_read_enable_i, // Memory read enable input
     input wire mem_write_enable_i, // Memory write enable input
@@ -57,9 +58,9 @@ integer i = 1; // For debugging the instruction number
 
 always @(posedge clk_i) begin
     if(isWorking) begin
-        $display("MEMORY STEP for ",i);
         case(STATE)
             FIRST_CYCLE:begin
+                $display("MEMORY STEP for ",i);
                 memory_working_info = 1'b1;
                 calculated_result = calculated_result_i;
                 mem_address = calculated_result_i;
@@ -106,8 +107,9 @@ always @(posedge clk_i) begin
                          end
                         `MEM_LW: begin
                             read_enable = 1'b0;
+                            $display("data completed ",data_completed_i);
                             $display("From Memory readed %h",data_i);
-                            //calculated_result = data_i;
+                            calculated_result = data_i;
                          end
                         `MEM_LB: begin
                          end

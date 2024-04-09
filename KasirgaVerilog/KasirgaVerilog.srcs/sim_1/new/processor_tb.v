@@ -7,7 +7,7 @@ localparam DATA_BIT = 32;
 reg clk_r;
 reg rst_r;
 
-wire [31:0] processor_MEMORY_ADDRESS;
+wire [31:0] processor_MEMORY_ADDRESS_INS;
 wire [31:0] processor_MEMORY_ADDRESS_DATA;
 wire [DATA_BIT-1:0] processor_memory_read_data;
 wire [DATA_BIT-1:0] processor_memory_read_ins;
@@ -20,7 +20,7 @@ wire instruction_completed;
 
 HelperMemory memory (
     .clk_i(clk_r),
-    .address_i(processor_MEMORY_ADDRESS),
+    .ins_address_i(processor_MEMORY_ADDRESS_INS),
     .data_address_i(processor_MEMORY_ADDRESS_DATA),
     .read_data_o(processor_memory_read_data),
     .read_ins_o(processor_memory_read_ins),
@@ -39,7 +39,7 @@ Processor processor (
     .data_i(processor_memory_read_data),
     .data_completed_i(data_completed),
     .instruction_completed_i(instruction_completed),
-    .mem_address_o(processor_MEMORY_ADDRESS),
+    .mem_address_o(processor_MEMORY_ADDRESS_INS),
     .get_data_o(get_data),
     .get_instruction_o(get_instruction),
     .write_data_o(processor_memory_write_data),
@@ -75,10 +75,11 @@ initial begin
     memory_write('h8000_0024, 32'h025185b3);  // mul x11, x3, x5
     memory_write('h8000_0028,32'h06cfa223);   // sw x12, 100(x31)
     memory_write('h8000_002c,32'h016586b3);   //add x13, x11, x22
-    memory_write('h8000_0030,32'h000fae03);    // lw x28, 0(x31)
+    memory_write('h8000_0030,32'h000fae03);   // lw x28, 0(x31)
     memory_write('h8000_0034,32'h016586b3);   //add x13, x11, x22
     memory_write('h8000_0038,32'h016586b3);   //add x13, x11, x22
     memory_write('h8000_003c,32'h016586b3);   //add x13, x11, x22
+    memory_write('h8000_0040,32'h073fa423);   // sw x19, 104(x31)
     
     
    

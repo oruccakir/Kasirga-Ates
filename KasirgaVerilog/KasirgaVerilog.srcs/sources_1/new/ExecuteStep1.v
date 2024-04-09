@@ -170,9 +170,9 @@ always @(posedge clk_i) begin
         case(STATE)
             FIRST_CYCLE : begin
                 mem_instruction = 1'b0; // important for mem operations
-                rd = rd_i;
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
+                rd = rd_i;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
                     `ARITHMETIC_LOGIC_UNIT: begin
@@ -253,12 +253,11 @@ always @(posedge clk_i) begin
                         $display("Bit Manipulation Unit working");
                     end
                     `MEMORY_STEP: begin
-                        // for address calculation enable artihmetic logic unit
                         enable_alu_unit = 1'b1; // no importance
                         other_resources = 1'b1;
-                        $display("Memory address calculation is being done");
+                        $display("Memory address calculation is being done for instruction ",i);
                         mem_op = instruction_type_i[2:0];
-                        mem_instruction = 1'b1;
+                        mem_instruction = 1'b1;;
                     end
                 endcase
                 STATE = SECOND_CYCLE; // Go to the second cycle
@@ -332,7 +331,7 @@ always @(posedge clk_i) begin
                         `MEMORY_STEP: begin
                             enable_alu_unit = 1'b0;
                             calculated_result = calculated_alu_result;
-                            $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result);
+                            $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result," for ",i );
                             i=i+1;
                             execute1_finished = 1'b1; 
                             STATE = FIRST_CYCLE;

@@ -6,7 +6,7 @@ module HelperMemory #(
     parameter DEBUG           = "TRUE"
 )(
     input wire                       clk_i,
-    input wire   [ADDRES_BIT-1:0]    address_i,
+    input wire   [ADDRES_BIT-1:0]    ins_address_i,
     input wire   [31:0]              data_address_i,
     input wire   [DATA_BIT-1:0]      write_data_i,
     input wire                       write_enable_i,
@@ -28,9 +28,9 @@ reg [DATA_BIT-1:0] read_data_cmb;
 reg [31:0]  read_ins_cmb;
 
 
-wire mem_access_valid_ins = (address_i >= INITIAL_ADDRES) && (address_i < (INITIAL_ADDRES + MEMORY_INDEX));
+wire mem_access_valid_ins = (ins_address_i >= INITIAL_ADDRES) && (ins_address_i < (INITIAL_ADDRES + MEMORY_INDEX));
 wire mem_access_valid_data = (data_address_i >= INITIAL_ADDRES) && (data_address_i < (INITIAL_ADDRES + MEMORY_INDEX));
-wire [ADDRES_BIT-1:0] MEM_INDEX_INS = (address_i - INITIAL_ADDRES) >> $clog2(DATA_BIT / 8);
+wire [ADDRES_BIT-1:0] MEM_INDEX_INS = (ins_address_i - INITIAL_ADDRES) >> $clog2(DATA_BIT / 8);
 wire [ADDRES_BIT-1:0] MEM_INDEX_DATA = (data_address_i - INITIAL_ADDRES) >> $clog2(DATA_BIT / 8);
 
 integer i;
@@ -78,6 +78,7 @@ always @(*)begin
         else
             data_completed = 1'b0;
 end
+
 
 always @(posedge clk_i) begin
     if (mem_access_valid_data && write_enable_i) begin
