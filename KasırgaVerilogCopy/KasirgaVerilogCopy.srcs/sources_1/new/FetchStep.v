@@ -49,25 +49,25 @@ always @(posedge clk_i) begin
                 STATE = SECOND_CYCLE; // change state to second state
             end
             SECOND_CYCLE : begin // second state
-                if(decode_working_info_i) begin // if decode step is working then stall
-                    $display("DECODE STILL WORKING FETCH WAITING for ",i); // debug info
-                    STATE = STALL; // change state to stall
-                end
-                else begin
-                    if(instruction_completed_i) begin
-                        $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
-                        i = i+1; // increment instruction number
+                if(instruction_completed_i) begin
+                    $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
+                    if(decode_working_info_i == 0) begin
                         instruction_to_decode = instruction_i; // convey instruction to decode step
-                        STATE = FIRST_CYCLE; // change state to first state
+                        STATE = FIRST_CYCLE; // change state to first state 
                         program_counter = program_counter + 4; // increment program counter
                         fetch_finished = 1'b1; // set fetch finished info
                         fetch_working_info = 1'b0; // set working info to 0
                         get_instruction = 1'b0;
+                        i = i+1; // increment instruction number
                     end
                     else begin
+                        $display("Decode still working stall for fetch instruction ",i);
                         STATE = STALL;
-                         $display("Instruction have not arrived yet");
                     end
+                end
+                else begin
+                    STATE = STALL;
+                     $display("Instruction have not arrived yet");
                 end
             end  
             STALL : begin // stall state

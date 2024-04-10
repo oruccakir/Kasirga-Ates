@@ -60,46 +60,48 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE:begin
-                $display("MEMORY STEP for ",i);
-                memory_working_info = 1'b1;
-                calculated_result = calculated_result_i;
-                mem_address = calculated_result_i;
-                mem_data = mem_data_i;
-                $display("-->Performing memory operation for instruction num %d",i);
-                $display("--> INFO comes from execute step %d",calculated_result_i);
-                if(mem_instruction_i) begin
-                    case(memOp_i)
-                        `MEM_SW: begin
-                            write_enable = 1'b1;
-                            $display("Memory SW Instruction writed address %h",mem_address);
-                         end
-                        `MEM_LW: begin
-                            read_enable = 1'b1;
-                            $display("Memory LW Instruction readed address %h",mem_address);
-                         end
-                        `MEM_LB: begin
-                         end
-                        `MEM_LH: begin
-                         end
-                        `MEM_LBU: begin
-                         end
-                        `MEM_LHU: begin
-                         end
-                        `MEM_SB: begin
-                         end
-                        `MEM_SH: begin
-                         end
-                    endcase
-                end
-                rd = rd_i;
-                STATE <= SECOND_CYCLE; // Go to the second cycle
-            end
-            SECOND_CYCLE:begin
                 if(writeback_working_info_i) begin
                     $display("WRITEBACK STILL WORKING");
                     STATE = STALL;
                 end
-                if(mem_instruction_i) begin
+                else begin
+                    $display("MEMORY STEP for ",i);
+                    memory_working_info = 1'b1;
+                    calculated_result = calculated_result_i;
+                    mem_address = calculated_result_i;
+                    mem_data = mem_data_i;
+                    $display("-->Performing memory operation for instruction num %d",i);
+                    $display("--> INFO comes from execute step %d",calculated_result_i);
+                    if(unit_type_i == `MEMORY_STEP) begin
+                        case(memOp_i)
+                            `MEM_SW: begin
+                                write_enable = 1'b1;
+                                $display("Memory SW Instruction writed address %h",mem_address);
+                             end
+                            `MEM_LW: begin
+                                read_enable = 1'b1;
+                                $display("Memory LW Instruction readed address %h",mem_address);
+                             end
+                            `MEM_LB: begin
+                             end
+                            `MEM_LH: begin
+                             end
+                            `MEM_LBU: begin
+                             end
+                            `MEM_LHU: begin
+                             end
+                            `MEM_SB: begin
+                             end
+                            `MEM_SH: begin
+                             end
+                        endcase
+                    end
+                   // rd = rd_i;
+                    STATE <= SECOND_CYCLE; // Go to the second cycle
+                end
+            end
+            SECOND_CYCLE:begin
+                if(unit_type_i == `MEMORY_STEP) begin
                     case(memOp_i)
                         `MEM_SW: begin
                             write_enable = 1'b0;
@@ -125,6 +127,7 @@ always @(posedge clk_i) begin
                          end
                     endcase
                 end
+                rd = rd_i;
                 $display("-->Memory operation completed for instruction %d",i);
                 i=i+1;
                 memory_finished <=1; // Set memory_finished to 1
@@ -133,7 +136,7 @@ always @(posedge clk_i) begin
             end
             STALL: begin
                 $display("STALL FOR MEMORY");
-                STATE = SECOND_CYCLE;
+                STATE = FIRST_CYCLE;
             end
         endcase
     end

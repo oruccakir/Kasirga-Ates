@@ -29,8 +29,11 @@ module ExecuteStep1 (
     output wire [4:0] rd_o,
     output wire [31:0] mem_data_o,
     output wire [2:0] mem_op_o,
-    output wire mem_instruction_o
+    output wire mem_instruction_o,
+    output wire [3:0] unit_type_o
 );
+
+reg [3:0] unit_type = 4'b0000;
 
 reg [2:0] mem_op = 3'b000;
 
@@ -169,10 +172,9 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
-                mem_instruction = 1'b0; // important for mem operations
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
-                rd = rd_i;
+                //rd = rd_i;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
                     `ARITHMETIC_LOGIC_UNIT: begin
@@ -256,8 +258,8 @@ always @(posedge clk_i) begin
                         enable_alu_unit = 1'b1; // no importance
                         other_resources = 1'b1;
                         $display("Memory address calculation is being done for instruction ",i);
-                        mem_op = instruction_type_i[2:0];
-                        mem_instruction = 1'b1;;
+                        //mem_op = instruction_type_i[2:0];
+                        //mem_instruction = 1'b1;;
                     end
                 endcase
                 STATE = SECOND_CYCLE; // Go to the second cycle
@@ -330,6 +332,7 @@ always @(posedge clk_i) begin
                         end
                         `MEMORY_STEP: begin
                             enable_alu_unit = 1'b0;
+                            mem_op = instruction_type_i[2:0];
                             calculated_result = calculated_alu_result;
                             $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result," for ",i );
                             i=i+1;
@@ -337,8 +340,11 @@ always @(posedge clk_i) begin
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                             other_resources = 1'b0;
+                            
                         end
                     endcase
+                    rd = rd_i;
+                    unit_type = unit_type_i;
                end
             end
             STALL: begin
@@ -356,6 +362,7 @@ assign rd_o = rd;
 assign mem_data_o = rs2_value_i;
 assign mem_op_o = mem_op;
 assign mem_instruction_o = mem_instruction;
+assign unit_type_o = unit_type;
 
 
 endmodule 

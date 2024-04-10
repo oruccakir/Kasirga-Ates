@@ -109,6 +109,8 @@ wire execute1_finished; // execute1 finished signal
 
 wire [31:0] calculated_result; // calculated result by execute1
 
+wire [3:0] unit_type_mem;
+
 wire [4:0] rd_to_memory;
 wire [2:0] mem_op;
 wire [31:0] mem_data; // memory data
@@ -139,7 +141,8 @@ ExecuteStep1 execute1(
     .rd_o(rd_to_memory),
     .mem_data_o(mem_data),
     .mem_op_o(mem_op),
-    .mem_instruction_o(mem_instruction)
+    .mem_instruction_o(mem_instruction),
+    .unit_type_o(unit_type_mem)
 );
 
 
@@ -162,7 +165,7 @@ MemoryStep memory(
     .enable_step_i(enable_memory),
     .data_completed_i(data_completed_i),
     .mem_instruction_i(mem_instruction),
-    .unit_type_i(unit_type),
+    .unit_type_i(unit_type_mem),
     .mem_data_i(mem_data),
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
