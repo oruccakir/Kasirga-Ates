@@ -51,6 +51,8 @@ wire [3:0] unit_type;
 // Fetch stage
 reg enable_fetch = 1'b1; // enable signal for fetch stage
 wire fetch_finished; // fetch finished signal
+wire [31:0] program_counter;
+wire is_branch_instruction;
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -62,7 +64,9 @@ FetchStep fetch(
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
-    .get_instruction_o(get_instruction_o)
+    .get_instruction_o(get_instruction_o),
+    .program_counter_o(program_counter),
+    .is_branch_instruction_o(is_branch_instruction)
 );
 
 // Decode stage
@@ -85,6 +89,7 @@ DecodeStep decode(
     .reg_write_csr_i(reg_write_csr),
     .target_register_i(target_register),
     .execute_working_info_i(execute_working_info),
+    .program_counter_i(program_counter),
     .rd_o(rd),
     .integer_operand1_o(integer_operand1),
     .integer_operand2_o(integer_operand2),
@@ -213,7 +218,7 @@ integer control = 0;
 always@(posedge clk_i) begin
 
     if(fetch_finished) begin
-        enable_fetch = 1'b0;     // if fetch finished, disable fetch stage              
+        enable_fetch = 1'b0;     // if fetch finished, disable fetch stage
         enable_decode = 1'b1;  // enable decode stage
         fetch.fetch_finished = 1'b0;  // reset fetch finished signal
         $display("fetch finished for instruction %d",f); // display the instruction number
@@ -223,7 +228,8 @@ always@(posedge clk_i) begin
         enable_decode = 1'b0;  // if decode finished, disable decode stage
         decode.decode_finished = 1'b0; // reset decode finished signal
         enable_execute1 = 1'b1; // enable execute1 stage
-        enable_fetch = 1'b1; // for implementing pipeline mechanism
+        if(is_branch_instruction == 1'b0) // if this is branch instruction then not run fetch wait execute step
+            enable_fetch = 1'b1; // for implementing pipeline mechanism
         $display("decode finished for instruction %d",d); // display the instruction number
         d = d + 1;   // increment the instruction number
     end
@@ -232,7 +238,8 @@ always@(posedge clk_i) begin
         execute1.execute1_finished = 1'b0; // reset execute1 finished signal
         enable_memory = 1'b1; // enable memory stage
         if(fetch_finished) begin
-            enable_decode = 1'b1; // for implementing stalling mechanism
+            if(is_branch_instruction == 1'b0) // if this is branch instruction then not run decode wait execute step
+                enable_decode = 1'b1; // for implementing stalling mechanism
         end
         $display("execute finished for instruction %d",e); // display the instruction number
         e=e+1; // increment the instruction number
@@ -242,7 +249,8 @@ always@(posedge clk_i) begin
         memory.memory_finished = 1'b0; // reset memory finished signal
         enable_writeback =1'b1; // enable writeback stage
         if(decode_finished) begin
-            enable_execute1 = 1'b1;  // for implementing stalling mechanism
+            if(is_branch_instruction == 1'b0) // if this is branch instruction then not run execute wait previous execute step
+                enable_execute1 = 1'b1;  // for implementing stalling mechanism
         end
         $display("memory finished for instruction %d",m); // display the instruction number
         m=m+1; // increment the instruction number

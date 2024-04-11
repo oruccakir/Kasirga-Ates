@@ -91,7 +91,6 @@ always @(posedge clk_i) begin
                     case(memOp_i)
                         `MEM_SW: begin
                             write_enable = 1'b0;
-                            $display("NO WRITE !!!!");
                          end
                         `MEM_LW: begin
                             read_enable = 1'b0;

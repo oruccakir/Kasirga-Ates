@@ -14,6 +14,7 @@ module DecodeStep (
     input wire reg_write_csr_i,  // Write data flag for csr register file,       comes from writeback step
     input wire [4:0] target_register_i, // this is crucial for writig info to correct register file index, comes from writeback step  
     input wire execute_working_info_i, // execute working info, comes from execute step
+    output wire [31:0] program_counter_i, // this is comes from fetch step and will be conveyed to decode step as first operand
     output wire [4:0] rd_o, // Destination register output, goes to execute step, Note : this value later comes as target_register_i as input from writeback step
     output wire [31:0] integer_operand1_o, // Operand 1 output, goes to execute step
     output wire [31:0] integer_operand2_o, // Operand 2 output, goes to execute step
@@ -42,6 +43,8 @@ wire [31:0] operand3_float; // Operand 3 float
 reg [3:0] unit_type = 4'b0000; //default zero will be changed later, will conveyed to execute step
 reg  [4:0] instruction_type = 5'b00000; // instruction type will be conveyed to execute step
 reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for register file, this later should be conveyed to writeback step for writing the data correct register file
+reg [31:0] first_operand = 32'b0; // for some instructions operand1_ineteger are not nesessary, this reg is assigned necessary info
+reg enable_first = 1'b0;    // this flag is necessary for assigning integer_operand1
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
@@ -89,6 +92,8 @@ always @(posedge clk_i) begin
         case(STATE)
             FIRST_CYCLE : begin // First cycle
                 decode_working_info = 1'b1; // Set the working info for decode step
+                enable_generate = 1'b0; 
+                enable_first = 1'b0;
                 if(execute_working_info_i) begin
                     $display("EXECUTE STILL WORKING DECODE WAITING for instruction ",i);
                     STATE = STALL;
@@ -97,6 +102,62 @@ always @(posedge clk_i) begin
                 $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i); // Display the instruction
                 opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                 case(opcode) // Extract the opcode
+                    7'b1100011: begin
+                        register_selection = `NONE_REGISTER;      
+                        rs1 = instruction_i[19:15];
+                        rs2 = instruction_i[24:20];
+                        enable_first = 1'b1;
+                        enable_generate = 1'b1;
+                        first_operand = program_counter_i;
+                        unit_type = `BRANCH_RESOLVER_UNIT;
+                        imm_generated_operand2[4:1] = instruction_i[11:8];
+                        imm_generated_operand2[11] = instruction_i[7];
+                        imm_generated_operand2[10:5] = instruction_i[30:25];
+                        imm_generated_operand2[12] = instruction_i[31];
+                        case(instruction_i[14:12])
+                            3'b000: begin
+                                instruction_type = `BRANCH_BEQ;
+                                if(operand1_integer != operand2_integer)
+                                    imm_generated_operand2 = 32'd4;
+                            end
+                            3'b001: begin
+                                instruction_type = `BRANCH_BNE;
+                            end
+                            3'b100: begin
+                                instruction_type = `BRANCH_BLT;
+                            end
+                            3'b101: begin 
+                                instruction_type = `BRANCH_BGE;
+                            end
+                            3'b110: begin 
+                                instruction_type = `BRANCH_BLTU;
+                            end
+                            3'b111: begin
+                                 instruction_type = `BRANCH_BGEU;
+                            end
+                        endcase
+                    end
+                    7'b0110111: begin
+                        register_selection = `INTEGER_REGISTER;
+                        rd = instruction_i[11:7];
+                        enable_generate = 1'b1;
+                        imm_generated_operand2[31:12] = instruction_i[31:12];
+                        imm_generated_operand2[11:0] = 12'b0;
+                        instruction_type = `NONE_LUI;
+                        unit_type = `NONE_UNIT;
+                    end
+                    7'b0010111: begin
+                        $display("AUPIC INSTRUCTON");
+                        register_selection = `INTEGER_REGISTER;
+                        rd = instruction_i[11:7];
+                        enable_generate = 1'b1;
+                        enable_first = 1'b1;
+                        first_operand = program_counter_i;
+                        imm_generated_operand2[31:12] = instruction_i[31:12];
+                        imm_generated_operand2[11:0] = 12'b0;
+                        instruction_type = `ALU_ADD;
+                        unit_type = `ARITHMETIC_LOGIC_UNIT;
+                    end
                     7'b0000011: begin
                         enable_generate = 1'b1;    // enable generate       
                         unit_type = `MEMORY_STEP;
@@ -427,7 +488,7 @@ end
 assign decode_finished_o = decode_finished; // Assign the flag for finishing decode step
 assign rd_o = rd;                           // Assign destination register is important for keeping the target register info for writeback, 
 // this info comes later again to this step, goes to execute step
-assign integer_operand1_o = operand1_integer;   // assign operand1 output, goes to execute step
+assign integer_operand1_o = (enable_first) ? first_operand : operand1_integer;   // assign operand1 output, goes to execute step
 assign integer_operand2_o = (enable_generate) ? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction and condition, goes to execute
 assign rs2_value_o = operand2_integer;          // assign operand2_integer to rs2_value for memory operations, goes to execute step
 assign float_operand1_o = operand1_float;       // Assign float operand 1, goes to execute step

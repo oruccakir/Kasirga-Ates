@@ -164,6 +164,10 @@ always @(posedge clk_i) begin
                 //rd = rd_i;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
+                    `NONE_UNIT : begin
+                        $display("LUI");
+                        STATE = SECOND_CYCLE; // Go to the second cycle
+                     end
                     `ARITHMETIC_LOGIC_UNIT: begin
                         enable_alu_unit = 1'b1; // Enable ALU unit
                         $display("ALU Working");
@@ -218,8 +222,12 @@ always @(posedge clk_i) begin
                     end
                     `BRANCH_RESOLVER_UNIT: begin
                         // Enable branch resolver unit 
-                        enable_branch_resolver_unit = 1'b1;
+                        //enable_branch_resolver_unit = 1'b1;
+                        other_resources = 1'b1;
+                        enable_alu_unit = 1'b1; // Enable ALU unit
                         $display("Branch Resolver Unit working");
+                        $display("Program counter ",operand1_integer_i);
+                        $display("Immediate",operand2_integer_i);
                     end 
                     `CONTROL_UNIT: begin
                         // Enable control unit
@@ -258,6 +266,16 @@ always @(posedge clk_i) begin
                 end
                 else begin
                     case(unit_type_i)
+                        `NONE_UNIT: begin
+                            $display("NONE UNIT INSTRUCTON");
+                            calculated_result = operand2_integer_i;
+                            $display("-->Execution completed for instruction num %d",i);
+                            $display("Result after execution %d",calculated_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                        end
                         `ARITHMETIC_LOGIC_UNIT: begin
                             calculated_result = calculated_alu_result;
                             enable_alu_unit = 1'b0;
@@ -308,6 +326,17 @@ always @(posedge clk_i) begin
                         `FLOATING_POINT_UNIT:begin
                         end
                         `BRANCH_RESOLVER_UNIT:begin
+                            enable_alu_unit = 1'b0;
+                            calculated_result = calculated_alu_result;
+                            $display("Branch Resolver  Unit Finished for instruction %d",i);
+                            $display("-->Execution completed for instruction num %d",i);
+                            $display("Result after execution %d",calculated_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                            other_resources = 1'b0;
+                            enable_alu_unit = 1'b0;
                         end 
                         `CONTROL_UNIT:begin
                         end
@@ -321,7 +350,7 @@ always @(posedge clk_i) begin
                             enable_alu_unit = 1'b0;
                             mem_op = instruction_type_i[2:0];
                             calculated_result = calculated_alu_result;
-                            $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result," for ",i );
+                            $display("Target memory address is completed ",calculated_result," in hexa %h ",calculated_result," for ",i );
                             i=i+1;
                             execute1_finished = 1'b1; 
                             STATE = FIRST_CYCLE;

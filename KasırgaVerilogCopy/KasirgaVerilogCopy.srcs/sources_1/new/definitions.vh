@@ -5,6 +5,7 @@
 `define INTEGER_REGISTER        2'b0
 `define FLOAT_REGISTER          2'b1
 `define CSR_REGISTER            2'b10
+`define NONE_REGISTER           2'b11
 // Control Signals for ALU operations
 `define ALU_ADD                 5'h0
 `define ALU_SUB                 5'h1
@@ -135,10 +136,19 @@
 `define ATOMIC_UNIT                     4'h7
 `define BIT_MANIPULATION_UNIT           4'h8
 `define MEMORY_STEP                     4'h9
+`define NONE_UNIT                       4'hf
 
 // FLOATING POINT UNIT SELECTION
 `define FLOATING_MULTIPLICATION_UNIT    1'b0
 `define FLOATING_DIVISION_UNIT          1'b1
+
+// For branhc resolver unit instructions
+`define BRANCH_BEQ                      5'h0
+`define BRANCH_BNE                      5'h1
+`define BRANCH_BLT                      5'h2
+`define BRANCH_BGE                      5'h3
+`define BRANCH_BLTU                     5'h4
+`define BRANCH_BGEU                     5'h5
 
 // For memory instructions
 `define MEM_LB                          3'h0
@@ -149,6 +159,8 @@
 `define MEM_SB                          3'h5
 `define MEM_SH                          3'h6
 `define MEM_SW                          3'h7
+
+`define NONE_LUI                        5'h0
 
 
 

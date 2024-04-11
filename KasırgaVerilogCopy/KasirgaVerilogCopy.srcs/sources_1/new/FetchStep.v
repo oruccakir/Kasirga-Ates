@@ -14,7 +14,9 @@ module FetchStep (
     output wire [31:0] mem_address_o, // Memory address output, goes to memory
     output wire fetch_finished_o, // flag for finishing fetch step
     output wire [31:0] instruction_to_decode_o, // instruction that will be conveyed to decode step 
-    output wire get_instruction_o              // this is the fetching instruction desire from memory
+    output wire get_instruction_o,              // this is the fetching instruction desire from memory
+    output wire [31:0] program_counter_o, // this is for increasig program counter for some instructions, goes to decode step
+    output wire is_branch_instruction_o   // this is for branch instruction information, indicating current instruction is branch, informing processor
 );
 
 reg fetch_working_info = 1'b0;  // working info for fetch step
@@ -24,6 +26,8 @@ reg [31:0] program_counter = 32'h8000_0000;  // program counter to access memory
 reg fetch_finished = 1'b0;       // flag for fetch finished info
 wire isWorking;                  // controling signal for working of this step
 integer i = 1; // for debugging the which instruction is fetched and conveyed
+reg [31:0] program_counter_to_decode = 32'b0; // this goes to decode step, from there goes to execute step
+reg is_branch_instruction = 1'b0;         // if this is true, then infrom processor to not make work other pipeline step by the time execute calculate correct program counter
 
 localparam FIRST_CYCLE = 3'b000;     // first state
 localparam SECOND_CYCLE = 3'b001;    // secodn state
@@ -44,9 +48,16 @@ always @(posedge clk_i) begin
             SECOND_CYCLE : begin // second state
                 if(instruction_completed_i) begin
                     $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
+                    if(instruction_i[6:0] == 7'b1100011) begin
+                        $display("BRANCH INSTRUCTION");
+                        is_branch_instruction = 1'b1;
+                    end
+                    else
+                        is_branch_instruction = 1'b0;
                     if(decode_working_info_i == 0) begin
                         instruction_to_decode = instruction_i; // convey instruction to decode step
                         STATE = FIRST_CYCLE; // change state to first state 
+                        program_counter_to_decode = program_counter;
                         program_counter = program_counter + 4; // increment program counter
                         fetch_finished = 1'b1; // set fetch finished info
                         fetch_working_info = 1'b0; // set working info to 0
@@ -75,5 +86,7 @@ assign mem_address_o = program_counter; // assign memory address to program coun
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished
 assign instruction_to_decode_o = instruction_to_decode; // assign instruction to decode, goes to decode step
 assign get_instruction_o = get_instruction;            // flag for getting the instruction from memory, goes to memory
+assign program_counter_o = program_counter_to_decode;     // Assing program counter output, goes to decode step
+assign is_branch_instruction_o = is_branch_instruction;  // Assing is_branch_instruction_o for stopping the pipeline 
 
 endmodule
