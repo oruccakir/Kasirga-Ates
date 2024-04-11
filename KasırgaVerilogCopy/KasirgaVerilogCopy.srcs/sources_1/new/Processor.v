@@ -162,7 +162,6 @@ MemoryStep memory(
     .mem_write_enable_i(mem_write_enable),
     .calculated_result_i(calculated_result),
     .rd_i(rd_to_memory),
-    .writeback_working_info_i(writeback_working_info),
     .register_selection_i(register_selection_execute),
     .memOp_i(mem_op),
     .mem_data_o(write_data_o),
