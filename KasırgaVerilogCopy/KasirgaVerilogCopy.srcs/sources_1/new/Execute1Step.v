@@ -112,7 +112,10 @@ FloatingPointUnit floating_point_unit(
 BranchResolverUnit branch_resolver_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_i(enable_branch_resolver_unit)
+    .enable_i(enable_branch_resolver_unit),
+    .operand1_i(operand1_integer_i),
+    .operand2_i(operand2_integer_i),
+    .result_o(calculated_branch_result)
 );
 
 // Control Unit module
@@ -224,7 +227,6 @@ always @(posedge clk_i) begin
                         // Enable branch resolver unit 
                         //enable_branch_resolver_unit = 1'b1;
                         other_resources = 1'b1;
-                        enable_alu_unit = 1'b1; // Enable ALU unit
                         $display("Branch Resolver Unit working");
                         $display("Program counter ",operand1_integer_i);
                         $display("Immediate",operand2_integer_i);

@@ -117,8 +117,8 @@ always @(posedge clk_i) begin
                         case(instruction_i[14:12])
                             3'b000: begin
                                 instruction_type = `BRANCH_BEQ;
-                                if(operand1_integer != operand2_integer)
-                                    imm_generated_operand2 = 32'd4;
+                                if(integerRegisterFile.registers[rs1] != integerRegisterFile.registers[rs2])
+                                    imm_generated_operand2 = 32'd4; 
                             end
                             3'b001: begin
                                 instruction_type = `BRANCH_BNE;
@@ -469,7 +469,9 @@ always @(posedge clk_i) begin
                     $display("-->Opcode: %b", opcode); // Display opcode
                     $display("-->rs1: %d", rs1);       // Display source register 1
                     $display("-->rs2: %d", rs2);       // Display source register 2
-                    $display("-->rd: %d", rd);         // Display destination register
+                    $display("-->rd: %d", rd);         // Display destination register);
+                    $display("Operand 1 : ",integerRegisterFile.registers[rs1]);
+                    $display("Operand 2 : ",integerRegisterFile.registers[rs2]);
                     decode_finished = 1'b1;         // Set the flag for finishing decode step  
                     STATE = FIRST_CYCLE;            // Go back to the first cycle
                     i=i+1;                        // Increment the instruction number
