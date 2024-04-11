@@ -24,7 +24,8 @@ module DecodeStep (
     output wire [4:0] instruction_type_o, // hold information of  which instruction, goes to execute step
     output wire decode_finished_o, // Flag for finishing decode step
     output wire decode_working_info_o, // output for decoding working info, goes to fetch step
-    output wire [31:0] rs2_value_o     // output for rs2 value, this is important for memory operations, goes to execute
+    output wire [31:0] rs2_value_o,     // output for rs2 value, this is important for memory operations, goes to execute
+    output wire [1:0] register_selection_o // output for register selection, important for writeback step, goes to execute step
 );
 
 reg decode_working_info = 1'b0; // very important info for stalling the decode and pipeline, goes to fetch step
@@ -277,6 +278,7 @@ always @(posedge clk_i) begin
                       endcase
                 end
                 7'b0000111: begin
+                    register_selection = `FLOAT_REGISTER;
                     rs1 = instruction_i[19:15]; // Extract source register 1
                     rs2 = instruction_i[24:20]; // Extract source register 2
                     rs3 = instruction_i[31:27]; // Extract source register 3
@@ -287,6 +289,7 @@ always @(posedge clk_i) begin
                     enable_generate = 1'b1; // enable generate
                 end
                 7'b0100111: begin
+                    register_selection = `FLOAT_REGISTER;
                     rs1 = instruction_i[19:15]; // Extract source register 1
                     rs2 = instruction_i[24:20]; // Extract source register 2
                     rs3 = instruction_i[31:27]; // Extract source register 3
@@ -301,6 +304,7 @@ always @(posedge clk_i) begin
                         imm_generated_operand2[31:12] = 20'b1; // extend with one                               
                 end
                 7'b1000011: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -308,16 +312,17 @@ always @(posedge clk_i) begin
                    instruction_type = `FLT_FMADD; // set instruction type
                    unit_type = `FLOATING_POINT_UNIT;    // set unit type
                end 
-               7'b1000111:
-                    begin
-                       rs1 = instruction_i[19:15]; // Extract source register 1
-                       rs2 = instruction_i[24:20]; // Extract source register 2
-                       rs3 = instruction_i[31:27]; // Extract source register 3
-                       rd = instruction_i[11:7];   // Extract destination register
-                       instruction_type = `FLT_FMSUB;  // set instruction type
-                       unit_type = `FLOATING_POINT_UNIT;  // set unit type
-                    end
+               7'b1000111: begin
+                   register_selection = `FLOAT_REGISTER;
+                   rs1 = instruction_i[19:15]; // Extract source register 1
+                   rs2 = instruction_i[24:20]; // Extract source register 2
+                   rs3 = instruction_i[31:27]; // Extract source register 3
+                   rd = instruction_i[11:7];   // Extract destination register
+                   instruction_type = `FLT_FMSUB;  // set instruction type
+                   unit_type = `FLOATING_POINT_UNIT;  // set unit type
+               end
                7'b1001011: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -326,6 +331,7 @@ always @(posedge clk_i) begin
                    unit_type = `FLOATING_POINT_UNIT; // set unit type                                
                 end
                 7'b1001111: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -334,6 +340,7 @@ always @(posedge clk_i) begin
                    unit_type = `FLOATING_POINT_UNIT; // set unit type                               
                 end
                 7'b1010011: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -428,7 +435,8 @@ assign float_operand2_o = operand2_float;       // Assign float operand 2, goes 
 assign float_operand3_o = operand3_float;       // Assign float operand 3, goes to execute step
 assign unit_type_o = unit_type;                 // Assign unit type, goes to execute step, important for which sub module should work       
 assign instruction_type_o = instruction_type;   // Assign instruction type, again important for which instruction should work in which sub module
-assign decode_working_info_o = decode_working_info; // Assign decode working info, will conveyed to fetch step for stalling operation
+assign decode_working_info_o = decode_working_info; // Assign decode working info, will be conveyed to fetch step for stalling operation
+assign register_selection_o = register_selection;  // Assign register selection info, will be conveyed to execute step
 
 
 /*

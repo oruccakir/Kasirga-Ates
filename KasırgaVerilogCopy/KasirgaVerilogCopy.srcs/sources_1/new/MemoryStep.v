@@ -17,7 +17,8 @@ module MemoryStep (
     input wire [31:0] calculated_result_i, // this comes from execute1 step
     input wire writeback_working_info_i,   // writeback working info comes from writeback step
     input wire [4:0] rd_i, // target register comes from execute step
-    input wire [31:0] mem_stored_data_i, // comes from execute step goes to memory, indicates rs2_value
+    input wire [31:0] mem_stored_data_i, // comes from execute step, indicates rs2_value
+    input wire [1:0] register_selection_i, // comes from execute step, goes to writeback step
     output wire [31:0] mem_data_o, // Memory data output goes to memory
     output wire [31:0] mem_address_o, // Memory address output goes to memory
     output wire memory_finished_o, // Flag for finishing memory step
@@ -25,7 +26,8 @@ module MemoryStep (
     output wire memory_working_info_o,       // memory working info, goes to execute step
     output wire [4:0] rd_o,    // target register goes to writeback step
     output wire write_enable_o, // goes to processor from there goes to helper memory
-    output wire read_enable_o   // read enable output goes to processor from there goes to memory
+    output wire read_enable_o,   // read enable output goes to processor from there goes to memory
+    output wire [1:0]register_selection_o // register selection output goes to writeback step
 );
 
 reg memory_working_info = 1'b0; // Working info for memory step, goes to execute step
@@ -38,6 +40,7 @@ reg [31:0] calculated_result = 32'b0; // Calculated result will conveyed to
 reg [4:0] rd = 5'b0;                  // target register goes to writeback step
 reg memory_finished = 1'b0;     // Flag for finishing memory step // impoertant change
 integer i = 1;                  // For debugging the instruction number
+reg [1:0] register_selection = 2'b0;  // register selection info, will be conveyed to writeback step
 
 localparam FIRST_CYCLE = 3'b000; // State for desiring memory operation
 localparam SECOND_CYCLE = 1'b001; // State for memory operation result
@@ -118,6 +121,7 @@ always @(posedge clk_i) begin
                     endcase
                 end
                 rd = rd_i;
+                register_selection = register_selection_i;
                 $display("-->Memory operation completed for instruction %d",i);
                 i=i+1;
                 memory_finished =1; 
@@ -140,4 +144,5 @@ assign memory_working_info_o = memory_working_info; // Assign memory working inf
 assign rd_o = rd;                                   // Assign target register, goes to writeback step
 assign write_enable_o = write_enable;               // Assign write_enable, goes to memory
 assign read_enable_o = read_enable;                 // Assign read_enable, goes to mempory
+assign register_selection_o = register_selection;   // Assign register selection, goes to writeback step
 endmodule

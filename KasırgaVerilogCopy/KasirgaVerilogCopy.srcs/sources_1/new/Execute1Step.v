@@ -18,13 +18,15 @@ module ExecuteStep1 (
     input wire [3:0] unit_type_i,         // for unit selection input comes from decode step for unit selection
     input wire [4:0] instruction_type_i,  // instruction type it works inside of unit type selection logic depending on definitions 
     input wire memory_working_info_i,      // memory working info, comes from memory step
+    input wire [1:0]register_selection_i,       // register selection info, comes from decode step
     output wire [31:0] calculated_result_o, // calculated result output, goes to memory step
     output wire execute1_finished_o,      // Flag for finishing execute step 1
     output wire execute_working_info_o,   // Execute step working info, goes to decode step
     output wire [4:0] rd_o,               // Target register info, goes to memory step
     output wire [31:0] mem_data_o,        // rs2_value or another source data will be assigned, goes to memory step
     output wire [2:0] mem_op_o,           // output for which memory operation will be implemented, goes to memory step
-    output wire [3:0] unit_type_o         // this info just for memory operations, goes to memory step
+    output wire [3:0] unit_type_o,         // this info just for memory operations, goes to memory step
+    output wire [1:0] register_selection_o // this info comes from decode step as input goes to memory step as output
 );
 
 reg [3:0] unit_type = 4'b0000;  // unit type, goes to memory step
@@ -32,6 +34,7 @@ reg [2:0] mem_op = 3'b000;      // mem operations info, goes to memory step
 reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result output goes to memory step
 reg [4:0] rd = 5'b0;                // target register index, goes to memory step
 reg execute_working_info = 1'b0;   //  very important info for stalling goes to decode step
+reg [1:0]register_selection = 2'b0;    // register selection info goes to memory step
 
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
@@ -327,6 +330,7 @@ always @(posedge clk_i) begin
                         end
                     endcase
                     rd = rd_i;
+                    register_selection = register_selection_i;
                     unit_type = unit_type_i;
                end
             end
@@ -345,6 +349,7 @@ assign rd_o = rd;                                      // Assign target register
 assign mem_data_o = rs2_value_i;                       // Assign mem_data_o as rs2_value, goes to memory step
 assign mem_op_o = mem_op;                              // Assign mem_op_o for memory operations, goes to memory step
 assign unit_type_o = unit_type;                        // Assing unit type info only necessary for mem operations, goes to memory step
+assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
 
 
 endmodule 
