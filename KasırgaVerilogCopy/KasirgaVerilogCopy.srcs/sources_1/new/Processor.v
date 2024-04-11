@@ -62,7 +62,6 @@ FetchStep fetch(
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
-    .fetch_working_info_o(fetch_working_info),
     .get_instruction_o(get_instruction_o)
 );
 
@@ -86,16 +85,12 @@ DecodeStep decode(
     .reg_write_csr_i(reg_write_csr),
     .target_register_i(target_register),
     .execute_working_info_i(execute_working_info),
-    .opcode_o(opcode),
-    .rs1_o(rs1),
-    .rs2_o(rs2),
     .rd_o(rd),
     .integer_operand1_o(integer_operand1),
     .integer_operand2_o(integer_operand2),
     .float_operand1_o(float_operand1),
     .float_operand2_o(float_operand2),
     .float_operand3_o(float_operand3),
-    .immediate_o(immediate),
     .unit_type_o(unit_type),
     .instruction_type_o(instruction_type),
     .decode_finished_o(decode_finished),
@@ -114,16 +109,11 @@ wire [3:0] unit_type_mem;
 wire [4:0] rd_to_memory;
 wire [2:0] mem_op;
 wire [31:0] mem_data; // memory data
-wire mem_instruction;
 // Execute1 module
 ExecuteStep1 execute1(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_step_i(enable_execute1),
-    .instruction_i(instruction_to_decode),
-    .opcode_i(opcode),
-    .rs1_i(rs1),
-    .rs2_i(rs2),
     .rd_i(rd),
     .operand1_integer_i(integer_operand1),
     .operand2_integer_i(integer_operand2),
@@ -131,7 +121,6 @@ ExecuteStep1 execute1(
     .operand1_float_i(float_operand1),
     .operand2_float_i(float_operand2),
     .operand3_float_i(float_operand3),
-    .immediate_i(immediate),
     .unit_type_i(unit_type),
     .instruction_type_i(instruction_type),
     .memory_working_info_i(memory_working_info),
@@ -141,7 +130,6 @@ ExecuteStep1 execute1(
     .rd_o(rd_to_memory),
     .mem_data_o(mem_data),
     .mem_op_o(mem_op),
-    .mem_instruction_o(mem_instruction),
     .unit_type_o(unit_type_mem)
 );
 
@@ -164,9 +152,8 @@ MemoryStep memory(
     .data_i(data_i),
     .enable_step_i(enable_memory),
     .data_completed_i(data_completed_i),
-    .mem_instruction_i(mem_instruction),
     .unit_type_i(unit_type_mem),
-    .mem_data_i(mem_data),
+    .mem_stored_data_i(mem_data),
     .mem_read_enable_i(mem_read_enable),
     .mem_write_enable_i(mem_write_enable),
     .calculated_result_i(calculated_result),
@@ -196,7 +183,6 @@ WriteBackStep writeback(
     .rst_i(rst_i),
     .enable_step_i(enable_writeback),
     .calculated_result_i(calculated_result_mem),
-    .fetch_working_info_i(fetch_working_info),
     .rd_i(rd_to_writeback),
     .writeback_finished_o(writeback_finished),
     .writebacked_result_o(writebacked_result),

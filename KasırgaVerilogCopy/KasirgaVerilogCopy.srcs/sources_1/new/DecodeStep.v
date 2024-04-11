@@ -8,50 +8,39 @@ module DecodeStep (
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input
-    input wire [31:0] writebacked_result_i, // writebacked result to suitable register
-    input wire reg_write_integer_i, //Write data flag for integer register file
-    input wire reg_write_float_i, // Write data flag for float register file
-    input wire reg_write_csr_i,  // Write data flag for csr register file
-    input wire [4:0] target_register_i, // that info comes from writeback step
-    input wire execute_working_info_i, // very important info for stalling
-    output wire [6:0] opcode_o, // Opcode output
-    output wire [4:0] rs1_o, // Source register 1 output
-    output wire [4:0] rs2_o, // Source register 2 output
-    output wire [4:0] rd_o, // Destination register output
-    output wire [31:0] integer_operand1_o, // Operand 1 output
-    output wire [31:0] integer_operand2_o, // Operand 2 output
-    output wire [31:0] float_operand1_o,   // operand 1 for float 
-    output wire [31:0] float_operand2_o,  // operand 2 for float
-    output wire [31:0] float_operand3_o,   // operand 3 for float
-    output wire [31:0] immediate_o, // Immediate output
-    output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
-    output wire [4:0] instruction_type_o, // hold information of  which instruction
+    input wire [31:0] writebacked_result_i, // writebacked result to suitable register, comes from writeback step
+    input wire reg_write_integer_i, //Write data flag for integer register file, comes from writeback step
+    input wire reg_write_float_i, // Write data flag for float register file,    comes from writeback step
+    input wire reg_write_csr_i,  // Write data flag for csr register file,       comes from writeback step
+    input wire [4:0] target_register_i, // this is crucial for writig info to correct register file index, comes from writeback step  
+    input wire execute_working_info_i, // execute working info, comes from execute step
+    output wire [4:0] rd_o, // Destination register output, goes to execute step, Note : this value later comes as target_register_i as input from writeback step
+    output wire [31:0] integer_operand1_o, // Operand 1 output, goes to execute step
+    output wire [31:0] integer_operand2_o, // Operand 2 output, goes to execute step
+    output wire [31:0] float_operand1_o,   // operand 1 for float, goes to execute step
+    output wire [31:0] float_operand2_o,  // operand 2 for float, goes to execute step
+    output wire [31:0] float_operand3_o,   // operand 3 for float, goes to execute step
+    output wire [3:0] unit_type_o, // select corrrect unit depends on instruction, goes to execute step
+    output wire [4:0] instruction_type_o, // hold information of  which instruction, goes to execute step
     output wire decode_finished_o, // Flag for finishing decode step
-    output wire decode_working_info_o, // output for decoding working info
-    output wire [31:0] rs2_value_o
+    output wire decode_working_info_o, // output for decoding working info, goes to fetch step
+    output wire [31:0] rs2_value_o     // output for rs2 value, this is important for memory operations, goes to execute
 );
 
-reg decode_working_info = 1'b0; // very important info for stalling the decode and pipeline
-
-// Output signals
+reg decode_working_info = 1'b0; // very important info for stalling the decode and pipeline, goes to fetch step
 reg [6:0] opcode = 7'b0; // Opcode
 reg [4:0] rs1 = 5'b0;// Source register 1
 reg [4:0] rs2 = 5'b0; // Source register 2 
 reg [4:0] rs3 = 5'b0; // Source register 3
-reg [4:0] rd = 5'b0; // Destination register
-wire [31:0] operand1_integer; // Operand 1
-wire [31:0] operand2_integer; // Operand 2 
+reg [4:0] rd = 5'b0; // Destination register, important for writeback step
+wire [31:0] operand1_integer; // Operand 1 integer
+wire [31:0] operand2_integer; // Operand 2 integer
 wire [31:0] operand1_float;  // Operand 1 for float
 wire [31:0] operand2_float; // Operand 2 for float
-wire [31:0] operand3_float; // Operand 3
-reg [31:0] immediate = 32'b0; // Immediate
-
-
-reg [3:0] unit_type = 4'b0000; //default zero will be changed later
-
+wire [31:0] operand3_float; // Operand 3 float
+reg [3:0] unit_type = 4'b0000; //default zero will be changed later, will conveyed to execute step
 reg  [4:0] instruction_type = 5'b00000; // instruction type will be conveyed to execute step
-
-reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for register file
+reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for register file, this later should be conveyed to writeback step for writing the data correct register file
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
@@ -65,7 +54,6 @@ IntegerRegisterFile integerRegisterFile(
     .read_data1_o(operand1_integer),    // Operand 1
     .read_data2_o(operand2_integer)   // Operand 2
 );
-
 
 // Float Register File module
 FloatRegisterFile floatRegisterFile(
@@ -82,24 +70,18 @@ FloatRegisterFile floatRegisterFile(
     .read_data3_o(operand3_float) // Operand 3
 );
 
-//Decode modul implementation
-reg decode_finished = 1'b0; // Flag for finishing decode step // important change
+reg decode_finished = 1'b0; // Flag for finishing decode step
 wire isWorking; // Flag for working
-
 localparam FIRST_CYCLE = 3'b000; // State for first cycle
 localparam SECOND_CYCLE = 3'b001; // State for second cycle
 localparam STALL = 3'b010;       // stall information for stalling pipeline
-
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
-
 reg [31:0] imm_generated_operand2 = 32'b0; // imm generated operand2
-reg enable_generate = 1'b0;
-
+reg enable_generate = 1'b0;              // this is necessary for immediate generator and assigning operand 2 value
 integer i = 1; // debugging for which instruction decoded
 
 assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 
-// Decode module implementation
 always @(posedge clk_i) begin
     if(isWorking) begin
         decode_working_info = 1'b1;
@@ -120,7 +102,6 @@ always @(posedge clk_i) begin
                         register_selection = `INTEGER_REGISTER; // Set the register selection
                         rs1 = instruction_i[19:15]; // Extract source register 1
                         rd = instruction_i[11:7];   // Extract destination register
-                        immediate = instruction_i[31:20]; // Extract immediate
                         generate_operand2(instruction_i);
                         case(instruction_i[14:12])
                             3'b000 : instruction_type[2:0] = `MEM_LB;
@@ -153,7 +134,6 @@ always @(posedge clk_i) begin
                         register_selection = `INTEGER_REGISTER; // Set the register selection
                         rs1 = instruction_i[19:15]; // Extract source register 1
                         rd = instruction_i[11:7];   // Extract destination register
-                        immediate = instruction_i[31:20]; // Extract immediate
                         unit_type = `ARITHMETIC_LOGIC_UNIT; // Set the unit type
                         enable_generate = 1'b1;    // enable generate                                
                         case(instruction_i[14:12]) // Extract the instruction type
@@ -438,20 +418,18 @@ always @(posedge clk_i) begin
 end
    
 assign decode_finished_o = decode_finished; // Assign the flag for finishing decode step
-assign opcode_o = opcode;                   // Assign the opcode        
-assign rs1_o = rs1;                         // Assign source register 1
-assign rs2_o = rs2;                         // Assign source register 2
-assign rd_o = rd;                           // Assign destination register
-assign integer_operand1_o = operand1_integer;   // assign operand1 output
-assign integer_operand2_o = (enable_generate)? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction
-assign rs2_value_o = operand2_integer;        // assign operand2_integer to rs2_value for memory operations
-assign float_operand1_o = operand1_float;  // Assign float operand 1
-assign float_operand2_o = operand2_float; // Assign float operand 2
-assign float_operand3_o = operand3_float; // Assign float operand 3
-assign immediate_o = immediate;             // Assign immediate 
-assign unit_type_o = unit_type;             // Assign unit type       
-assign instruction_type_o = instruction_type; // Assign instruction
-assign decode_working_info_o = decode_working_info; // Assign decode working info
+assign rd_o = rd;                           // Assign destination register is important for keeping the target register info for writeback, 
+// this info comes later again to this step, goes to execute step
+assign integer_operand1_o = operand1_integer;   // assign operand1 output, goes to execute step
+assign integer_operand2_o = (enable_generate) ? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction and condition, goes to execute
+assign rs2_value_o = operand2_integer;          // assign operand2_integer to rs2_value for memory operations, goes to execute step
+assign float_operand1_o = operand1_float;       // Assign float operand 1, goes to execute step
+assign float_operand2_o = operand2_float;       // Assign float operand 2, goes to execute step
+assign float_operand3_o = operand3_float;       // Assign float operand 3, goes to execute step
+assign unit_type_o = unit_type;                 // Assign unit type, goes to execute step, important for which sub module should work       
+assign instruction_type_o = instruction_type;   // Assign instruction type, again important for which instruction should work in which sub module
+assign decode_working_info_o = decode_working_info; // Assign decode working info, will conveyed to fetch step for stalling operation
+
 
 /*
     * Task to generate operand2

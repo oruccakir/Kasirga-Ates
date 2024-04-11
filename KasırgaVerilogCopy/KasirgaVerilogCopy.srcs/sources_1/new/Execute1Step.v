@@ -8,44 +8,31 @@ module ExecuteStep1 (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
-    input wire [31:0] instruction_i, // Instruction input
-    input wire [6:0] opcode_i, // Opcode input
-    input wire [4:0] rs1_i, // Source register 1 input
-    input wire [4:0] rs2_i, // Source register 2 input
-    input wire [4:0] rd_i, // Destination register input
-    input wire [31:0] operand1_integer_i, // Operand 1 input
-    input wire [31:0] operand2_integer_i, // Operand 2 input
-    input wire [31:0] rs2_value_i,
-    input wire [31:0] operand1_float_i,
-    input wire [31:0] operand2_float_i,
-    input wire [31:0] operand3_float_i,
-    input wire [31:0] immediate_i, // Immediate input
-    input wire [3:0] unit_type_i,  // for unit selection input
-    input wire [4:0] instruction_type_i, // instruction type
-    input wire memory_working_info_i,
-    output wire [31:0] calculated_result_o, // resulted
-    output wire execute1_finished_o, // Flag for finishing execute step 1
-    output wire execute_working_info_o,
-    output wire [4:0] rd_o,
-    output wire [31:0] mem_data_o,
-    output wire [2:0] mem_op_o,
-    output wire mem_instruction_o,
-    output wire [3:0] unit_type_o
+    input wire [4:0] rd_i, // Destination register input from decode step
+    input wire [31:0] operand1_integer_i, // Operand 1 input comes from decode integer register file
+    input wire [31:0] operand2_integer_i, // Operand 2 input comes from decode integer register file or from another calculation logic
+    input wire [31:0] rs2_value_i,        // rs2 register value comes from decode integer register file
+    input wire [31:0] operand1_float_i,   // Operand 1 input comes from decode float register file
+    input wire [31:0] operand2_float_i,   // Operand 2 input comes from decode float register file
+    input wire [31:0] operand3_float_i,   // Operand 3 input comes from decode float register file
+    input wire [3:0] unit_type_i,         // for unit selection input comes from decode step for unit selection
+    input wire [4:0] instruction_type_i,  // instruction type it works inside of unit type selection logic depending on definitions 
+    input wire memory_working_info_i,      // memory working info, comes from memory step
+    output wire [31:0] calculated_result_o, // calculated result output, goes to memory step
+    output wire execute1_finished_o,      // Flag for finishing execute step 1
+    output wire execute_working_info_o,   // Execute step working info, goes to decode step
+    output wire [4:0] rd_o,               // Target register info, goes to memory step
+    output wire [31:0] mem_data_o,        // rs2_value or another source data will be assigned, goes to memory step
+    output wire [2:0] mem_op_o,           // output for which memory operation will be implemented, goes to memory step
+    output wire [3:0] unit_type_o         // this info just for memory operations, goes to memory step
 );
 
-reg [3:0] unit_type = 4'b0000;
+reg [3:0] unit_type = 4'b0000;  // unit type, goes to memory step
+reg [2:0] mem_op = 3'b000;      // mem operations info, goes to memory step
+reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result output goes to memory step
+reg [4:0] rd = 5'b0;                // target register index, goes to memory step
+reg execute_working_info = 1'b0;   //  very important info for stalling goes to decode step
 
-reg [2:0] mem_op = 3'b000;
-
-reg mem_instruction = 1'b0;
-
-reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
-
-reg [4:0] rd = 5'b0;
-
-reg execute_working_info = 1'b0;   //  very important info for stalling 
-
-// ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
 reg enable_integer_division_unit = 1'b0; // Enable signal for integer division unit
@@ -153,18 +140,15 @@ BitManipulationUnit bit_manipulation_unit(
     .enable_i(enable_bit_manipulation_unit)
 );
 
-
 // ExecuteStep1 module implementation
-reg execute1_finished = 1'b0; // Flag for finishing execute step 1 // important change
+reg execute1_finished = 1'b0; // Flag for finishing execute step 1 
 wire isWorking; // Flag for working
+integer i = 1; // it is just for debugging the instruction number
 
 localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
 localparam SECOND_CYCLE = 3'b001; // State for instruction result
-localparam STALL = 3'b010;        // State for stalling the pipeline
-
+localparam STALL = 3'b010;        // State for stalling the execute step
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
-
-integer i = 1; // it is just for debugging the instruction number
 
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
@@ -340,7 +324,6 @@ always @(posedge clk_i) begin
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                             other_resources = 1'b0;
-                            
                         end
                     endcase
                     rd = rd_i;
@@ -355,14 +338,13 @@ always @(posedge clk_i) begin
     end
 end
 
-assign execute1_finished_o = execute1_finished;
-assign calculated_result_o = calculated_result;
-assign execute_working_info_o = execute_working_info;
-assign rd_o = rd;
-assign mem_data_o = rs2_value_i;
-assign mem_op_o = mem_op;
-assign mem_instruction_o = mem_instruction;
-assign unit_type_o = unit_type;
+assign execute1_finished_o = execute1_finished;       // Assign execute finished
+assign calculated_result_o = calculated_result;       // Assign calculated result, goes to memory step
+assign execute_working_info_o = execute_working_info;  // Assign execute working info, goes to decode step
+assign rd_o = rd;                                      // Assign target register goes to memory step
+assign mem_data_o = rs2_value_i;                       // Assign mem_data_o as rs2_value, goes to memory step
+assign mem_op_o = mem_op;                              // Assign mem_op_o for memory operations, goes to memory step
+assign unit_type_o = unit_type;                        // Assing unit type info only necessary for mem operations, goes to memory step
 
 
 endmodule 
