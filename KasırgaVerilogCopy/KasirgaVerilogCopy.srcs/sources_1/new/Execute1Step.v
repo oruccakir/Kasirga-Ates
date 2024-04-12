@@ -19,6 +19,8 @@ module ExecuteStep1 (
     input wire [4:0] instruction_type_i,  // instruction type it works inside of unit type selection logic depending on definitions 
     input wire memory_working_info_i,      // memory working info, comes from memory step
     input wire [1:0]register_selection_i,       // register selection info, comes from decode step
+    input wire [31:0] program_counter_i,     // comes from decode for branch instructions and for other necessary instructions
+    input wire [31:0] immediate_value_i,     // comes from decode step for branch and other instructions
     output wire [31:0] calculated_result_o, // calculated result output, goes to memory step
     output wire execute1_finished_o,      // Flag for finishing execute step 1
     output wire execute_working_info_o,   // Execute step working info, goes to decode step
@@ -26,7 +28,9 @@ module ExecuteStep1 (
     output wire [31:0] mem_data_o,        // rs2_value or another source data will be assigned, goes to memory step
     output wire [2:0] mem_op_o,           // output for which memory operation will be implemented, goes to memory step
     output wire [3:0] unit_type_o,         // this info just for memory operations, goes to memory step
-    output wire [1:0] register_selection_o // this info comes from decode step as input goes to memory step as output
+    output wire [1:0] register_selection_o, // this info comes from decode step as input goes to memory step as output
+    output wire is_branch_address_calculated_o, // this goes to fetch step for branch address calculation, indicating whether completed or not
+    output wire [31:0] calculated_branch_address_o // this goes to fetch step for branch address calculation, gives calculated branch address
 );
 
 reg [3:0] unit_type = 4'b0000;  // unit type, goes to memory step
@@ -65,6 +69,8 @@ wire [31:0] calculated_branch_result;   // bransh resolver unit result reg
 wire [31:0] calculated_bit_manip_result;  //  bit manipulation unit result reg
 wire [31:0] calculated_atomic_result;      // atomic unit result reg
 wire [31:0] calculated_control_status_result; // control status unit result reg 
+
+reg is_branch_address_calculated = 1'b0; // for branch instructions indicate branch calculation
 
 reg other_resources = 1'b0;
 // Arithmetic Logic Unit module
@@ -113,6 +119,9 @@ BranchResolverUnit branch_resolver_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_i(enable_branch_resolver_unit),
+    .instruction_type_i(instruction_type_i),
+    .program_counter_i(program_counter_i),
+    .immediate_value_i(immediate_value_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .result_o(calculated_branch_result)
@@ -164,6 +173,7 @@ always @(posedge clk_i) begin
             FIRST_CYCLE : begin
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
+                is_branch_address_calculated = 1'b0;
                 //rd = rd_i;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
@@ -225,11 +235,17 @@ always @(posedge clk_i) begin
                     end
                     `BRANCH_RESOLVER_UNIT: begin
                         // Enable branch resolver unit 
-                        //enable_branch_resolver_unit = 1'b1;
-                        other_resources = 1'b1;
+                        enable_branch_resolver_unit = 1'b1;
+                        if(instruction_type_i == `BRANCH_JAL || `BRANCH_JALR) begin
+                            other_resources = 1'b1;
+                            $display("Enable otherr");
+                            enable_alu_unit = 1'b1; // no importance
+                        end
                         $display("Branch Resolver Unit working");
-                        $display("Program counter ",operand1_integer_i);
-                        $display("Immediate",operand2_integer_i);
+                        $display("Program counter ",program_counter_i);
+                        $display("Immediate",immediate_value_i);
+                        $display("Rs1 value ",operand1_integer_i);
+                        $display("Rs2 value ",operand2_integer_i);
                     end 
                     `CONTROL_UNIT: begin
                         // Enable control unit
@@ -329,16 +345,25 @@ always @(posedge clk_i) begin
                         end
                         `BRANCH_RESOLVER_UNIT:begin
                             enable_alu_unit = 1'b0;
-                            calculated_result = calculated_alu_result;
+                            if(instruction_type_i == `BRANCH_JAL) begin
+                                $display("JALLL");
+                                calculated_result = calculated_alu_result;
+                            end
+                            else if(instruction_type_i == `BRANCH_JALR) begin
+                                $display("JALRR");
+                                calculated_result = calculated_alu_result;    
+                                //calculated_branch_result[0] = 1'b0; // crucial                      
+                            end
+                            enable_branch_resolver_unit = 1'b0;
+                            is_branch_address_calculated = 1'b1;
                             $display("Branch Resolver  Unit Finished for instruction %d",i);
                             $display("-->Execution completed for instruction num %d",i);
-                            $display("Result after execution %d",calculated_result);
+                            $display("Result after execution %d",calculated_branch_result);
                             i=i+1;
                             execute1_finished = 1'b1; 
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                             other_resources = 1'b0;
-                            enable_alu_unit = 1'b0;
                         end 
                         `CONTROL_UNIT:begin
                         end
@@ -381,6 +406,7 @@ assign mem_data_o = rs2_value_i;                       // Assign mem_data_o as r
 assign mem_op_o = mem_op;                              // Assign mem_op_o for memory operations, goes to memory step
 assign unit_type_o = unit_type;                        // Assing unit type info only necessary for mem operations, goes to memory step
 assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
-
+assign is_branch_address_calculated_o = is_branch_address_calculated; // Assign information of whether branch calculated or not
+assign calculated_branch_address_o = calculated_branch_result; // Assign branch address, goes to fetch step
 
 endmodule 

@@ -83,7 +83,9 @@ initial begin
     memory_write('h8000_0044,32'h016586b3);   //add x13, x11, x22
     memory_write('h8000_0048,32'h01efa223);   // sw x30, 4(x31)
     memory_write('h8000_004c,32'h00001717);   // auipc x14, 1
-    memory_write('h8000_0050,32'h00d58563);   // beq x11, x13, 10
+    memory_write('h8000_0050,32'h00d5c663);   // blt x11, x13, 12
+    memory_write('h8000_005c,32'h01000eef);   // jal x29, 16
+    memory_write('h8000_006c,32'h078f8e67);   // jalr x28, 120(x31)
     
     
    

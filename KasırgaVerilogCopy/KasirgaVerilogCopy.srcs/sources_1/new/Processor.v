@@ -40,7 +40,6 @@ wire [31:0] rs2_value;
 wire [31:0] float_operand1; // Operand 1 in float format
 wire [31:0] float_operand2;  // Operand 2 in float format
 wire [31:0] float_operand3; // Operand 3 in float format
-wire [31:0] immediate; // Immediate value
 // Instruction to decode
 wire [31:0]instruction_to_decode;
 // get instruction type
@@ -54,6 +53,10 @@ wire fetch_finished; // fetch finished signal
 wire [31:0] program_counter;
 wire is_branch_instruction;
 
+wire is_branch_address_calculated;
+wire [31:0] calculated_result; // calculated result by execute1
+wire [31:0] calculated_branch_address;
+
 FetchStep fetch(
     .clk_i(clk_i),
     .rst_i(rst_i),
@@ -61,6 +64,8 @@ FetchStep fetch(
     .instruction_i(instruction_i),
     .decode_working_info_i(decode_working_info),
     .instruction_completed_i(instruction_completed_i),
+    .calculated_branch_address_i(calculated_branch_address),
+    .is_branch_address_calculated_i(is_branch_address_calculated),
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
@@ -77,6 +82,8 @@ wire reg_write_float; // coming from writeback
 wire reg_write_csr;    // coming from writeback step
 wire [1:0] register_selection;  // for decode step register selection
 wire [4:0] target_register;
+wire [31:0] immediate_value;
+wire [31:0] program_counter_decode;
 // Decode module
 DecodeStep decode(
     .clk_i(clk_i),
@@ -101,14 +108,16 @@ DecodeStep decode(
     .decode_finished_o(decode_finished),
     .decode_working_info_o(decode_working_info),
     .rs2_value_o(rs2_value),
-    .register_selection_o(register_selection)
+    .register_selection_o(register_selection),
+    .program_counter_o(program_counter_decode),
+    .immediate_value_o(immediate_value)
 );
 
 // Execute1 stage
 reg enable_execute1 = 1'b0; // enable signal for execute1 stage
 wire execute1_finished; // execute1 finished signal
 
-wire [31:0] calculated_result; // calculated result by execute1
+
 
 wire [3:0] unit_type_mem;
 
@@ -132,6 +141,8 @@ ExecuteStep1 execute1(
     .instruction_type_i(instruction_type),
     .memory_working_info_i(memory_working_info),
     .register_selection_i(register_selection),
+    .program_counter_i(program_counter_decode),
+    .immediate_value_i(immediate_value),
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished),
     .execute_working_info_o(execute_working_info),
@@ -139,7 +150,9 @@ ExecuteStep1 execute1(
     .mem_data_o(mem_data),
     .mem_op_o(mem_op),
     .unit_type_o(unit_type_mem),
-    .register_selection_o(register_selection_execute)
+    .register_selection_o(register_selection_execute),
+    .is_branch_address_calculated_o(is_branch_address_calculated),
+    .calculated_branch_address_o(calculated_branch_address)
 );
 
 
@@ -217,6 +230,7 @@ integer control = 0;
 
 always@(posedge clk_i) begin
 
+
     if(fetch_finished) begin
         enable_fetch = 1'b0;     // if fetch finished, disable fetch stage
         enable_decode = 1'b1;  // enable decode stage
@@ -234,12 +248,14 @@ always@(posedge clk_i) begin
         d = d + 1;   // increment the instruction number
     end
     else if(execute1_finished) begin
+    
         enable_execute1 = 1'b0; // if execute1 finished, disable execute1 stage
         execute1.execute1_finished = 1'b0; // reset execute1 finished signal
         enable_memory = 1'b1; // enable memory stage
         if(fetch_finished) begin
-            if(is_branch_instruction == 1'b0) // if this is branch instruction then not run decode wait execute step
+            if(is_branch_instruction == 1'b0) begin // if this is branch instruction then not run decode wait execute step
                 enable_decode = 1'b1; // for implementing stalling mechanism
+            end
         end
         $display("execute finished for instruction %d",e); // display the instruction number
         e=e+1; // increment the instruction number
@@ -255,6 +271,8 @@ always@(posedge clk_i) begin
         $display("memory finished for instruction %d",m); // display the instruction number
         m=m+1; // increment the instruction number
     end
+    else if(is_branch_instruction == 1'b0)
+        enable_fetch = 1'b1;
     /*
     else if(writeback_finished) begin
         enable_writeback = 1'b0; // if writeback finished, disable writeback stage

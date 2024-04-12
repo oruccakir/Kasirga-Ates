@@ -11,6 +11,8 @@ module FetchStep (
     input wire decode_working_info_i, // very important info for stalling, comes from decode step
     input wire [31:0] instruction_i, // Instruction output, comes from memory via processor
     input wire instruction_completed_i, // this comes from memory, indicates memory completed process of giving instruction data
+    input wire is_branch_address_calculated_i, // this comes from execute step, indicating that whether branch address calculation is completed or not
+    input wire [31:0] calculated_branch_address_i, // this comes from execute step, gives correct branch address
     output wire [31:0] mem_address_o, // Memory address output, goes to memory
     output wire fetch_finished_o, // flag for finishing fetch step
     output wire [31:0] instruction_to_decode_o, // instruction that will be conveyed to decode step 
@@ -48,7 +50,7 @@ always @(posedge clk_i) begin
             SECOND_CYCLE : begin // second state
                 if(instruction_completed_i) begin
                     $display("FETCH STEP Fetched Instruction %h", instruction_i," for instruction %d",i); // debug info
-                    if(instruction_i[6:0] == 7'b1100011) begin
+                    if(instruction_i[6:0] == 7'b1100011 || instruction_i[6:0] == 7'b1101111 || instruction_i[6:0] == 7'b1100111) begin
                         $display("BRANCH INSTRUCTION");
                         is_branch_instruction = 1'b1;
                     end
@@ -81,6 +83,17 @@ always @(posedge clk_i) begin
         endcase 
     end  
 end 
+
+/*
+    This always block is for branch instruction, if the branch instruction is calculated then
+    the program counter is set to the calculated branch address
+*/
+always@(posedge is_branch_address_calculated_i) begin // if branch address is calculated run this always block
+    $display("Calculated branch address ",calculated_branch_address_i, " as hexadeciamal %h",calculated_branch_address_i); // for debugging display calculated branch address
+    is_branch_instruction = 1'b0;                                       // this is crucial because for next instructions pipeline should work as usual, important for processor module
+    program_counter = calculated_branch_address_i;                      // set program counter as newly calculated branch address
+end
+
 
 assign mem_address_o = program_counter; // assign memory address to program counter, goes to processor then memory
 assign fetch_finished_o = fetch_finished; // assign fetch finished info to fetch finished

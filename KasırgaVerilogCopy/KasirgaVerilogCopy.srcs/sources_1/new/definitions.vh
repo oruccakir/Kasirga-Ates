@@ -149,6 +149,8 @@
 `define BRANCH_BGE                      5'h3
 `define BRANCH_BLTU                     5'h4
 `define BRANCH_BGEU                     5'h5
+`define BRANCH_JAL                      5'h6
+`define BRANCH_JALR                     5'h7
 
 // For memory instructions
 `define MEM_LB                          3'h0
