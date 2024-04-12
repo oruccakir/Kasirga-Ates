@@ -29,6 +29,32 @@ reg [4:0] rd_next = 5'b0;      // next for target register
 reg  [31:0] writebacked_result = 32'b0; // writeback result that will be conveyed to decode step
 reg  [31:0] writebacked_result_next = 32'b0; // next for writeback_result
 
+
+always @(*) begin
+    reg_write_integer_next = (register_selection_i == `INTEGER_REGISTER) ? 1'b1 : 1'b0;
+    reg_write_float_next = (register_selection_i == `FLOAT_REGISTER) ? 1'b1 : 1'b0;
+    reg_write_csr_next = (register_selection_i == `CSR_REGISTER) ? 1'b1 : 1'b0;
+    rd_next = rd_i;
+    writebacked_result_next = calculated_result_i;
+end
+
+always @(posedge clk_i) begin
+    reg_write_integer = reg_write_integer_next;
+    reg_write_float = reg_write_float_next;
+    reg_write_csr = reg_write_csr_next;
+    rd = rd_next;
+    writebacked_result = writebacked_result_next;
+end
+
+assign writebacked_result_o = writebacked_result; // Assign calculated result, goes to decode step
+assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer register, goes to decode step
+assign reg_write_float_o = reg_write_float;     // Assign write flag for float register, goes to decode step
+assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register, goes to decode step
+assign rd_o = rd_i;                               // Assign target register , goes to decode step
+
+
+
+
 /*
 reg writeback_working_info; // working info for writeback step will conveyed to memory step for stalling operation
 reg writeback_finished = 1'b0; // Flag for finishing writeback step
@@ -72,30 +98,12 @@ always @(posedge clk_i) begin
 end
 */
 
-always @(*) begin
-    reg_write_integer_next = (register_selection_i == `INTEGER_REGISTER) ? 1'b1 : 1'b0;
-    reg_write_float_next = (register_selection_i == `FLOAT_REGISTER) ? 1'b1 : 1'b0;
-    reg_write_csr_next = (register_selection_i == `CSR_REGISTER) ? 1'b1 : 1'b0;
-    rd_next = rd_i;
-    writebacked_result_next = calculated_result_i;
-end
 
-always @(posedge clk_i) begin
-    reg_write_integer = reg_write_integer_next;
-    reg_write_float = reg_write_float_next;
-    reg_write_csr = reg_write_csr_next;
-    rd = rd_next;
-    writebacked_result = writebacked_result_next;
-end
 
 
 //assign writeback_finished_o = writeback_finished; // Assign writeback_finished
 //assign writeback_working_info_o = writeback_working_info; // Assign working info for writeback step, goes to memory step
-assign writebacked_result_o = writebacked_result; // Assign calculated result, goes to decode step
-assign reg_write_integer_o = reg_write_integer; // Assign write flag for integer register, goes to decode step
-assign reg_write_float_o = reg_write_float;     // Assign write flag for float register, goes to decode step
-assign reg_write_csr_o = reg_write_csr;         // Assign write flag for csr register, goes to decode step
-assign rd_o = rd_i;                               // Assign target register , goes to decode step
+
 
 endmodule
 

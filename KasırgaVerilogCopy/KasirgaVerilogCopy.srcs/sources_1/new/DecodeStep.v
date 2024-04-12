@@ -541,6 +541,7 @@ assign register_selection_o = register_selection;  // Assign register selection 
 assign program_counter_o = program_counter;       // Assign program counter, goes to execute step
 assign immediate_value_o = imm_generated_operand2; // Assign immediate value, goes to execute step
 
+
 /*
     * Task to generate operand2
     * @param instruction_i
