@@ -8,50 +8,48 @@ module DecodeStep (
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
     input wire [31:0] instruction_i, // Instruction input
-    input wire [31:0] writebacked_result_i, // writebacked result to suitable register
-    input wire reg_write_integer_i, //Write data flag for integer register file
-    input wire reg_write_float_i, // Write data flag for float register file
-    input wire reg_write_csr_i,  // Write data flag for csr register file
-    input wire [4:0] target_register_i, // that info comes from writeback step
-    input wire execute_working_info_i, // very important info for stalling
-    output wire [6:0] opcode_o, // Opcode output
-    output wire [4:0] rs1_o, // Source register 1 output
-    output wire [4:0] rs2_o, // Source register 2 output
-    output wire [4:0] rd_o, // Destination register output
-    output wire [31:0] integer_operand1_o, // Operand 1 output
-    output wire [31:0] integer_operand2_o, // Operand 2 output
-    output wire [31:0] float_operand1_o,   // operand 1 for float 
-    output wire [31:0] float_operand2_o,  // operand 2 for float
-    output wire [31:0] float_operand3_o,   // operand 3 for float
-    output wire [31:0] immediate_o, // Immediate output
-    output wire [3:0] unit_type_o, // select corrrect unit depends on instruction
-    output wire [4:0] instruction_type_o, // hold information of  which instruction
+    input wire [31:0] writebacked_result_i, // writebacked result to suitable register, comes from writeback step
+    input wire reg_write_integer_i, //Write data flag for integer register file, comes from writeback step
+    input wire reg_write_float_i, // Write data flag for float register file,    comes from writeback step
+    input wire reg_write_csr_i,  // Write data flag for csr register file,       comes from writeback step
+    input wire [4:0] target_register_i, // this is crucial for writig info to correct register file index, comes from writeback step  
+    input wire execute_working_info_i, // execute working info, comes from execute step
+    output wire [31:0] program_counter_i, // this comes from fetch step and will be conveyed to decode step as first operand
+    output wire [4:0] rd_o, // Destination register output, goes to execute step, Note : this value later comes as target_register_i as input from writeback step
+    output wire [31:0] integer_operand1_o, // Operand 1 output, goes to execute step
+    output wire [31:0] integer_operand2_o, // Operand 2 output, goes to execute step
+    output wire [31:0] float_operand1_o,   // operand 1 for float, goes to execute step
+    output wire [31:0] float_operand2_o,  // operand 2 for float, goes to execute step
+    output wire [31:0] float_operand3_o,   // operand 3 for float, goes to execute step
+    output wire [3:0] unit_type_o, // select corrrect unit depends on instruction, goes to execute step
+    output wire [4:0] instruction_type_o, // hold information of  which instruction, goes to execute step
     output wire decode_finished_o, // Flag for finishing decode step
-    output wire decode_working_info_o, // output for decoding working info
-    output wire [31:0] rs2_value_o
+    output wire decode_working_info_o, // output for decoding working info, goes to fetch step
+    output wire [31:0] rs2_value_o,     // output for rs2 value, this is important for memory operations, goes to execute
+    output wire [1:0] register_selection_o, // output for register selection, important for writeback step, goes to execute step
+    output wire [31:0] program_counter_o,    // output for program counter, necessary for brach instructions, goes to execute step
+    output wire [31:0] immediate_value_o     // output for immeadiate value, necessart for branch instructions, goes to execute step
 );
 
-reg decode_working_info = 1'b0; // very important info for stalling the decode and pipeline
-
-// Output signals
+reg decode_working_info = 1'b0; // very important info for stalling the decode and pipeline, goes to fetch step
 reg [6:0] opcode = 7'b0; // Opcode
 reg [4:0] rs1 = 5'b0;// Source register 1
 reg [4:0] rs2 = 5'b0; // Source register 2 
 reg [4:0] rs3 = 5'b0; // Source register 3
-reg [4:0] rd = 5'b0; // Destination register
-wire [31:0] operand1_integer; // Operand 1
-wire [31:0] operand2_integer; // Operand 2 
+reg [4:0] rd = 5'b0; // Destination register, important for writeback step
+wire [31:0] operand1_integer; // Operand 1 integer
+wire [31:0] operand2_integer; // Operand 2 integer
 wire [31:0] operand1_float;  // Operand 1 for float
 wire [31:0] operand2_float; // Operand 2 for float
-wire [31:0] operand3_float; // Operand 3
-reg [31:0] immediate = 32'b0; // Immediate
-
-
-reg [3:0] unit_type = 4'b0000; //default zero will be changed later
-
+wire [31:0] operand3_float; // Operand 3 float
+reg [3:0] unit_type = 4'b0000; //default zero will be changed later, will conveyed to execute step
 reg  [4:0] instruction_type = 5'b00000; // instruction type will be conveyed to execute step
+reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for register file, this later should be conveyed to writeback step for writing the data correct register file
+reg [31:0] first_operand = 32'b0; // for some instructions operand1_ineteger are not nesessary, this reg is assigned necessary info
+reg [31:0] second_operand = 32'b0; // for some instructions operand2_ineteger are not nesessary, this reg is assigned necessary info
+reg enable_first = 1'b0;    // this flag is necessary for assigning integer_operand1
+reg [31:0] program_counter = 32'b0;  // necessary for branch instructions, goes to execute step
 
-reg  [1:0] register_selection = `INTEGER_REGISTER;  // register selection for register file
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
@@ -65,7 +63,6 @@ IntegerRegisterFile integerRegisterFile(
     .read_data1_o(operand1_integer),    // Operand 1
     .read_data2_o(operand2_integer)   // Operand 2
 );
-
 
 // Float Register File module
 FloatRegisterFile floatRegisterFile(
@@ -82,30 +79,27 @@ FloatRegisterFile floatRegisterFile(
     .read_data3_o(operand3_float) // Operand 3
 );
 
-//Decode modul implementation
-reg decode_finished = 1'b0; // Flag for finishing decode step // important change
+reg decode_finished = 1'b0; // Flag for finishing decode step
 wire isWorking; // Flag for working
-
 localparam FIRST_CYCLE = 3'b000; // State for first cycle
 localparam SECOND_CYCLE = 3'b001; // State for second cycle
 localparam STALL = 3'b010;       // stall information for stalling pipeline
-
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
-
 reg [31:0] imm_generated_operand2 = 32'b0; // imm generated operand2
-reg enable_generate = 1'b0;
-
+reg enable_generate = 1'b0;              // this is necessary for immediate generator and assigning operand 2 value
 integer i = 1; // debugging for which instruction decoded
 
 assign isWorking = enable_step_i && decode_finished != 1'b1; // Assign isWorking
 
-// Decode module implementation
 always @(posedge clk_i) begin
     if(isWorking) begin
         decode_working_info = 1'b1;
         case(STATE)
             FIRST_CYCLE : begin // First cycle
+                program_counter = program_counter_i;
                 decode_working_info = 1'b1; // Set the working info for decode step
+                enable_generate = 1'b0; 
+                enable_first = 1'b0;
                 if(execute_working_info_i) begin
                     $display("EXECUTE STILL WORKING DECODE WAITING for instruction ",i);
                     STATE = STALL;
@@ -114,14 +108,99 @@ always @(posedge clk_i) begin
                 $display("DECODE STEP Decoding instruction %h", instruction_i, " for instruction %d",i); // Display the instruction
                 opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
                 case(opcode) // Extract the opcode
+                    7'b1101111: begin
+                        register_selection = `INTEGER_REGISTER;
+                        unit_type = `BRANCH_RESOLVER_UNIT;
+                        instruction_type = `BRANCH_JAL;
+                        enable_first = 1'b1;
+                        enable_generate = 1'b1;
+                        first_operand = program_counter_i;
+                        second_operand = 32'd4;
+                        rd = instruction_i[11:7];
+                        imm_generated_operand2[20] = instruction_i[31];
+                        imm_generated_operand2[19:12] = instruction_i[19:12];
+                        imm_generated_operand2[11] = instruction_i[20];
+                        imm_generated_operand2[10:1] = instruction_i[30:21];
+                        imm_generated_operand2[0] = 0; // not sure but it works okey
+                        if(instruction_i[31] == 1'b0)
+                            imm_generated_operand2[31:21] = 11'b0;
+                        else
+                            imm_generated_operand2[31:21] = 11'b1;
+                    end
+                    7'b1100111: begin
+                        register_selection = `INTEGER_REGISTER;
+                        unit_type = `BRANCH_RESOLVER_UNIT;
+                        enable_generate = 1'b1;
+                        second_operand = 32'd4;
+                        rd = instruction_i[11:7];
+                        rs1 = instruction_i[19:15];         
+                        imm_generated_operand2[11:0] = instruction_i[31:20];
+                        if(imm_generated_operand2[11] == 0)
+                            imm_generated_operand2[31:12] = 20'b0000000000000000000;
+                        else
+                            imm_generated_operand2[31:12] = 20'b11111111111111111111;                          
+                    end
+                    7'b1100011: begin
+                        register_selection = `NONE_REGISTER;      
+                        rs1 = instruction_i[19:15];
+                        rs2 = instruction_i[24:20];
+                        unit_type = `BRANCH_RESOLVER_UNIT;
+                        imm_generated_operand2[4:1] = instruction_i[11:8];
+                        imm_generated_operand2[11] = instruction_i[7];
+                        imm_generated_operand2[10:5] = instruction_i[30:25];
+                        imm_generated_operand2[12] = instruction_i[31];
+                        case(instruction_i[14:12])
+                            3'b000: begin
+                                instruction_type = `BRANCH_BEQ;
+                            end
+                            3'b001: begin
+                                instruction_type = `BRANCH_BNE;
+                            end
+                            3'b100: begin
+                                instruction_type = `BRANCH_BLT;
+                            end
+                            3'b101: begin 
+                                instruction_type = `BRANCH_BGE;
+                            end
+                            3'b110: begin 
+                                instruction_type = `BRANCH_BLTU;
+                            end
+                            3'b111: begin
+                                 instruction_type = `BRANCH_BGEU;
+                            end
+                        endcase
+                    end
+                    7'b0110111: begin
+                        register_selection = `INTEGER_REGISTER;
+                        rd = instruction_i[11:7];
+                        enable_generate = 1'b1;
+                        imm_generated_operand2[31:12] = instruction_i[31:12];
+                        imm_generated_operand2[11:0] = 12'b0;
+                        second_operand = imm_generated_operand2;
+                        instruction_type = `NONE_LUI;
+                        unit_type = `NONE_UNIT;
+                    end
+                    7'b0010111: begin
+                        $display("AUPIC INSTRUCTON");
+                        register_selection = `INTEGER_REGISTER;
+                        rd = instruction_i[11:7];
+                        enable_generate = 1'b1;
+                        enable_first = 1'b1;
+                        first_operand = program_counter_i;
+                        imm_generated_operand2[31:12] = instruction_i[31:12];
+                        imm_generated_operand2[11:0] = 12'b0;
+                        second_operand = imm_generated_operand2;
+                        instruction_type = `ALU_ADD;
+                        unit_type = `ARITHMETIC_LOGIC_UNIT;
+                    end
                     7'b0000011: begin
                         enable_generate = 1'b1;    // enable generate       
                         unit_type = `MEMORY_STEP;
                         register_selection = `INTEGER_REGISTER; // Set the register selection
                         rs1 = instruction_i[19:15]; // Extract source register 1
                         rd = instruction_i[11:7];   // Extract destination register
-                        immediate = instruction_i[31:20]; // Extract immediate
                         generate_operand2(instruction_i);
+                        second_operand = imm_generated_operand2;
                         case(instruction_i[14:12])
                             3'b000 : instruction_type[2:0] = `MEM_LB;
                             3'b001 : instruction_type[2:0] = `MEM_LH;
@@ -143,6 +222,7 @@ always @(posedge clk_i) begin
                             imm_generated_operand2[31:12] = 20'b0;
                         else
                             imm_generated_operand2[31:12] = 20'b1;
+                        second_operand = imm_generated_operand2;
                         case(instruction_i[14:12])
                             3'b000 : instruction_type[2:0] = `MEM_SB;
                             3'b001 : instruction_type[2:0] = `MEM_SH;
@@ -153,7 +233,6 @@ always @(posedge clk_i) begin
                         register_selection = `INTEGER_REGISTER; // Set the register selection
                         rs1 = instruction_i[19:15]; // Extract source register 1
                         rd = instruction_i[11:7];   // Extract destination register
-                        immediate = instruction_i[31:20]; // Extract immediate
                         unit_type = `ARITHMETIC_LOGIC_UNIT; // Set the unit type
                         enable_generate = 1'b1;    // enable generate                                
                         case(instruction_i[14:12]) // Extract the instruction type
@@ -189,6 +268,7 @@ always @(posedge clk_i) begin
                                     instruction_type = `ALU_SRAI; // Set the instruction type
                             end
                         endcase
+                        second_operand = imm_generated_operand2;
                     end
                     7'b0110011: begin
                         register_selection = `INTEGER_REGISTER; // Set the register selection
@@ -297,6 +377,7 @@ always @(posedge clk_i) begin
                       endcase
                 end
                 7'b0000111: begin
+                    register_selection = `FLOAT_REGISTER;
                     rs1 = instruction_i[19:15]; // Extract source register 1
                     rs2 = instruction_i[24:20]; // Extract source register 2
                     rs3 = instruction_i[31:27]; // Extract source register 3
@@ -307,6 +388,7 @@ always @(posedge clk_i) begin
                     enable_generate = 1'b1; // enable generate
                 end
                 7'b0100111: begin
+                    register_selection = `FLOAT_REGISTER;
                     rs1 = instruction_i[19:15]; // Extract source register 1
                     rs2 = instruction_i[24:20]; // Extract source register 2
                     rs3 = instruction_i[31:27]; // Extract source register 3
@@ -321,6 +403,7 @@ always @(posedge clk_i) begin
                         imm_generated_operand2[31:12] = 20'b1; // extend with one                               
                 end
                 7'b1000011: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -328,16 +411,17 @@ always @(posedge clk_i) begin
                    instruction_type = `FLT_FMADD; // set instruction type
                    unit_type = `FLOATING_POINT_UNIT;    // set unit type
                end 
-               7'b1000111:
-                    begin
-                       rs1 = instruction_i[19:15]; // Extract source register 1
-                       rs2 = instruction_i[24:20]; // Extract source register 2
-                       rs3 = instruction_i[31:27]; // Extract source register 3
-                       rd = instruction_i[11:7];   // Extract destination register
-                       instruction_type = `FLT_FMSUB;  // set instruction type
-                       unit_type = `FLOATING_POINT_UNIT;  // set unit type
-                    end
+               7'b1000111: begin
+                   register_selection = `FLOAT_REGISTER;
+                   rs1 = instruction_i[19:15]; // Extract source register 1
+                   rs2 = instruction_i[24:20]; // Extract source register 2
+                   rs3 = instruction_i[31:27]; // Extract source register 3
+                   rd = instruction_i[11:7];   // Extract destination register
+                   instruction_type = `FLT_FMSUB;  // set instruction type
+                   unit_type = `FLOATING_POINT_UNIT;  // set unit type
+               end
                7'b1001011: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -346,6 +430,7 @@ always @(posedge clk_i) begin
                    unit_type = `FLOATING_POINT_UNIT; // set unit type                                
                 end
                 7'b1001111: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -354,6 +439,7 @@ always @(posedge clk_i) begin
                    unit_type = `FLOATING_POINT_UNIT; // set unit type                               
                 end
                 7'b1010011: begin
+                   register_selection = `FLOAT_REGISTER;
                    rs1 = instruction_i[19:15]; // Extract source register 1
                    rs2 = instruction_i[24:20]; // Extract source register 2
                    rs3 = instruction_i[31:27]; // Extract source register 3
@@ -421,7 +507,9 @@ always @(posedge clk_i) begin
                     $display("-->Opcode: %b", opcode); // Display opcode
                     $display("-->rs1: %d", rs1);       // Display source register 1
                     $display("-->rs2: %d", rs2);       // Display source register 2
-                    $display("-->rd: %d", rd);         // Display destination register
+                    $display("-->rd: %d", rd);         // Display destination register);
+                    $display("Operand 1 : ",integerRegisterFile.registers[rs1]);
+                    $display("Operand 2 : ",integerRegisterFile.registers[rs2]);
                     decode_finished = 1'b1;         // Set the flag for finishing decode step  
                     STATE = FIRST_CYCLE;            // Go back to the first cycle
                     i=i+1;                        // Increment the instruction number
@@ -438,20 +526,21 @@ always @(posedge clk_i) begin
 end
    
 assign decode_finished_o = decode_finished; // Assign the flag for finishing decode step
-assign opcode_o = opcode;                   // Assign the opcode        
-assign rs1_o = rs1;                         // Assign source register 1
-assign rs2_o = rs2;                         // Assign source register 2
-assign rd_o = rd;                           // Assign destination register
-assign integer_operand1_o = operand1_integer;   // assign operand1 output
-assign integer_operand2_o = (enable_generate)? imm_generated_operand2 : operand2_integer; // Assign operand 2 depending on the instruction
-assign rs2_value_o = operand2_integer;        // assign operand2_integer to rs2_value for memory operations
-assign float_operand1_o = operand1_float;  // Assign float operand 1
-assign float_operand2_o = operand2_float; // Assign float operand 2
-assign float_operand3_o = operand3_float; // Assign float operand 3
-assign immediate_o = immediate;             // Assign immediate 
-assign unit_type_o = unit_type;             // Assign unit type       
-assign instruction_type_o = instruction_type; // Assign instruction
-assign decode_working_info_o = decode_working_info; // Assign decode working info
+assign rd_o = rd;                           // Assign destination register is important for keeping the target register info for writeback, 
+// this info comes later again to this step, goes to execute step
+assign integer_operand1_o = (enable_first) ? first_operand : operand1_integer;   // assign operand1 output, goes to execute step
+assign integer_operand2_o = (enable_generate) ? second_operand : operand2_integer; // Assign operand 2 depending on the instruction and condition, goes to execute
+assign rs2_value_o = operand2_integer;          // assign operand2_integer to rs2_value for memory operations, goes to execute step
+assign float_operand1_o = operand1_float;       // Assign float operand 1, goes to execute step
+assign float_operand2_o = operand2_float;       // Assign float operand 2, goes to execute step
+assign float_operand3_o = operand3_float;       // Assign float operand 3, goes to execute step
+assign unit_type_o = unit_type;                 // Assign unit type, goes to execute step, important for which sub module should work       
+assign instruction_type_o = instruction_type;   // Assign instruction type, again important for which instruction should work in which sub module
+assign decode_working_info_o = decode_working_info; // Assign decode working info, will be conveyed to fetch step for stalling operation
+assign register_selection_o = register_selection;  // Assign register selection info, will be conveyed to execute step
+assign program_counter_o = program_counter;       // Assign program counter, goes to execute step
+assign immediate_value_o = imm_generated_operand2; // Assign immediate value, goes to execute step
+
 
 /*
     * Task to generate operand2

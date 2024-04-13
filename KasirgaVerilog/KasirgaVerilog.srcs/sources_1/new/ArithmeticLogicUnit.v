@@ -25,6 +25,8 @@ RippleCarryAdder32 adder(
 );
 // Perform the operation based on the aluOp
 always @(posedge enable_i) begin
+    if(other_resources_i)
+        $display("  ALU is working for other resources");
       case (aluOp_i)
         `ALU_SUB : result = operand1_i - operand2_i; // subtraction
         `ALU_AND: result = operand1_i & operand2_i; // Bitwise AND

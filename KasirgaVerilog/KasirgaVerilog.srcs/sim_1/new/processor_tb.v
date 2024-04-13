@@ -77,9 +77,15 @@ initial begin
     memory_write('h8000_002c,32'h016586b3);   //add x13, x11, x22
     memory_write('h8000_0030,32'h000fae03);   // lw x28, 0(x31)
     memory_write('h8000_0034,32'h016586b3);   //add x13, x11, x22
-    memory_write('h8000_0038,32'h016586b3);   //add x13, x11, x22
-    memory_write('h8000_003c,32'h016586b3);   //add x13, x11, x22
-    memory_write('h8000_0040,32'h073fa423);   // sw x19, 104(x31)
+    memory_write('h8000_0038,32'h073fa423);   // sw x19, 104(x31)
+    memory_write('h8000_003c,32'h00001f37);   // lui x30, 1
+    memory_write('h8000_0040,32'h016586b3);   //add x13, x11, x22
+    memory_write('h8000_0044,32'h016586b3);   //add x13, x11, x22
+    memory_write('h8000_0048,32'h01efa223);   // sw x30, 4(x31)
+    memory_write('h8000_004c,32'h00001717);   // auipc x14, 1
+    memory_write('h8000_0050,32'h00d5c663);   // blt x11, x13, 12
+    memory_write('h8000_005c,32'h01000eef);   // jal x29, 16
+    memory_write('h8000_006c,32'h078f8e67);   // jalr x28, 120(x31)
     
     
    

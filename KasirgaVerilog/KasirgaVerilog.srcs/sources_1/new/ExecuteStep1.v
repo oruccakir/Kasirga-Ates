@@ -8,41 +8,38 @@ module ExecuteStep1 (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_step_i, // Enable input
-    input wire [31:0] instruction_i, // Instruction input
-    input wire [6:0] opcode_i, // Opcode input
-    input wire [4:0] rs1_i, // Source register 1 input
-    input wire [4:0] rs2_i, // Source register 2 input
-    input wire [4:0] rd_i, // Destination register input
-    input wire [31:0] operand1_integer_i, // Operand 1 input
-    input wire [31:0] operand2_integer_i, // Operand 2 input
-    input wire [31:0] rs2_value_i,
-    input wire [31:0] operand1_float_i,
-    input wire [31:0] operand2_float_i,
-    input wire [31:0] operand3_float_i,
-    input wire [31:0] immediate_i, // Immediate input
-    input wire [3:0] unit_type_i,  // for unit selection input
-    input wire [4:0] instruction_type_i, // instruction type
-    input wire memory_working_info_i,
-    output wire [31:0] calculated_result_o, // resulted
-    output wire execute1_finished_o, // Flag for finishing execute step 1
-    output wire execute_working_info_o,
-    output wire [4:0] rd_o,
-    output wire [31:0] mem_data_o,
-    output wire [2:0] mem_op_o,
-    output wire mem_instruction_o
+    input wire [4:0] rd_i, // Destination register input from decode step
+    input wire [31:0] operand1_integer_i, // Operand 1 input comes from decode integer register file
+    input wire [31:0] operand2_integer_i, // Operand 2 input comes from decode integer register file or from another calculation logic
+    input wire [31:0] rs2_value_i,        // rs2 register value comes from decode integer register file
+    input wire [31:0] operand1_float_i,   // Operand 1 input comes from decode float register file
+    input wire [31:0] operand2_float_i,   // Operand 2 input comes from decode float register file
+    input wire [31:0] operand3_float_i,   // Operand 3 input comes from decode float register file
+    input wire [3:0] unit_type_i,         // for unit selection input comes from decode step for unit selection
+    input wire [4:0] instruction_type_i,  // instruction type it works inside of unit type selection logic depending on definitions 
+    input wire memory_working_info_i,      // memory working info, comes from memory step
+    input wire [1:0]register_selection_i,       // register selection info, comes from decode step
+    input wire [31:0] program_counter_i,     // comes from decode for branch instructions and for other necessary instructions
+    input wire [31:0] immediate_value_i,     // comes from decode step for branch and other instructions
+    output wire [31:0] calculated_result_o, // calculated result output, goes to memory step
+    output wire execute1_finished_o,      // Flag for finishing execute step 1
+    output wire execute_working_info_o,   // Execute step working info, goes to decode step
+    output wire [4:0] rd_o,               // Target register info, goes to memory step
+    output wire [31:0] mem_data_o,        // rs2_value or another source data will be assigned, goes to memory step
+    output wire [2:0] mem_op_o,           // output for which memory operation will be implemented, goes to memory step
+    output wire [3:0] unit_type_o,         // this info just for memory operations, goes to memory step
+    output wire [1:0] register_selection_o, // this info comes from decode step as input goes to memory step as output
+    output wire is_branch_address_calculated_o, // this goes to fetch step for branch address calculation, indicating whether completed or not
+    output wire [31:0] calculated_branch_address_o // this goes to fetch step for branch address calculation, gives calculated branch address
 );
 
-reg [2:0] mem_op = 3'b000;
+reg [3:0] unit_type = 4'b0000;  // unit type, goes to memory step
+reg [2:0] mem_op = 3'b000;      // mem operations info, goes to memory step
+reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result output goes to memory step
+reg [4:0] rd = 5'b0;                // target register index, goes to memory step
+reg execute_working_info = 1'b0;   //  very important info for stalling goes to decode step
+reg [1:0]register_selection = 2'b0;    // register selection info goes to memory step
 
-reg mem_instruction = 1'b0;
-
-reg [31:0] calculated_result = 32'b0; // reg for assign calculated result to calculated result putput
-
-reg [4:0] rd = 5'b0;
-
-reg execute_working_info = 1'b0;   //  very important info for stalling 
-
-// ALU module
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
 reg enable_integer_division_unit = 1'b0; // Enable signal for integer division unit
@@ -72,6 +69,8 @@ wire [31:0] calculated_branch_result;   // bransh resolver unit result reg
 wire [31:0] calculated_bit_manip_result;  //  bit manipulation unit result reg
 wire [31:0] calculated_atomic_result;      // atomic unit result reg
 wire [31:0] calculated_control_status_result; // control status unit result reg 
+
+reg is_branch_address_calculated = 1'b0; // for branch instructions indicate branch calculation
 
 reg other_resources = 1'b0;
 // Arithmetic Logic Unit module
@@ -119,7 +118,13 @@ FloatingPointUnit floating_point_unit(
 BranchResolverUnit branch_resolver_unit(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_i(enable_branch_resolver_unit)
+    .enable_i(enable_branch_resolver_unit),
+    .instruction_type_i(instruction_type_i),
+    .program_counter_i(program_counter_i),
+    .immediate_value_i(immediate_value_i),
+    .operand1_i(operand1_integer_i),
+    .operand2_i(operand2_integer_i),
+    .result_o(calculated_branch_result)
 );
 
 // Control Unit module
@@ -150,18 +155,15 @@ BitManipulationUnit bit_manipulation_unit(
     .enable_i(enable_bit_manipulation_unit)
 );
 
-
 // ExecuteStep1 module implementation
-reg execute1_finished = 1'b0; // Flag for finishing execute step 1 // important change
+reg execute1_finished = 1'b0; // Flag for finishing execute step 1 
 wire isWorking; // Flag for working
+integer i = 1; // it is just for debugging the instruction number
 
 localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
 localparam SECOND_CYCLE = 3'b001; // State for instruction result
-localparam STALL = 3'b010;        // State for stalling the pipeline
-
+localparam STALL = 3'b010;        // State for stalling the execute step
 reg [2:0] STATE = FIRST_CYCLE; // State for the module
-
-integer i = 1; // it is just for debugging the instruction number
 
 assign isWorking = enable_step_i && execute1_finished != 1'b1; // Assign isWorking
 
@@ -169,12 +171,16 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin
-                mem_instruction = 1'b0; // important for mem operations
                 execute1_finished = 1'b0;
                 execute_working_info = 1'b1;
-                rd = rd_i;
+                is_branch_address_calculated = 1'b0;
+                //rd = rd_i;
                 $display("EXECUTE STEP Executing instruction for instruction num %d",i);
                 case(unit_type_i)
+                    `NONE_UNIT : begin
+                        $display("LUI");
+                        STATE = SECOND_CYCLE; // Go to the second cycle
+                     end
                     `ARITHMETIC_LOGIC_UNIT: begin
                         enable_alu_unit = 1'b1; // Enable ALU unit
                         $display("ALU Working");
@@ -230,7 +236,16 @@ always @(posedge clk_i) begin
                     `BRANCH_RESOLVER_UNIT: begin
                         // Enable branch resolver unit 
                         enable_branch_resolver_unit = 1'b1;
+                        if(instruction_type_i == `BRANCH_JAL || `BRANCH_JALR) begin
+                            other_resources = 1'b1;
+                            $display("Enable otherr");
+                            enable_alu_unit = 1'b1; // no importance
+                        end
                         $display("Branch Resolver Unit working");
+                        $display("Program counter ",program_counter_i);
+                        $display("Immediate",immediate_value_i);
+                        $display("Rs1 value ",operand1_integer_i);
+                        $display("Rs2 value ",operand2_integer_i);
                     end 
                     `CONTROL_UNIT: begin
                         // Enable control unit
@@ -256,8 +271,8 @@ always @(posedge clk_i) begin
                         enable_alu_unit = 1'b1; // no importance
                         other_resources = 1'b1;
                         $display("Memory address calculation is being done for instruction ",i);
-                        mem_op = instruction_type_i[2:0];
-                        mem_instruction = 1'b1;;
+                        //mem_op = instruction_type_i[2:0];
+                        //mem_instruction = 1'b1;;
                     end
                 endcase
                 STATE = SECOND_CYCLE; // Go to the second cycle
@@ -269,6 +284,16 @@ always @(posedge clk_i) begin
                 end
                 else begin
                     case(unit_type_i)
+                        `NONE_UNIT: begin
+                            $display("NONE UNIT INSTRUCTON");
+                            calculated_result = operand2_integer_i;
+                            $display("-->Execution completed for instruction num %d",i);
+                            $display("Result after execution %d",calculated_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                        end
                         `ARITHMETIC_LOGIC_UNIT: begin
                             calculated_result = calculated_alu_result;
                             enable_alu_unit = 1'b0;
@@ -319,6 +344,26 @@ always @(posedge clk_i) begin
                         `FLOATING_POINT_UNIT:begin
                         end
                         `BRANCH_RESOLVER_UNIT:begin
+                            enable_alu_unit = 1'b0;
+                            if(instruction_type_i == `BRANCH_JAL) begin
+                                $display("JALLL");
+                                calculated_result = calculated_alu_result;
+                            end
+                            else if(instruction_type_i == `BRANCH_JALR) begin
+                                $display("JALRR");
+                                calculated_result = calculated_alu_result;    
+                                //calculated_branch_result[0] = 1'b0; // crucial                      
+                            end
+                            enable_branch_resolver_unit = 1'b0;
+                            is_branch_address_calculated = 1'b1;
+                            $display("Branch Resolver  Unit Finished for instruction %d",i);
+                            $display("-->Execution completed for instruction num %d",i);
+                            $display("Result after execution %d",calculated_branch_result);
+                            i=i+1;
+                            execute1_finished = 1'b1; 
+                            STATE = FIRST_CYCLE;
+                            execute_working_info = 1'b0;
+                            other_resources = 1'b0;
                         end 
                         `CONTROL_UNIT:begin
                         end
@@ -330,8 +375,9 @@ always @(posedge clk_i) begin
                         end
                         `MEMORY_STEP: begin
                             enable_alu_unit = 1'b0;
+                            mem_op = instruction_type_i[2:0];
                             calculated_result = calculated_alu_result;
-                            $display("Target memory address is completed",calculated_result," in hexa %h ",calculated_result," for ",i );
+                            $display("Target memory address is completed ",calculated_result," in hexa %h ",calculated_result," for ",i );
                             i=i+1;
                             execute1_finished = 1'b1; 
                             STATE = FIRST_CYCLE;
@@ -339,6 +385,9 @@ always @(posedge clk_i) begin
                             other_resources = 1'b0;
                         end
                     endcase
+                    rd = rd_i;
+                    register_selection = register_selection_i;
+                    unit_type = unit_type_i;
                end
             end
             STALL: begin
@@ -349,13 +398,15 @@ always @(posedge clk_i) begin
     end
 end
 
-assign execute1_finished_o = execute1_finished;
-assign calculated_result_o = calculated_result;
-assign execute_working_info_o = execute_working_info;
-assign rd_o = rd;
-assign mem_data_o = rs2_value_i;
-assign mem_op_o = mem_op;
-assign mem_instruction_o = mem_instruction;
-
+assign execute1_finished_o = execute1_finished;       // Assign execute finished
+assign calculated_result_o = calculated_result;       // Assign calculated result, goes to memory step
+assign execute_working_info_o = execute_working_info;  // Assign execute working info, goes to decode step
+assign rd_o = rd;                                      // Assign target register goes to memory step
+assign mem_data_o = rs2_value_i;                       // Assign mem_data_o as rs2_value, goes to memory step
+assign mem_op_o = mem_op;                              // Assign mem_op_o for memory operations, goes to memory step
+assign unit_type_o = unit_type;                        // Assing unit type info only necessary for mem operations, goes to memory step
+assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
+assign is_branch_address_calculated_o = is_branch_address_calculated; // Assign information of whether branch calculated or not
+assign calculated_branch_address_o = calculated_branch_result; // Assign branch address, goes to fetch step
 
 endmodule 
