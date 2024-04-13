@@ -526,8 +526,7 @@ always @(posedge clk_i) begin
 end
    
 assign decode_finished_o = decode_finished; // Assign the flag for finishing decode step
-assign rd_o = rd;                           // Assign destination register is important for keeping the target register info for writeback, 
-// this info comes later again to this step, goes to execute step
+assign rd_o = rd;                           // Assign destination register is important for keeping the target register info for writeback, // this info comes later again to this step, goes to execute step
 assign integer_operand1_o = (enable_first) ? first_operand : operand1_integer;   // assign operand1 output, goes to execute step
 assign integer_operand2_o = (enable_generate) ? second_operand : operand2_integer; // Assign operand 2 depending on the instruction and condition, goes to execute
 assign rs2_value_o = operand2_integer;          // assign operand2_integer to rs2_value for memory operations, goes to execute step
@@ -558,7 +557,6 @@ task generate_operand2(
             imm_generated_operand2[31:12] = 20'b1; // extend with one
     end
 endtask
-
 
 
 endmodule

@@ -12,9 +12,11 @@ module BranchResolverUnit (
     input wire [31:0] operand1_i,
     input wire [31:0] operand2_i,
     output wire [31:0] result_o,
-    output wire is_finished_o
+    output wire is_finished_o,
+    output wire branch_info_o
 );
 
+reg branch_info = 1'b0;
 reg [31:0] immediate_value = 32'b0;
 reg [31:0] program_counter_or_rs1 = 32'b0;
 wire [31:0] result_addition;
@@ -31,37 +33,55 @@ always @(posedge enable_i) begin
     case(instruction_type_i)
         `BRANCH_BEQ: begin
             program_counter_or_rs1 = program_counter_i;
-            if(operand1_i != operand2_i)
+            if(operand1_i != operand2_i) begin
                 immediate_value = 32'd4;
-            else
+                branch_info = `BRANCH_NOT_TAKEN;
+            end
+            else begin
+                branch_info = `BRANCH_TAKEN;
                 immediate_value = immediate_value_i;
+            end
         end
         `BRANCH_BNE: begin
             program_counter_or_rs1 = program_counter_i;
-            if(operand1_i == operand2_i)
+            if(operand1_i == operand2_i) begin
+                branch_info = `BRANCH_NOT_TAKEN;
                 immediate_value = 32'd4;
-            else 
+            end
+            else begin
+                branch_info = `BRANCH_TAKEN;
                 immediate_value = immediate_value_i;
+            end
         end
         `BRANCH_BLT: begin
             program_counter_or_rs1 = program_counter_i;
-            if(operand1_i >= operand2_i)
+            if(operand1_i >= operand2_i) begin
                 immediate_value = 32'd4;
-            else
+                branch_info = `BRANCH_NOT_TAKEN;
+            end
+            else begin
+                branch_info = `BRANCH_TAKEN;
                 immediate_value = immediate_value_i;
+            end
         end
         `BRANCH_BGE: begin
             program_counter_or_rs1 = program_counter_i;
-            if(operand1_i < operand2_i)
+            if(operand1_i < operand2_i) begin
+                branch_info = `BRANCH_NOT_TAKEN;
                 immediate_value = 32'd4;
-            else
+            end
+            else begin
+                branch_info = `BRANCH_TAKEN;
                 immediate_value = immediate_value_i;
+            end
         end
         `BRANCH_JAL: begin
+            branch_info = `BRANCH_TAKEN;
             program_counter_or_rs1 = program_counter_i;
             immediate_value = immediate_value_i;
         end
         `BRANCH_JALR: begin
+            branch_info = `BRANCH_TAKEN;
             program_counter_or_rs1 = operand1_i;
             immediate_value = immediate_value_i;
         end
@@ -70,5 +90,6 @@ always @(posedge enable_i) begin
 end
 
 assign result_o = result_addition;
+assign branch_info_o = branch_info;
 
 endmodule

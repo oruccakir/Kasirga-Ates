@@ -165,4 +165,7 @@
 `define NONE_LUI                        5'h0
 
 
+`define BRANCH_TAKEN                    1'b1
+`define BRANCH_NOT_TAKEN                1'b0
+
 

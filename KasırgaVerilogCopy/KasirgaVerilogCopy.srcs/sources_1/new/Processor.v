@@ -29,20 +29,20 @@ wire [31:0] writebacked_result; // will be writed to available register
 wire [4:0] rd; // Destination register
 wire [31:0] integer_operand1; // Operand 1 in integer format
 wire [31:0] integer_operand2;// Operand 2 in integer format
-wire [31:0] rs2_value;
+wire [31:0] rs2_value;   // this necessay for some instructions such as memory instructions
 wire [31:0] float_operand1; // Operand 1 in float format
 wire [31:0] float_operand2;  // Operand 2 in float format
 wire [31:0] float_operand3; // Operand 3 in float format
-wire [31:0]instruction_to_decode;
-wire [4:0] instruction_type;
-wire [3:0] unit_type;
-reg enable_fetch = 1'b1; // enable signal for fetch stage
-wire fetch_finished; // fetch finished signal
-wire [31:0] program_counter;
-wire is_branch_instruction;
-wire is_branch_address_calculated;
-wire [31:0] calculated_result; // calculated result by execute1
-wire [31:0] calculated_branch_address;
+wire [31:0]instruction_to_decode; // this info goes from fetch step to decode step
+wire [4:0] instruction_type;     // this info goes from decode step to execute step
+wire [3:0] unit_type;           // this info goes from decode step to execute step
+reg enable_fetch = 1'b1;        // enable signal for fetch stage
+wire fetch_finished;            // fetch finished signal
+wire [31:0] program_counter;    // this info goes from fetch step to decode step
+wire is_branch_instruction;     // this info goes from fetch step to processor
+wire is_branch_address_calculated;     // this info goes from execute step to fetch step
+wire [31:0] calculated_result;         // calculated result by execute1
+wire [31:0] calculated_branch_address;  // this info goes from execute step to fetch step
 // Decode stage
 reg enable_decode = 1'b0; // enable signal for decode stage
 wire decode_finished; // decode finished signal
@@ -50,15 +50,15 @@ wire reg_write_integer; // coming from writeback
 wire reg_write_float; // coming from writeback
 wire reg_write_csr;    // coming from writeback step
 wire [1:0] register_selection;  // for decode step register selection
-wire [4:0] target_register;
-wire [31:0] immediate_value;
-wire [31:0] program_counter_decode;
-// Execute1 stage
+wire [4:0] target_register;   // this info goes from writeback step to decode step
+wire [31:0] immediate_value;   // this info goes from decode step to execute step
+wire [31:0] program_counter_decode;        // this info goes from decode step to execute step
+// Execute1 stage                       
 reg enable_execute1 = 1'b0; // enable signal for execute1 stage
 wire execute1_finished; // execute1 finished signal
-wire [4:0] rd_to_writeback;
-wire [1:0] register_selection_execute;
-
+wire [4:0] rd_to_writeback;   // this info goes from execute step to writeback step
+wire [1:0] register_selection_execute;  // this info goes from execute step to writeback step
+wire branch_info; // this info comes from execute step, indicates whether branch is taken or not
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -69,6 +69,7 @@ FetchStep fetch(
     .instruction_completed_i(instruction_completed_i),
     .calculated_branch_address_i(calculated_branch_address),
     .is_branch_address_calculated_i(is_branch_address_calculated),
+    .branch_info_i(branch_info),
     .mem_address_o(mem_address_o),
     .fetch_finished_o(fetch_finished),
     .instruction_to_decode_o(instruction_to_decode),
@@ -135,7 +136,8 @@ ExecuteStep1 execute1(
     .read_enable_o(read_enable_o),
     .write_enable_o(write_enable_o),
     .mem_address_o(data_address_o),
-    .mem_writed_data_o(write_data_o)
+    .mem_writed_data_o(write_data_o),
+    .branch_info_o(branch_info)
 );
 
 // Writeback module

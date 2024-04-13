@@ -13,6 +13,7 @@ module FetchStep (
     input wire instruction_completed_i, // this comes from memory, indicates memory completed process of giving instruction data
     input wire is_branch_address_calculated_i, // this comes from execute step, indicating that whether branch address calculation is completed or not
     input wire [31:0] calculated_branch_address_i, // this comes from execute step, gives correct branch address
+    input wire branch_info_i, // this info comes from execute step, indicates whether branch is taken or not
     output wire [31:0] mem_address_o, // Memory address output, goes to memory
     output wire fetch_finished_o, // flag for finishing fetch step
     output wire [31:0] instruction_to_decode_o, // instruction that will be conveyed to decode step 
@@ -21,7 +22,6 @@ module FetchStep (
     output wire is_branch_instruction_o   // this is for branch instruction information, indicating current instruction is branch, informing processor
 );
 
-reg fetch_working_info = 1'b0;  // working info for fetch step
 reg get_instruction = 1'b0;     // desire for fetch, goes to memory
 reg [31:0] instruction_to_decode = 32'b0; // instruction that will be convetyed to decode step
 reg [31:0] program_counter = 32'h8000_0000;  // program counter to access memory, data and instructions
@@ -42,7 +42,6 @@ always @(posedge clk_i) begin
     if(isWorking) begin
         case(STATE)
             FIRST_CYCLE : begin 
-                fetch_working_info= 1'b1; // working info for fetch step
                 get_instruction = 1'b1;
                 $display("FETCH STEP Fetching instruction from memory %h", program_counter, " for instruction %d",i); // debug info
                 STATE = SECOND_CYCLE; // change state to second state
@@ -62,7 +61,6 @@ always @(posedge clk_i) begin
                         program_counter_to_decode = program_counter;
                         program_counter = program_counter + 4; // increment program counter
                         fetch_finished = 1'b1; // set fetch finished info
-                        fetch_working_info = 1'b0; // set working info to 0
                         get_instruction = 1'b0;
                         i = i+1; // increment instruction number
                     end
@@ -89,9 +87,11 @@ end
     the program counter is set to the calculated branch address
 */
 always@(posedge is_branch_address_calculated_i) begin // if branch address is calculated run this always block
-    $display("Calculated branch address ",calculated_branch_address_i, " as hexadeciamal %h",calculated_branch_address_i); // for debugging display calculated branch address
-    is_branch_instruction = 1'b0;                                       // this is crucial because for next instructions pipeline should work as usual, important for processor module
-    program_counter = calculated_branch_address_i;                      // set program counter as newly calculated branch address
+    if(branch_info_i == `BRANCH_TAKEN) begin
+        $display("Calculated branch address ",calculated_branch_address_i, " as hexadeciamal %h",calculated_branch_address_i); // for debugging display calculated branch address
+        is_branch_instruction = 1'b0;                                       // this is crucial because for next instructions pipeline should work as usual, important for processor module
+        program_counter = calculated_branch_address_i;                      // set program counter as newly calculated branch address
+    end
 end
 
 

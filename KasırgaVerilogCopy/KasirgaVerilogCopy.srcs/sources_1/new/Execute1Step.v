@@ -33,7 +33,8 @@ module ExecuteStep1 (
     output wire read_enable_o, // read enable output goes to processor from there goes to memory
     output wire write_enable_o, // write enable output goes to processor from there goes to memory
     output wire [31:0] mem_address_o,  // Memory address output goes to memory
-    output wire [31:0] mem_writed_data_o // Memory data output goes to memory
+    output wire [31:0] mem_writed_data_o, // Memory data output goes to memory
+    output wire branch_info_o // comes from branch resolver unit as output and goes to fetch step 
 );
 
 reg [3:0] unit_type = 4'b0000;  // unit type, goes to memory step
@@ -129,7 +130,8 @@ BranchResolverUnit branch_resolver_unit(
     .immediate_value_i(immediate_value_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
-    .result_o(calculated_branch_result)
+    .result_o(calculated_branch_result),
+    .branch_info_o(branch_info_o)
 );
 
 // Control Unit module
