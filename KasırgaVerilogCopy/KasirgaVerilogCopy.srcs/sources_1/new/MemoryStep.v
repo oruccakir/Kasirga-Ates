@@ -59,7 +59,7 @@ always @(posedge clk_i) begin
                 mem_data = mem_stored_data_i;
                 $display("-->Performing memory operation for instruction num %d",i);
                 $display("--> INFO comes from execute step %d",calculated_result_i);
-                if(unit_type_i == `MEMORY_STEP) begin
+                if(unit_type_i == `MEMORY_UNIT) begin
                     case(memOp_i)
                         `MEM_SW: begin
                             write_enable = 1'b1;
@@ -87,7 +87,7 @@ always @(posedge clk_i) begin
                 STATE <= SECOND_CYCLE;
             end
             SECOND_CYCLE:begin
-                if(unit_type_i == `MEMORY_STEP) begin
+                if(unit_type_i == `MEMORY_UNIT) begin
                     case(memOp_i)
                         `MEM_SW: begin
                             write_enable = 1'b0;

@@ -135,7 +135,7 @@
 `define CONTROL_STATUS_UNIT             4'h6
 `define ATOMIC_UNIT                     4'h7
 `define BIT_MANIPULATION_UNIT           4'h8
-`define MEMORY_STEP                     4'h9
+`define MEMORY_UNIT                     4'h9
 `define NONE_UNIT                       4'hf
 
 // FLOATING POINT UNIT SELECTION
