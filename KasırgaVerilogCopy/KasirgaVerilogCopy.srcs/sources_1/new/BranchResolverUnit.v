@@ -11,7 +11,8 @@ module BranchResolverUnit (
     input wire [31:0] immediate_value_i,
     input wire [31:0] operand1_i,
     input wire [31:0] operand2_i,
-    output wire [31:0] result_o
+    output wire [31:0] result_o,
+    output wire is_finished_o
 );
 
 reg [31:0] immediate_value = 32'b0;

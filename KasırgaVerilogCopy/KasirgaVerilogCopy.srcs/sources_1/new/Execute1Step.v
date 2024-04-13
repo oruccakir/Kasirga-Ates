@@ -399,6 +399,7 @@ always @(posedge clk_i) begin
                         end
                         else begin
                             enable_alu_unit = 1'b0;
+                            enable_memory_unit = 1'b0;
                             //mem_op = instruction_type_i[2:0];
                             calculated_result = calculated_memory_unit_result;
                             i=i+1;
@@ -406,6 +407,7 @@ always @(posedge clk_i) begin
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                             other_resources = 1'b0;
+                            memory_unit.is_finished = 1'b0;
                         end
                     end
                 endcase

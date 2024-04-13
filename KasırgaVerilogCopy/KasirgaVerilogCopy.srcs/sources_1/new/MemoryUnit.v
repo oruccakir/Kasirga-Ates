@@ -1,30 +1,10 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 13.04.2024 12:46:39
-// Design Name: 
-// Module Name: MemoryUnit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 include "definitions.vh";
 
 module MemoryUnit(
-    input wire clk_i,
-    input wire rst_i,
-    input wire enable_i,
+    input wire clk_i,        // clk_i input comes from processor
+    input wire rst_i,        // rst_i input comes from processor
+    input wire enable_i,     // enable_i input comes from excecute step, when a memory instruction encountered
     input wire [31:0] data_i, // comes from memory that will assign to calculated result 
     input wire data_completed_i, // data completed comes from helper memory
     input wire [2:0] memOp_i, // Memory operation input
@@ -37,6 +17,10 @@ module MemoryUnit(
     output wire read_enable_o,   // read enable output goes to processor from there goes to memory
     output wire is_finished_o     // finish info for memory unit
 );
+
+reg [31:0] mem_address_next = 32'b0; // next reg for mem_address
+reg [31:0] mem_data_next = 32'b0;    // next reg for mem_data
+
 
 reg write_enable = 1'b0;        // write info goes to memory
 reg read_enable = 1'b0;         // read info goes to memory
@@ -52,6 +36,17 @@ localparam SECOND_CYCLE = 1'b001; // State for memory operation result
 localparam STALL = 3'b010;        // State for stalling later will be deleted because writeback step will implemented without cycle logic
 reg [2:0] STATE = FIRST_CYCLE;    // State for stalling the module
 
+
+always @(*) begin
+    mem_address_next = calculated_memory_address_i; // when trigerred assign next mem_address
+    mem_data_next = mem_stored_data_i;              // when trigerred assign next mem_stored_data
+end
+
+always @(posedge clk_i) begin
+    mem_address = mem_address_next;             // assign mem_address with clock   
+    mem_data = mem_data_next;                   // assign mem_data with clock
+end
+
 assign isWorking = enable_i && is_finished != 1'b1; // Assign isWorking
 
 always @(posedge clk_i) begin
@@ -60,18 +55,18 @@ always @(posedge clk_i) begin
             FIRST_CYCLE:begin
 
 
-                mem_address = calculated_memory_address_i;
-                mem_data = mem_stored_data_i;
+                //mem_address = calculated_memory_address_i;
+                //mem_data = mem_stored_data_i;
                 $display("-->Performing memory operation for instruction num ");
 
                 case(memOp_i)
                     `MEM_SW: begin
                         write_enable = 1'b1;
-                        $display("Memory SW Instruction writed address %h",mem_address);
+                        $display("Memory SW Instruction writed address %h",mem_address_next);
                      end
                     `MEM_LW: begin
                         read_enable = 1'b1;
-                        $display("Memory LW Instruction readed address %h",mem_address);
+                        $display("Memory LW Instruction readed address %h",mem_address_next);
                      end
                     `MEM_LB: begin
                      end
@@ -116,7 +111,7 @@ always @(posedge clk_i) begin
 
 
                 $display("-->Memory operation completed for instruction");
-                is_finished =1; 
+                is_finished =1'b1; 
                 STATE = FIRST_CYCLE; 
             end
             STALL: begin
@@ -127,12 +122,12 @@ always @(posedge clk_i) begin
     end
 end
 
-assign mem_data_o = mem_data;                       // Assign the memory data, goes to memory
-assign mem_address_o = mem_address;                 // Assign the memory address, goes to memory
-assign is_finished_o = is_finished;         // Assign the flag for finishing memory step
+assign mem_data_o = mem_data;                        // Assign the memory data, goes to memory
+assign mem_address_o = mem_address;                  // Assign the memory address, goes to memory
+assign is_finished_o = is_finished;                  // Assign the flag for finishing memory step
 
 
-assign write_enable_o = write_enable;               // Assign write_enable, goes to memory
-assign read_enable_o = read_enable;                 // Assign read_enable, goes to mempory
-assign mem_data_for_writeback_o = calculated_result;  // Assign result for writeback step
+assign write_enable_o = write_enable;                // Assign write_enable, goes to memory
+assign read_enable_o = read_enable;                  // Assign read_enable, goes to mempory
+assign mem_data_for_writeback_o = calculated_result; // Assign result for writeback step
 endmodule

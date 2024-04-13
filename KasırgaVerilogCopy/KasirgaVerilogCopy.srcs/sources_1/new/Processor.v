@@ -7,26 +7,24 @@
 include "definitions.vh";
 
 module Processor(
-    input wire clk_i, // Clock signal
+    input wire clk_i, // Clock signal 
     input wire rst_i, // Reset signal
-    input wire [31:0] instruction_i, // Instruction to be executed
-    input wire [31:0] data_i,
-    input wire data_completed_i,
-    input wire instruction_completed_i,
-    output wire [31:0] mem_address_o, // Memory address
-    output wire [31:0] data_address_o,
-    output wire get_data_o,
-    output wire get_instruction_o,
-    output wire [31:0] write_data_o, //  data need to be writed to memory
-    output wire write_enable_o // write data enable output that will be conveyed as input to memory
+    input wire [31:0] instruction_i, // Instruction to be executed comes from memory, later will be fecthed from cache, goes to fetch step
+    input wire [31:0] data_i,        // data input comes from memory, later will be taken from cache, goes to execute step as input to memory unit
+    input wire data_completed_i,     // data completed input comes from memory, goes to execute step as input to memory unit
+    input wire instruction_completed_i, // instruction completed input comes from memory, goes to fetch step
+    output wire [31:0] mem_address_o,  // output for instruction memory address comes from fetch step goes to memory 
+    output wire [31:0] data_address_o, // output for data memory address comes from execute step - memory unit, goes to memory
+    output wire read_enable_o,            // output for memory, indicates memory unit desire for data, goes o memory (read_enable_o)
+    output wire get_instruction_o,     // output for memory, indicates fecth step desire for instruction, goes to memory
+    output wire [31:0] write_data_o, //  data need to be writed to memory, comes from execute step - memory unit
+    output wire write_enable_o // write data enable output that will be conveyed as input to memory, comes from execute step - memory unit
     
 );
 
 wire decode_working_info; // working info for decode stage
 wire execute_working_info; // working info for execute stage
 wire fetch_working_info; // working info for fetch stage
-
-
 wire [31:0] writebacked_result; // will be writed to available register
 wire [4:0] rd; // Destination register
 wire [31:0] integer_operand1; // Operand 1 in integer format
@@ -45,6 +43,22 @@ wire is_branch_instruction;
 wire is_branch_address_calculated;
 wire [31:0] calculated_result; // calculated result by execute1
 wire [31:0] calculated_branch_address;
+// Decode stage
+reg enable_decode = 1'b0; // enable signal for decode stage
+wire decode_finished; // decode finished signal
+wire reg_write_integer; // coming from writeback
+wire reg_write_float; // coming from writeback
+wire reg_write_csr;    // coming from writeback step
+wire [1:0] register_selection;  // for decode step register selection
+wire [4:0] target_register;
+wire [31:0] immediate_value;
+wire [31:0] program_counter_decode;
+// Execute1 stage
+reg enable_execute1 = 1'b0; // enable signal for execute1 stage
+wire execute1_finished; // execute1 finished signal
+wire [4:0] rd_to_writeback;
+wire [1:0] register_selection_execute;
+
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -63,16 +77,6 @@ FetchStep fetch(
     .is_branch_instruction_o(is_branch_instruction)
 );
 
-// Decode stage
-reg enable_decode = 1'b0; // enable signal for decode stage
-wire decode_finished; // decode finished signal
-wire reg_write_integer; // coming from writeback
-wire reg_write_float; // coming from writeback
-wire reg_write_csr;    // coming from writeback step
-wire [1:0] register_selection;  // for decode step register selection
-wire [4:0] target_register;
-wire [31:0] immediate_value;
-wire [31:0] program_counter_decode;
 // Decode module
 DecodeStep decode(
     .clk_i(clk_i),
@@ -102,12 +106,6 @@ DecodeStep decode(
     .immediate_value_o(immediate_value)
 );
 
-// Execute1 stage
-reg enable_execute1 = 1'b0; // enable signal for execute1 stage
-wire execute1_finished; // execute1 finished signal
-wire [4:0] rd_to_writeback;
-wire [1:0] register_selection_execute;
-
 // Execute1 module
 ExecuteStep1 execute1(
     .clk_i(clk_i),
@@ -134,12 +132,11 @@ ExecuteStep1 execute1(
     .register_selection_o(register_selection_execute),
     .is_branch_address_calculated_o(is_branch_address_calculated),
     .calculated_branch_address_o(calculated_branch_address),
-    .read_enable_o(get_data_o),
+    .read_enable_o(read_enable_o),
     .write_enable_o(write_enable_o),
     .mem_address_o(data_address_o),
     .mem_writed_data_o(write_data_o)
 );
-
 
 // Writeback module
 WriteBackStep writeback(
@@ -193,7 +190,6 @@ always@(posedge clk_i) begin
     else if(is_branch_instruction == 1'b0)
         enable_fetch = 1'b1;
 
-    
 end
 
 endmodule

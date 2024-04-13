@@ -11,7 +11,7 @@ module HelperMemory #(
     input wire   [DATA_BIT-1:0]      write_data_i,
     input wire                       write_enable_i,
     input wire                       get_instruction_i,
-    input wire                       get_data_i,
+    input wire                       read_enable_i,
     output wire  [DATA_BIT-1:0]      read_data_o,
     output wire  [31:0]              read_ins_o,
     output wire                      data_completed_o,
@@ -61,7 +61,7 @@ always @(*)begin
         else
             instruction_completed = 1'b0;
             
-        if(get_data_i) begin
+        if(read_enable_i) begin
             if(data_counter == data_latency) begin
                 if(mem_access_valid_data) begin
                     read_data_cmb = memory[MEM_INDEX_DATA];

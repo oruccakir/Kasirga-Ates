@@ -13,7 +13,7 @@ wire [DATA_BIT-1:0] processor_memory_read_data;
 wire [DATA_BIT-1:0] processor_memory_read_ins;
 wire [DATA_BIT-1:0] processor_memory_write_data;
 wire processor_memory_write;
-wire get_data;
+wire processor_memory_read;
 wire get_instruction;
 wire data_completed;
 wire instruction_completed;
@@ -24,7 +24,7 @@ HelperMemory memory (
     .data_address_i(processor_MEMORY_ADDRESS_DATA),
     .read_data_o(processor_memory_read_data),
     .read_ins_o(processor_memory_read_ins),
-    .get_data_i(get_data),
+    .read_enable_i(processor_memory_read),
     .get_instruction_i(get_instruction),
     .write_data_i(processor_memory_write_data),
     .write_enable_i(processor_memory_write),
@@ -40,7 +40,7 @@ Processor processor (
     .data_completed_i(data_completed),
     .instruction_completed_i(instruction_completed),
     .mem_address_o(processor_MEMORY_ADDRESS_INS),
-    .get_data_o(get_data),
+    .read_enable_o(processor_memory_read),
     .get_instruction_o(get_instruction),
     .write_data_o(processor_memory_write_data),
     .write_enable_o(processor_memory_write),
