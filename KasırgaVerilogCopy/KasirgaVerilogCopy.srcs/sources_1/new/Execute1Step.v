@@ -34,7 +34,8 @@ module ExecuteStep1 (
     output wire write_enable_o, // write enable output goes to processor from there goes to memory
     output wire [31:0] mem_address_o,  // Memory address output goes to memory
     output wire [31:0] mem_writed_data_o, // Memory data output goes to memory
-    output wire branch_info_o // comes from branch resolver unit as output and goes to fetch step 
+    output wire branch_info_o, // comes from branch resolver unit as output and goes to fetch step 
+    output wire [2:0] write_register_info_o // goes to writeback step for writing process
 );
 
 reg [3:0] unit_type = 4'b0000;  // unit type, goes to memory step
@@ -314,6 +315,7 @@ always @(posedge clk_i) begin
                         execute1_finished = 1'b1; 
                         STATE = FIRST_CYCLE;
                         execute_working_info = 1'b0;
+                        rd = rd_i;
                     end
                     `ARITHMETIC_LOGIC_UNIT: begin
                         calculated_result = calculated_alu_result;
@@ -325,6 +327,7 @@ always @(posedge clk_i) begin
                         execute1_finished = 1'b1; 
                         STATE = FIRST_CYCLE;
                         execute_working_info = 1'b0;
+                        rd = rd_i;
                     end
                     `INTEGER_MULTIPLICATION_UNIT: begin
                         if(finished_integer_multiplication_unit != 1'b1) begin
@@ -342,6 +345,7 @@ always @(posedge clk_i) begin
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
                             execute1_finished = 1'b1; 
+                            rd = rd_i;
                         end
                     end
                     `INTEGER_DIVISION_UNIT: begin
@@ -360,6 +364,7 @@ always @(posedge clk_i) begin
                             execute1_finished = 1'b1; 
                             STATE = FIRST_CYCLE;
                             execute_working_info = 1'b0;
+                            rd = rd_i;
                         end
                     end
                     `FLOATING_POINT_UNIT:begin
@@ -373,6 +378,7 @@ always @(posedge clk_i) begin
                         else if(instruction_type_i == `BRANCH_JALR) begin
                             $display("JALRR");
                             calculated_result = calculated_alu_result;    
+                            
                             //calculated_branch_result[0] = 1'b0; // crucial                      
                         end
                         enable_branch_resolver_unit = 1'b0;
@@ -385,6 +391,7 @@ always @(posedge clk_i) begin
                         STATE = FIRST_CYCLE;
                         execute_working_info = 1'b0;
                         other_resources = 1'b0;
+                        rd = rd_i;
                     end 
                     `CONTROL_UNIT:begin
                     end
@@ -410,10 +417,11 @@ always @(posedge clk_i) begin
                             execute_working_info = 1'b0;
                             other_resources = 1'b0;
                             memory_unit.is_finished = 1'b0;
+                            rd = rd_i;
                         end
                     end
                 endcase
-                rd = rd_i;
+               // rd = rd_i;
                 register_selection = register_selection_i;
                 unit_type = unit_type_i;
             end
@@ -432,5 +440,8 @@ assign rd_o = rd;                                      // Assign target register
 assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
 assign is_branch_address_calculated_o = is_branch_address_calculated; // Assign information of whether branch calculated or not
 assign calculated_branch_address_o = calculated_branch_result; // Assign branch address, goes to fetch step
-
+assign write_register_info_o = (register_selection_i == `INTEGER_REGISTER) ? 3'b100 : 
+                               (register_selection_i == `FLOAT_REGISTER) ? 3'b010 : 
+                               (register_selection_i == `CSR_REGISTER) ? 3'b001 : 
+                               3'b000;
 endmodule 

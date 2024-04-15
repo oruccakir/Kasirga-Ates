@@ -2,7 +2,7 @@
 // Functionality: This module performs the first part of the execute stage of the pipeline.
 // File: ExecuteStep1.v
 
-include "definitions.vh";
+include "definitions.vh";   
 
 module ExecuteStep1 (
     input wire clk_i, // Clock input

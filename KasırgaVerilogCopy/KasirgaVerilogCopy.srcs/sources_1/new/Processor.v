@@ -59,6 +59,7 @@ wire execute1_finished; // execute1 finished signal
 wire [4:0] rd_to_writeback;   // this info goes from execute step to writeback step
 wire [1:0] register_selection_execute;  // this info goes from execute step to writeback step
 wire branch_info; // this info comes from execute step, indicates whether branch is taken or not
+wire [2:0] write_register_info;
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -137,7 +138,8 @@ ExecuteStep1 execute1(
     .write_enable_o(write_enable_o),
     .mem_address_o(data_address_o),
     .mem_writed_data_o(write_data_o),
-    .branch_info_o(branch_info)
+    .branch_info_o(branch_info),
+    .write_register_info_o(write_register_info)
 );
 
 // Writeback module
@@ -147,6 +149,7 @@ WriteBackStep writeback(
     .calculated_result_i(calculated_result),
     .rd_i(rd_to_writeback),
     .register_selection_i(register_selection),
+    .write_register_info_i(write_register_info),
     .writebacked_result_o(writebacked_result),
     .reg_write_integer_o(reg_write_integer),
     .reg_write_float_o(reg_write_float),
@@ -173,7 +176,7 @@ always@(posedge clk_i) begin
         enable_decode = 1'b0;  // if decode finished, disable decode stage
         decode.decode_finished = 1'b0; // reset decode finished signal
         enable_execute1 = 1'b1; // enable execute1 stage
-        if(is_branch_instruction == 1'b0) // if this is branch instruction then not run fetch wait execute step
+       // if(is_branch_instruction == 1'b0) // if this is branch instruction then not run fetch wait execute step
             enable_fetch = 1'b1; // for implementing pipeline mechanism
         $display("decode finished for instruction %d",d); // display the instruction number
         d = d + 1;   // increment the instruction number
@@ -182,9 +185,8 @@ always@(posedge clk_i) begin
         enable_execute1 = 1'b0; // if execute1 finished, disable execute1 stage
         execute1.execute1_finished = 1'b0; // reset execute1 finished signal
         if(fetch_finished) begin
-            if(is_branch_instruction == 1'b0) begin // if this is branch instruction then not run decode wait execute step
-                enable_decode = 1'b1; // for implementing stalling mechanism
-            end
+           // if(is_branch_instruction == 1'b0) begin // if this is branch instruction then not run decode wait execute step
+            enable_decode = 1'b1; // for implementing stalling mechanism
         end
         $display("execute finished for instruction %d",e); // display the instruction number
         e=e+1; // increment the instruction number

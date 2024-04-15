@@ -2,8 +2,8 @@
 // Purpose: Contains definitions for the pipeline processor.
 
 // Control signals for registers
-`define INTEGER_REGISTER        2'b0
-`define FLOAT_REGISTER          2'b1
+`define INTEGER_REGISTER        2'b00
+`define FLOAT_REGISTER          2'b01
 `define CSR_REGISTER            2'b10
 `define NONE_REGISTER           2'b11
 // Control Signals for ALU operations

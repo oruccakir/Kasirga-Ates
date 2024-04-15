@@ -144,6 +144,7 @@ always @(posedge clk_i) begin
                         register_selection = `NONE_REGISTER;      
                         rs1 = instruction_i[19:15];
                         rs2 = instruction_i[24:20];
+                        rd = 5'b0;
                         unit_type = `BRANCH_RESOLVER_UNIT;
                         imm_generated_operand2[4:1] = instruction_i[11:8];
                         imm_generated_operand2[11] = instruction_i[7];
@@ -212,10 +213,10 @@ always @(posedge clk_i) begin
                     7'b0100011: begin
                         enable_generate = 1'b1;    // enable generate       
                         unit_type = `MEMORY_UNIT;
-                        register_selection = `INTEGER_REGISTER; // Set the register selection
+                        register_selection = `NONE_REGISTER; // Set the register selection
                         rs1 = instruction_i[19:15]; // Extract source register 1
                         rs2 = instruction_i[24:20]; // Extract source register 2
-                        rd = instruction_i[11:7];   // Extract destination register
+                        rd = 5'b0;   // Extract destination register
                         imm_generated_operand2 [4:0] = instruction_i[11:7]; // Extract immediate
                         imm_generated_operand2 [11:5] = instruction_i[31:25]; // Extract immediate
                         if(instruction_i[31] == 1'b0)
@@ -510,6 +511,12 @@ always @(posedge clk_i) begin
                     $display("-->rd: %d", rd);         // Display destination register);
                     $display("Operand 1 : ",integerRegisterFile.registers[rs1]);
                     $display("Operand 2 : ",integerRegisterFile.registers[rs2]);
+                    case(register_selection) 
+                        `INTEGER_REGISTER: $display("INTEGER_REGISTER");
+                        `FLOAT_REGISTER:  $display("FLOAT_REGISTER");
+                         `CSR_REGISTER:  $display("CSR_REGISTER");
+                         `NONE_REGISTER: $display("NONE_REGISTER");
+                    endcase
                     decode_finished = 1'b1;         // Set the flag for finishing decode step  
                     STATE = FIRST_CYCLE;            // Go back to the first cycle
                     i=i+1;                        // Increment the instruction number

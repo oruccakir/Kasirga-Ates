@@ -39,11 +39,14 @@ module IntegerRegisterFile (
   assign read_data1_o = registers[rs1_i]; // read data from register 1
   assign read_data2_o = registers[rs2_i]; // read data from register 2
 
-always@(write_data_i) begin
+integer i = 1;     // this is jsut for debbugging
+
+always@(posedge clk_i) begin
     if(rd_i != 0 && reg_write_i) begin
-        $display("Writing back to integer register file value %d", write_data_i," target regsiter ",rd_i);
         registers[rd_i] = write_data_i; // write data to register
+        i=i+1;
     end
+
 end
 
 
