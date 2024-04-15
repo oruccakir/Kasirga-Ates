@@ -59,9 +59,6 @@ end
       registers[24] <= 0; registers[25] <= 0; registers[26] <= 0; registers[27] <= 0; 
       registers[28] <= 0; registers[29] <= 0; registers[30] <= 0; registers[31] <= 0;
     end
-    else if (reg_write_i && rd_i != 0) begin // write to register 0 is not allowed
-      registers[rd_i] = write_data_i; // write data to register
-    end
   end
   
 
