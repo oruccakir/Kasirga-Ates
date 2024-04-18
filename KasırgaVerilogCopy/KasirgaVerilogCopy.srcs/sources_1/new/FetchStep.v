@@ -93,6 +93,7 @@ always@(posedge is_branch_address_calculated_i) begin // if branch address is ca
         $display("Calculated branch address ",calculated_branch_address_i, " as hexadeciamal %h",calculated_branch_address_i); // for debugging display calculated branch address
         is_branch_instruction = 1'b0;                                       // this is crucial because for next instructions pipeline should work as usual, important for processor module
         program_counter = calculated_branch_address_i;                      // set program counter as newly calculated branch address
+        //i=i+1;
     end
 end
 

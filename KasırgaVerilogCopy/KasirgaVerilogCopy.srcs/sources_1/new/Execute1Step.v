@@ -23,6 +23,7 @@ module ExecuteStep1 (
     input wire [1:0]register_selection_i,       // register selection info, comes from decode step
     input wire [31:0] program_counter_i,     // comes from decode for branch instructions and for other necessary instructions
     input wire [31:0] immediate_value_i,     // comes from decode step for branch and other instructions
+    input wire [10:0] unit_enables_i,
     output wire [31:0] calculated_result_o, // calculated result output, goes to memory step
     output wire execute1_finished_o,      // Flag for finishing execute step 1
     output wire execute_working_info_o,   // Execute step working info, goes to decode step
@@ -37,9 +38,11 @@ module ExecuteStep1 (
     output wire [31:0] mem_writed_data_o, // Memory data output goes to memory
     output wire branch_info_o, // comes from branch resolver unit as output and goes to fetch step 
     output wire [2:0] write_register_info_o, // goes to writeback step for writing process
-    output wire [31:0] forwarded_data_o
+    output wire [31:0] forwarded_data_o,
+    output wire [4:0] forwarded_rd_o
 );
 
+reg [10:0] unit_enables_next;
 reg [3:0] unit_type; // unit type, goes to memory step
 reg [31:0] calculated_result; // reg for assign calculated result to calculated result output goes to memory step
 reg [4:0] rd;                // target register index, goes to memory step
@@ -50,6 +53,7 @@ reg [1:0] register_selection_next;
 reg [3:0] unit_type_next;
 reg [31:0] calculated_result_next;
 reg [4:0] rd_next;
+reg [4:0] forwarded_rd;
 
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
@@ -84,9 +88,11 @@ wire [31:0] calculated_atomic_result;      // atomic unit result reg
 wire [31:0] calculated_control_status_result; // control status unit result reg 
 wire [31:0] calculated_memory_unit_result;   // memory_unit result reg
 
-wire integer_multiplication_unit_working_info = 1'b0;
-wire integer_division_unit_working_info = 1'b0;
-wire memory_unit_working_info = 1'b0;
+wire integer_multiplication_unit_working_info;
+wire integer_division_unit_working_info;
+wire memory_unit_working_info;
+wire alu_working_info;
+
 
 reg is_branch_address_calculated = 1'b0; // for branch instructions indicate branch calculation
 
@@ -98,7 +104,8 @@ ArithmeticLogicUnit arithmetic_logic_unit(
     .operand2_i(operand2_integer_i),
     .aluOp_i(instruction_type_i),
     .other_resources_i(other_resources),
-    .result_o(calculated_alu_result)
+    .result_o(calculated_alu_result),
+    .is_finished_o(finished_alu_unit)
 );
 
 // Integer Multiplication Unit module
@@ -206,10 +213,30 @@ always@(*) begin
     register_selection_next = register_selection_i;
     unit_type_next = unit_type_i;
     rd_next = rd_i;
+    unit_enables_next = unit_enables_i;
 end
 
 always@(*) begin
  $display("@@EXECUTE STAGE Executed instruction num %d ",i);
+ 
+ /*
+ case(unit_enables_i)
+    `RUN_NONE_UNIT                     : $display("RUN_NONE_UNIT");
+    `RUN_FLOATING_POINT_UNIT           : $display("RUN_FLOATING_POINT_UNIT");
+    `RUN_ARITHMETIC_LOGIC_UNIT         : $display("RUN_ARITHMETIC_LOGIC_UNIT");
+    `RUN_INTEGER_MULTIPLICATION_UNIT   : $display("RUN_INTEGER_MULTIPLICATION_UNIT");
+    `RUN_INTEGER_DIVISION_UNIT         : $display("RUN_INTEGER_DIVISION_UNIT");
+    `RUN_BRANCH_RESOLVER_UNIT          : $display("RUN_BRANCH_RESOLVER_UNIT");
+    `RUN_CONTROL_UNIT                  : $display("RUN_CONTROL_UNIT");
+    `RUN_CONTROL_STATUS_UNIT           : $display("RUN_CONTROL_STATUS_UNIT");
+    `RUN_ATOMIC_UNIT                   : $display("RUN_ATOMIC_UNIT");
+    `RUN_BIT_MANIPULATION_UNIT         : $display("RUN_BIT_MANIPULATION_UNIT");
+    `RUN_MEMORY_UNIT                   : $display("RUN_MEMORY_UNIT");
+    `RUN_BRANCH_RESOLVER_AND_ALU       : $display("RUN_BRANCH_RESOLVER_AND_ALU");
+    `RUN_MEMORY_UNIT_AND_ALU           : $display("RUN_MEMORY_UNIT_AND_ALU");
+    
+ endcase
+ */
  $display("----> UNIT : ");
     case(unit_type_i)
         `NONE_UNIT : begin
@@ -274,15 +301,27 @@ always@(*) begin
             $display("Floating Point Unit working");
         end
         `BRANCH_RESOLVER_UNIT: begin
-            enable_branch_resolver_unit = 1'b1;
-            if(instruction_type_i == `BRANCH_JAL || `BRANCH_JALR) begin
+            $display("BRANCH RESOLVER UNIT working for instruction %d",i);
+            $display("-->EX Operand 1 %d",operand1_integer_i);
+            $display("-->EX Operand 2 %d",operand2_integer_i);
+            $display("-->Program Counter : %h",program_counter_i);
+            $display("-->Immediate Value : %d",immediate_value_i);
+            $display("-->Executed Instruction :");
+            case(instruction_type_i)
+                `BRANCH_JAL : $display("JAL");
+                `BRANCH_JALR : $display("JALR");
+                `BRANCH_BLT : $display("BLT");
+                `BRANCH_BNE : $display("BNE");
+                `BRANCH_BGE : $display("BGE");
+                `BRANCH_BEQ : $display("BEQ");
+            endcase
+            if(instruction_type_i == `BRANCH_JAL) begin
                 $display("Enable otherr");
             end
-            $display("Branch Resolver Unit working");
-            $display("Program counter ",program_counter_i);
-            $display("Immediate",immediate_value_i);
-            $display("Rs1 value ",operand1_integer_i);
-            $display("Rs2 value ",operand2_integer_i);
+            else if(instruction_type_i == `BRANCH_JALR) begin
+                $display("Enable otherr");      
+            end
+            
         end 
         `CONTROL_UNIT: begin
             $display("Control Unit working");
@@ -308,32 +347,32 @@ always@(*) begin
             endcase
         end
     endcase
-    execute1_finished = 1'b0;
+    execute1_finished = 1'b1;
     i=i+1;
 end
 
-always @(*) begin
-    execute1_finished = 1'b1; 
+always @(posedge execute1_finished) begin
+    
     case(unit_type_i)
         `NONE_UNIT : begin
          end
         `ARITHMETIC_LOGIC_UNIT: begin
+            $display("ENABLE ALU");
             enable_alu_unit = 1'b1; 
         end
         `INTEGER_MULTIPLICATION_UNIT: begin
-            enable_integer_multiplication_unit = 1'b1;
+          enable_integer_multiplication_unit = 1'b1;
         end
         `INTEGER_DIVISION_UNIT: begin
-            enable_integer_division_unit = 1'b1;
+           enable_integer_division_unit = 1'b1;
         end
         `FLOATING_POINT_UNIT:begin
             enable_floating_point_unit = 1'b1;
         end
         `BRANCH_RESOLVER_UNIT: begin
             enable_branch_resolver_unit = 1'b1;
-            if(instruction_type_i == `BRANCH_JAL || `BRANCH_JALR) begin
+            if(instruction_type_i == `BRANCH_JAL ||instruction_type_i ==  `BRANCH_JALR) begin
                 other_resources = 1'b1;
-                enable_alu_unit = 1'b1; 
             end
         end 
         `CONTROL_UNIT: begin
@@ -346,14 +385,14 @@ always @(*) begin
             enable_atomic_unit = 1'b1;
         end
         `BIT_MANIPULATION_UNIT: begin
-            enable_bit_manipulation_unit = 1'b1;
+           enable_bit_manipulation_unit = 1'b1;
         end
         `MEMORY_UNIT: begin
-            other_resources = 1'b1;
-            enable_memory_unit = 1'b1;
+           other_resources = 1'b1;
+           enable_memory_unit = 1'b1;
         end
     endcase
-    
+    execute1_finished = 1'b0;
 end
 
 
@@ -371,10 +410,11 @@ always@(posedge clk_i) begin
         execute_working_info <= 1'b0;
     end
     else begin
-            if(execute_working_info_o == 0) begin
-                register_selection <= register_selection_next;
-                rd <= rd_next;
-            end
+        if(execute_working_info_o == 1'b0) begin
+            register_selection <= register_selection_next;
+            rd <= rd_next;
+        end
+        forwarded_rd <= rd_next;
     end
 end
 
@@ -386,6 +426,7 @@ always@(posedge clk_i) begin
          end
         `ARITHMETIC_LOGIC_UNIT: begin
             enable_alu_unit = 1'b0; 
+            arithmetic_logic_unit.is_finished = 1'b0;
             calculated_result = calculated_alu_result;
             $display("--->ALU RESULT %d ",calculated_result);
         end
@@ -410,10 +451,14 @@ always@(posedge clk_i) begin
                $display("INTEGER DIVISION UNIT STILL WORKING");
         end
         `FLOATING_POINT_UNIT:begin
-            enable_floating_point_unit = 1'b1;
+           enable_floating_point_unit = 1'b1;
         end
         `BRANCH_RESOLVER_UNIT: begin
-            enable_branch_resolver_unit = 1'b1;
+            enable_branch_resolver_unit = 1'b0;
+            other_resources = 1'b0;
+            calculated_result = calculated_branch_result;
+            $display("-->BR RESULT %h ",calculated_result);
+            is_branch_address_calculated = 1'b1;
         end 
         `CONTROL_UNIT: begin
             enable_control_unit = 1'b1;
@@ -425,7 +470,7 @@ always@(posedge clk_i) begin
             enable_atomic_unit = 1'b1;
         end
         `BIT_MANIPULATION_UNIT: begin
-            enable_bit_manipulation_unit = 1'b1;
+            enable_bit_manipulation_unit = 1'b0;
         end
         `MEMORY_UNIT: begin
             if(finished_memory_unit) begin
@@ -441,15 +486,15 @@ always@(posedge clk_i) begin
     endcase 
 end
 
-assign integer_multiplication_unit_working_info = (enable_integer_multiplication_unit && finished_integer_multiplication_unit == 1'b0);
-assign integer_division_unit_working_info = (enable_integer_division_unit && finished_integer_division_unit == 1'b0);
-assign memory_unit_working_info = (enable_memory_unit && finished_memory_unit == 1'b0);
+
+assign integer_multiplication_unit_working_info = (enable_integer_multiplication_unit & finished_integer_multiplication_unit == 1'b0);
+assign integer_division_unit_working_info = (enable_integer_division_unit & finished_integer_division_unit == 1'b0);
+assign memory_unit_working_info = (enable_memory_unit & finished_memory_unit == 1'b0);
 
 assign execute1_finished_o = execute1_finished;       // Assign execute finished
 assign calculated_result_o = calculated_result;       // Assign calculated result, goes to memory step
 assign execute_working_info_o =  integer_multiplication_unit_working_info ||
-                                 integer_division_unit_working_info ||
-                                 memory_unit_working_info;
+                                 integer_division_unit_working_info;
                                                                   
 assign rd_o = rd;                                      // Assign target register goes to memory step
 assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
@@ -461,4 +506,6 @@ assign write_register_info_o = (register_selection == `INTEGER_REGISTER) ? 3'b10
                                3'b000;
                                
 assign forwarded_data_o = calculated_result;
+assign forwarded_rd_o = forwarded_rd;
+
 endmodule 

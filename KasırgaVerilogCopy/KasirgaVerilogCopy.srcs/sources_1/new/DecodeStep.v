@@ -31,9 +31,12 @@ module DecodeStep (
     output wire [31:0] rs2_value_o,     // output for rs2 value, this is important for memory operations, goes to execute
     output wire [1:0] register_selection_o, // output for register selection, important for writeback step, goes to execute step
     output wire [31:0] program_counter_o,    // output for program counter, necessary for brach instructions, goes to execute step
-    output wire [31:0] immediate_value_o     // output for immeadiate value, necessart for branch instructions, goes to execute step
+    output wire [31:0] immediate_value_o,     // output for immeadiate value, necessart for branch instructions, goes to execute step
+    output wire [10:0] unit_enables_o
 );
 
+reg [10:0] unit_enables;
+reg [10:0] unit_enables_next;
 reg decode_working_info; // very important info for stalling the decode and pipeline, goes to fetch step
 reg [6:0] opcode = 7'b0; // Opcode
 reg [4:0] rs1 = 5'b0;// Source register 1
@@ -153,6 +156,7 @@ always @(*) begin
         opcode = instruction_i[6:0]; // Extract opcode not that not use <= here 
         case(opcode) // Extract the opcode
             7'b1101111: begin
+                unit_enables_next = `RUN_BRANCH_RESOLVER_AND_ALU;
                 register_selection_next = `INTEGER_REGISTER;
                 unit_type_next = `BRANCH_RESOLVER_UNIT;
                 instruction_type_next = `BRANCH_JAL;
@@ -172,6 +176,7 @@ always @(*) begin
                     imm_generated_operand2_next[31:21] = 11'b1;
             end
             7'b1100111: begin
+                unit_enables_next = `RUN_BRANCH_RESOLVER_AND_ALU;
                 register_selection_next = `INTEGER_REGISTER;
                 unit_type_next = `BRANCH_RESOLVER_UNIT;
                 instruction_type_next = `BRANCH_JALR;
@@ -186,6 +191,7 @@ always @(*) begin
                     imm_generated_operand2_next[31:12] = 20'b11111111111111111111;                          
             end
             7'b1100011: begin
+                unit_enables_next = `RUN_BRANCH_RESOLVER_UNIT;
                 register_selection_next = `NONE_REGISTER;      
                 rs1 = instruction_i[19:15];
                 rs2 = instruction_i[24:20];
@@ -217,6 +223,7 @@ always @(*) begin
                 endcase
             end
             7'b0110111: begin
+                unit_enables_next = `RUN_NONE_UNIT;
                 register_selection_next = `INTEGER_REGISTER;
                 rd_next = instruction_i[11:7];
                 enable_generate = 1'b1;
@@ -228,6 +235,7 @@ always @(*) begin
             end
             7'b0010111: begin
                 $display("AUPIC INSTRUCTON");
+                unit_enables_next = `RUN_ARITHMETIC_LOGIC_UNIT;
                 register_selection_next = `INTEGER_REGISTER;
                 rd_next = instruction_i[11:7];
                 enable_generate = 1'b1;
@@ -240,6 +248,7 @@ always @(*) begin
                 unit_type_next = `ARITHMETIC_LOGIC_UNIT;
             end
             7'b0000011: begin
+                unit_enables_next = `RUN_MEMORY_UNIT_AND_ALU;
                 enable_generate = 1'b1;    // enable generate       
                 unit_type_next = `MEMORY_UNIT;
                 register_selection_next = `INTEGER_REGISTER; // Set the register selection
@@ -256,6 +265,7 @@ always @(*) begin
                 endcase
             end
             7'b0100011: begin
+                unit_enables_next = `RUN_MEMORY_UNIT_AND_ALU;
                 enable_generate = 1'b1;    // enable generate       
                 unit_type_next = `MEMORY_UNIT;
                 register_selection_next = `NONE_REGISTER; // Set the register selection
@@ -276,6 +286,7 @@ always @(*) begin
                 endcase
             end
             7'b0010011: begin
+                unit_enables_next = `RUN_ARITHMETIC_LOGIC_UNIT;
                 register_selection_next = `INTEGER_REGISTER; // Set the register selection
                 rs1 = instruction_i[19:15]; // Extract source register 1
                 rd_next = instruction_i[11:7];   // Extract destination register
@@ -319,6 +330,7 @@ always @(*) begin
   
             end
             7'b0110011: begin
+                unit_enables_next = `RUN_ARITHMETIC_LOGIC_UNIT;
                 register_selection_next = `INTEGER_REGISTER; // Set the register selection
                 enable_generate =1'b0; // disable generate
                 rs1 = instruction_i[19:15]; // Extract source register 1
@@ -329,6 +341,7 @@ always @(*) begin
                     3'b000 : begin
                         if(instruction_i[25] == 1'b1) // Extract the instruction type
                         begin
+                            unit_enables_next = `RUN_INTEGER_MULTIPLICATION_UNIT;
                             unit_type_next = `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
                             instruction_type_next = `INT_MUL; // Set the instruction type
                         end
@@ -340,6 +353,7 @@ always @(*) begin
                     3'b001 : begin
                         if(instruction_i[25] == 1'b1)
                         begin
+                            unit_enables_next = `RUN_INTEGER_MULTIPLICATION_UNIT;
                             unit_type_next = `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
                             instruction_type_next = `INT_MULH; // Set the instruction type
                         end
@@ -349,6 +363,7 @@ always @(*) begin
                     3'b010 : begin
                         if(instruction_i[25] == 1'b1)
                         begin
+                            unit_enables_next = `RUN_INTEGER_MULTIPLICATION_UNIT;
                             unit_type_next = `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
                             instruction_type_next = `INT_MULHSU; // Set the instruction type
                         end
@@ -358,6 +373,7 @@ always @(*) begin
                     3'b011 : begin
                         if(instruction_i[25] == 1'b1)
                         begin
+                            unit_enables_next = `RUN_INTEGER_MULTIPLICATION_UNIT;
                             unit_type_next = `INTEGER_MULTIPLICATION_UNIT; // Set the unit type
                             instruction_type_next = `INT_MULHU; // Set the instruction type
                         end
@@ -367,6 +383,7 @@ always @(*) begin
                     3'b100 : begin instruction_type_next = `ALU_XOR; // Set the instruction type
                         if(instruction_i[25] == 1'b1)
                         begin
+                            unit_enables_next = `RUN_INTEGER_DIVISION_UNIT;
                             unit_type_next = `INTEGER_DIVISION_UNIT; // Set the unit type
                             instruction_type_next = `INT_DIV; // Set the instruction type
                         end
@@ -376,6 +393,7 @@ always @(*) begin
                     3'b101 : begin
                         if(instruction_i[25] == 1'b1)
                            begin
+                            unit_enables_next = `RUN_INTEGER_DIVISION_UNIT;
                             unit_type_next = `INTEGER_DIVISION_UNIT; // Set the unit type
                             instruction_type_next = `INT_DIVU; // Set the instruction type
                            end
@@ -387,6 +405,7 @@ always @(*) begin
                     3'b110 : begin
                         if(instruction_i[25] == 1'b1)
                         begin
+                            unit_enables_next = `RUN_INTEGER_DIVISION_UNIT;
                             unit_type_next = `INTEGER_DIVISION_UNIT; // Set the unit type
                             instruction_type_next = `INT_REM; // Set the instruction type
                         end
@@ -396,6 +415,7 @@ always @(*) begin
                     3'b111 : begin
                         if(instruction_i[25] == 1'b1)
                         begin
+                            unit_enables_next = `RUN_INTEGER_DIVISION_UNIT;
                             unit_type_next = `INTEGER_DIVISION_UNIT; // Set the unit type
                             instruction_type_next = `INT_REMU; // Set the instruction type
                         end
@@ -405,6 +425,7 @@ always @(*) begin
                 endcase
             end
           7'b0101111: begin
+               unit_enables_next = `RUN_ATOMIC_UNIT;
                register_selection_next = `INTEGER_REGISTER; // set register selection
                rs1 = instruction_i[19:15]; // Extract source register 1
                rs2 = instruction_i[24:20]; // Extract source register 2
@@ -425,6 +446,7 @@ always @(*) begin
               endcase
         end
         7'b0000111: begin
+            unit_enables_next = `RUN_FLOATING_POINT_UNIT;
             register_selection_next = `FLOAT_REGISTER;
             rs1 = instruction_i[19:15]; // Extract source register 1
             rs2 = instruction_i[24:20]; // Extract source register 2
@@ -436,6 +458,7 @@ always @(*) begin
             enable_generate = 1'b1; // enable generate
         end
         7'b0100111: begin
+            unit_enables_next = `RUN_FLOATING_POINT_UNIT;
             register_selection_next = `FLOAT_REGISTER;
             rs1 = instruction_i[19:15]; // Extract source register 1
             rs2 = instruction_i[24:20]; // Extract source register 2
@@ -451,6 +474,7 @@ always @(*) begin
                 imm_generated_operand2_next[31:12] = 20'b1; // extend with one                               
         end
         7'b1000011: begin
+           unit_enables_next = `RUN_FLOATING_POINT_UNIT;
            register_selection_next = `FLOAT_REGISTER;
            rs1 = instruction_i[19:15]; // Extract source register 1
            rs2 = instruction_i[24:20]; // Extract source register 2
@@ -460,6 +484,7 @@ always @(*) begin
            unit_type_next = `FLOATING_POINT_UNIT;    // set unit type
        end 
        7'b1000111: begin
+           unit_enables_next = `RUN_FLOATING_POINT_UNIT;
            register_selection_next = `FLOAT_REGISTER;
            rs1 = instruction_i[19:15]; // Extract source register 1
            rs2 = instruction_i[24:20]; // Extract source register 2
@@ -469,6 +494,7 @@ always @(*) begin
            unit_type_next = `FLOATING_POINT_UNIT;  // set unit type
        end
        7'b1001011: begin
+           unit_enables_next = `RUN_FLOATING_POINT_UNIT;
            register_selection_next = `FLOAT_REGISTER;
            rs1 = instruction_i[19:15]; // Extract source register 1
            rs2 = instruction_i[24:20]; // Extract source register 2
@@ -478,6 +504,7 @@ always @(*) begin
            unit_type_next = `FLOATING_POINT_UNIT; // set unit type                                
         end
         7'b1001111: begin
+           unit_enables_next = `RUN_FLOATING_POINT_UNIT;
            register_selection_next = `FLOAT_REGISTER;
            rs1 = instruction_i[19:15]; // Extract source register 1
            rs2 = instruction_i[24:20]; // Extract source register 2
@@ -487,6 +514,7 @@ always @(*) begin
            unit_type_next = `FLOATING_POINT_UNIT; // set unit type                               
         end
         7'b1010011: begin
+           unit_enables_next = `RUN_FLOATING_POINT_UNIT;
            register_selection_next = `FLOAT_REGISTER;
            rs1 = instruction_i[19:15]; // Extract source register 1
            rs2 = instruction_i[24:20]; // Extract source register 2
@@ -558,7 +586,7 @@ end
 always@(execute_working_info_i) begin   
     decode_instruction = ~execute_working_info_i;
     decode_working_info = execute_working_info_i;
-    if(execute_working_info_i)
+    if(execute_working_info_i == 1'b1)
         $display("Execute Working stall for decode");
 end
 
@@ -582,6 +610,7 @@ always@(posedge clk_i) begin
     end
     else begin    
         if(decode_instruction) begin
+           unit_enables <= unit_enables_next;
            rd <= rd_next;
            unit_type <= unit_type_next;
            program_counter <= program_counter_next;
@@ -609,7 +638,7 @@ assign decode_working_info_o = decode_working_info; // Assign decode working inf
 assign register_selection_o = register_selection;  // Assign register selection info, will be conveyed to execute step
 assign program_counter_o = program_counter;       // Assign program counter, goes to execute step
 assign immediate_value_o = imm_generated_operand2; // Assign immediate value, goes to execute step
-
+assign unit_enables_o = unit_enables;
 
 task generate_operand2(
     input [31:0] instruction_i

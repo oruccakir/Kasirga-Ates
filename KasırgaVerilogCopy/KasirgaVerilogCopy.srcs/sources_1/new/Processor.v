@@ -5,7 +5,7 @@
 // File: Processor.v
 
 // Include the definitions
-include "definitions.vh";
+`include "definitions.vh";
 // Current Processor
 module Processor(
     input wire clk_i, // Clock signal 
@@ -62,6 +62,8 @@ wire [1:0] register_selection_execute;  // this info goes from execute step to w
 wire branch_info; // this info comes from execute step, indicates whether branch is taken or not
 wire [2:0] write_register_info;
 wire [31:0] forwarded_data;
+wire [4:0] forwarded_rd;
+wire [10:0] unit_enables;
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -95,7 +97,7 @@ DecodeStep decode(
     .execute_working_info_i(execute_working_info),
     .program_counter_i(program_counter),
     .forwarded_data_i(forwarded_data),
-    .forwarded_rd_i(rd_to_writeback),
+    .forwarded_rd_i(forwarded_rd),
     .rd_o(rd),
     .integer_operand1_o(integer_operand1),
     .integer_operand2_o(integer_operand2),
@@ -109,7 +111,8 @@ DecodeStep decode(
     .rs2_value_o(rs2_value),
     .register_selection_o(register_selection),
     .program_counter_o(program_counter_decode),
-    .immediate_value_o(immediate_value)
+    .immediate_value_o(immediate_value),
+    .unit_enables_o(unit_enables)
 );
 
 // Execute1 module
@@ -131,6 +134,7 @@ ExecuteStep1 execute1(
     .register_selection_i(register_selection),
     .program_counter_i(program_counter_decode),
     .immediate_value_i(immediate_value),
+    .unit_enables_i(unit_enables),
     .calculated_result_o(calculated_result),
     .execute1_finished_o(execute1_finished),
     .execute_working_info_o(execute_working_info),
@@ -144,7 +148,8 @@ ExecuteStep1 execute1(
     .mem_writed_data_o(write_data_o),
     .branch_info_o(branch_info),
     .write_register_info_o(write_register_info),
-    .forwarded_data_o(forwarded_data)
+    .forwarded_data_o(forwarded_data),
+    .forwarded_rd_o(forwarded_rd)
 );
 
 // Writeback module

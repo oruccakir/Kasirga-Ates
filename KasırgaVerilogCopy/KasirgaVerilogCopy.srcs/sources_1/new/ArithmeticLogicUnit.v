@@ -11,9 +11,11 @@ module ArithmeticLogicUnit (
     input wire enable_i, // Enable input
     input wire [4:0] aluOp_i, // ALU operation
     input wire other_resources_i, // we can use arithmetic logic for memory address calculation
-    output wire [31:0] result_o // Result
+    output wire [31:0] result_o, // Result
+    output wire is_finished_o
 );
 
+reg is_finished = 1'b0;
 wire [31:0] result_addition;
 reg [31:0] result = 32'b0;
 wire cout;
@@ -25,6 +27,7 @@ RippleCarryAdder32 adder(
 );
 // Perform the operation based on the aluOp
 always @(posedge enable_i) begin
+    $display("ALU STARTED");
     if(other_resources_i)
         $display("  ALU is working for other resources");
       case (aluOp_i)
@@ -51,5 +54,6 @@ always @(posedge enable_i) begin
 end
 
 assign result_o = (aluOp_i == `ALU_ADD || other_resources_i) ? result_addition : result;
+assign is_finished_o = is_finished;
 
 endmodule
