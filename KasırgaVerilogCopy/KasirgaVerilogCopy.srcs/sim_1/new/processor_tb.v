@@ -20,6 +20,7 @@ wire instruction_completed;
 
 HelperMemory memory (
     .clk_i(clk_r),
+    .rst_i(rst_r),
     .ins_address_i(processor_MEMORY_ADDRESS_INS),
     .data_address_i(processor_MEMORY_ADDRESS_DATA),
     .read_data_o(processor_memory_read_data),
@@ -58,11 +59,13 @@ localparam MAX_CYCLES = 100;
 integer stall_ctr;
 initial begin
     stall_ctr = 0;
-    //rst_r = 1'b1;
+    rst_r = 1'b1;
+
     // Race condition engellemek icin sistem 1 cevrim calistirilir
     @(posedge clk_r); // reset sinyali aktif oldugu icin degisiklik olusmaz
     // https://luplab.gitlab.io/rvcodecjs/ <- assembly binary donusumu icin kullanabiliriniz
     // BUYRUKLAR ,
+    
     memory_write('h8000_0000, 32'h00940633);  // 1   add x12, x8, x9,
     memory_write('h8000_0004, 32'h008381b3); //  2   add  x3, x7, x8,
     memory_write('h8000_0008, 32'h064a8593);  // 3   addi x11, x21, 100
@@ -79,6 +82,8 @@ initial begin
     memory_write('h8000_0034,32'h016586b3);   // 14 add x13, x11, x22
     memory_write('h8000_0038,32'h073fa423);   // 15 sw x19, 104(x31)
     memory_write('h8000_003c,32'h00001f37);   // 16 lui x30, 1
+    
+    
     memory_write('h8000_0040,32'h016586b3);   // 17 add x13, x11, x22
     memory_write('h8000_0044,32'h016586b3);   // 18 add x13, x11, x22
     memory_write('h8000_0048,32'h01efa223);   // 19 sw x30, 4(x31)
@@ -86,6 +91,7 @@ initial begin
     memory_write('h8000_0050,32'h00d5c663);   // 21 blt x11, x13, 12
     memory_write('h8000_005c,32'h01000eef);   // 22 jal x29, 16
     memory_write('h8000_006c,32'h078f8e67);   // 23 jalr x28, 120(x31)
+    
     
     
    

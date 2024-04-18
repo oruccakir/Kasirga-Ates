@@ -1,3 +1,4 @@
+
 module HelperMemory #(
     parameter INITIAL_ADDRES = 32'h8000_0000,
     parameter ADDRES_BIT       = 32,
@@ -6,6 +7,7 @@ module HelperMemory #(
     parameter DEBUG           = "TRUE"
 )(
     input wire                       clk_i,
+    input wire                       rst_i,
     input wire   [ADDRES_BIT-1:0]    ins_address_i,
     input wire   [31:0]              data_address_i,
     input wire   [DATA_BIT-1:0]      write_data_i,
@@ -34,11 +36,11 @@ wire [ADDRES_BIT-1:0] MEM_INDEX_INS = (ins_address_i - INITIAL_ADDRES) >> $clog2
 wire [ADDRES_BIT-1:0] MEM_INDEX_DATA = (data_address_i - INITIAL_ADDRES) >> $clog2(DATA_BIT / 8);
 
 integer i;
+/*
 initial begin
-    for (i = 0; i < MEMORY_INDEX; i = i + 1) begin
-        memory[i] <= 0;
-    end
+
 end
+*/
 
 integer instruction_latency = 0;
 integer data_latency = 0;
@@ -46,21 +48,11 @@ integer instruction_counter = 0;
 integer data_counter = 0;
 
 always @(*)begin
-    read_ins_cmb = UNDEFINED;
-        if(get_instruction_i) begin
-            if(instruction_counter == instruction_latency) begin
-                if(mem_access_valid_ins)
-                    read_ins_cmb = memory[MEM_INDEX_INS];
-                instruction_counter = 0;
-                instruction_completed = 1'b1;
-            end
-            else begin
-                instruction_counter = instruction_counter + 1;
-            end
-        end
-        else
-            instruction_completed = 1'b0;
-            
+   // read_ins_cmb = UNDEFINED;
+   
+    if(mem_access_valid_ins && get_instruction_i)
+        read_ins_cmb = memory[MEM_INDEX_INS];
+                    
         if(read_enable_i) begin
             if(data_counter == data_latency) begin
                 if(mem_access_valid_data) begin
@@ -77,6 +69,7 @@ always @(*)begin
         end
         else
             data_completed = 1'b0;
+            
 end
 
 
@@ -85,6 +78,13 @@ always @(posedge clk_i) begin
         $display("Memory WRITE writed data ",write_data_i);
         $display("Memory WRITE writed address %h ",data_address_i);
         memory[MEM_INDEX_DATA] <= write_data_i;
+    end
+end
+
+always@(posedge rst_i) begin
+        read_ins_cmb <= 32'b0;
+        for (i = 0; i < MEMORY_INDEX; i = i + 1) begin
+        memory[i] <= 0;
     end
 end
 

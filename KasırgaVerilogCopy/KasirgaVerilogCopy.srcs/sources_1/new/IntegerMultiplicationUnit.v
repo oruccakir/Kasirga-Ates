@@ -54,7 +54,7 @@ always @(posedge clk_i or posedge rst_i) begin
                 end
                 CYCLE5: begin
                     STATE = CYCLE1;
-                    is_finished <= 1'b1;
+                    is_finished = 1'b1;
                 end
             endcase
         end
