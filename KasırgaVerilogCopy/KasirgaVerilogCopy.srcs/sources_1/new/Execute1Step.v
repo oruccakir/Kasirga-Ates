@@ -54,6 +54,7 @@ reg [3:0] unit_type_next;
 reg [31:0] calculated_result_next;
 reg [4:0] rd_next;
 reg [4:0] forwarded_rd;
+reg [2:0] write_register_info;
 
 reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
 reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
@@ -413,6 +414,10 @@ always@(posedge clk_i) begin
         if(execute_working_info_o == 1'b0) begin
             register_selection <= register_selection_next;
             rd <= rd_next;
+            write_register_info <= (register_selection_next == `INTEGER_REGISTER) ? 3'b100 : 
+                               (register_selection_next == `FLOAT_REGISTER) ? 3'b010 : 
+                               (register_selection_next == `CSR_REGISTER) ? 3'b001 : 
+                               3'b000;
         end
         forwarded_rd <= rd_next;
     end
@@ -500,11 +505,13 @@ assign rd_o = rd;                                      // Assign target register
 assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
 assign is_branch_address_calculated_o = is_branch_address_calculated; // Assign information of whether branch calculated or not
 assign calculated_branch_address_o = calculated_branch_result; // Assign branch address, goes to fetch step
-assign write_register_info_o = (register_selection == `INTEGER_REGISTER) ? 3'b100 : 
+assign write_register_info_o = write_register_info;
+/*
+(register_selection == `INTEGER_REGISTER) ? 3'b100 : 
                                (register_selection == `FLOAT_REGISTER) ? 3'b010 : 
                                (register_selection == `CSR_REGISTER) ? 3'b001 : 
                                3'b000;
-                               
+      */                         
 assign forwarded_data_o = calculated_result;
 assign forwarded_rd_o = forwarded_rd;
 

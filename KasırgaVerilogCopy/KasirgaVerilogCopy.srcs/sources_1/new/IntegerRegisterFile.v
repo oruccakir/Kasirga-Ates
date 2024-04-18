@@ -54,8 +54,13 @@ always@(posedge clk_i) begin
         registers[rd_i] = write_data_i; // write data to register;
         $display("-->INTEGER REGISTER FILE Writed result %d ",registers[rd_i]," Target Register %d ", rd_i);
     end
-
 end
-
-
+/*
+always@(reg_write_i) begin
+    if(rd_i != 0 && reg_write_i) begin
+        registers[rd_i] = write_data_i; // write data to register;
+        $display("-->INTEGER REGISTER FILE Writed result %d ",registers[rd_i]," Target Register %d ", rd_i);
+    end
+end
+*/
 endmodule

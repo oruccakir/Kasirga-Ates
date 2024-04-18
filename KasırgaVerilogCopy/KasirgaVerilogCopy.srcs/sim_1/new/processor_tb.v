@@ -75,7 +75,7 @@ initial begin
     
       //memory_write('h8000_0000, 32'h40c288b3); //  5   sub x17, x5, x12
      // memory_write('h8000_0004, 32'h003589b3); //  6   add x19, x11, x3
-   /*
+   
     memory_write('h8000_0000, 32'h00940633);  // 1   add x12, x8, x9
    // memory_write('h8000_0004, 32'h40c288b3); //  5   sub x17, x5, x12
     
@@ -104,7 +104,7 @@ initial begin
     memory_write('h8000_0050,32'h00d5c663);   // 21 blt x11, x13, 12
     memory_write('h8000_005c,32'h01000eef);   // 22 jal x29, 16
     memory_write('h8000_006c,32'h078f8e67);   // 23 jalr x28, 120(x31)
-    */
+    
     
     
    
