@@ -184,4 +184,5 @@
 `define RUN_BRANCH_RESOLVER_AND_ALU       11'b00001000001
 `define RUN_MEMORY_UNIT_AND_ALU           11'b00000000011
 
-
+`define WRITING_IN_PROGRESS                1'b0
+`define WRITING_COMPLETED                  1'b1

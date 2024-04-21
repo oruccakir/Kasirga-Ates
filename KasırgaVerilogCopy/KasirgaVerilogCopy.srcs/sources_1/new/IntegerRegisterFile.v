@@ -1,7 +1,7 @@
 // File: IntegerRegisterFile.v
 // Purpose: Define a module for the integer register file
 
-include "definitions.vh";
+`include "definitions.vh";
 
 module IntegerRegisterFile (  
   input wire clk_i, // clock signal
@@ -16,51 +16,48 @@ module IntegerRegisterFile (
   output wire [31:0] read_data2_o // data from read register 2
 );
 
-  reg [31:0] registers [31:0]; // 32 registers for integer data
-  initial begin
-      registers[0] = 0; registers[1] = 0; registers[2] = 0; registers[3] = 0; 
-      registers[4] = 0; registers[5] = 0; registers[6] = 0; registers[7] = 0;
-      registers[8] = 0; registers[9] = 0; registers[10] = 0; registers[11] = 5; 
-      registers[12] = 0; registers[13] = 0; registers[14] = 0; registers[15] = 32'd60;
-      registers[16] = 0; registers[17] = 48; registers[18] = 0; registers[19] = 0; 
-      registers[20] = 0; registers[21] = 0; registers[22] = 0; registers[23] = 0;
-      registers[24] = 0; registers[25] = 0; registers[26] = 0; registers[27] = 0; 
-      registers[28] = 0; registers[29] = 0; registers[30] = 0; registers[31] = 0;
-      registers[0] = 40;
-      registers[5] = 88;
-      registers[3] = 22;
-      registers[2] = 13;
-      registers[6] = 14;
-      registers[7] = 55;
-      registers[8] = 15;
-      registers[9] = 23;
-      registers[31] = 32'h8000_0000;
-  end
+reg [31:0] registers [31:0];
+reg [31:0] registers_state;
+  
+integer i = 0;
+initial begin
 
-  assign read_data1_o = registers[rs1_i]; // read data from register 1
-  assign read_data2_o = registers[rs2_i]; // read data from register 2
 
-/*
-always@(*) begin
-   if(rd_i != 0 && reg_write_i) begin
-         registers[rd_i] = write_data_i; // write data to register;
-         $display("-->INTEGER REGISTER FILE Writed result %d ",registers[rd_i]," Target Register %d ", rd_i);
-    end
+    
+  registers[0] = 0; registers[1] = 0; registers[2] = 0; registers[3] = 0; 
+  registers[4] = 0; registers[5] = 0; registers[6] = 0; registers[7] = 0;
+  registers[8] = 0; registers[9] = 0; registers[10] = 0; registers[11] = 5; 
+  registers[12] = 0; registers[13] = 0; registers[14] = 0; registers[15] = 32'd60;
+  registers[16] = 0; registers[17] = 48; registers[18] = 0; registers[19] = 0; 
+  registers[20] = 0; registers[21] = 0; registers[22] = 0; registers[23] = 0;
+  registers[24] = 0; registers[25] = 0; registers[26] = 0; registers[27] = 0; 
+  registers[28] = 0; registers[29] = 0; registers[30] = 0; registers[31] = 0;
+  registers[0] = 40;
+  registers[5] = 88;
+  registers[3] = 22;
+  registers[2] = 13;
+  registers[6] = 14;
+  registers[7] = 55;
+  registers[8] = 15;
+  registers[9] = 23;
+  registers[31] = 32'h8000_0000;
 end
-*/
+
+assign read_data1_o = registers[rs1_i]; // read data from register 1
+assign read_data2_o = registers[rs2_i]; // read data from register 2
 
 always@(posedge clk_i) begin
+    if(rst_i) begin
+        for(i=0; i<32; i=i+1)  begin
+            registers_state[i] = `WRITING_COMPLETED;
+            //registers[i] = 32'b0; 
+        end
+    end
     if(rd_i != 0 && reg_write_i) begin
         registers[rd_i] = write_data_i; // write data to register;
         $display("-->INTEGER REGISTER FILE Writed result %d ",registers[rd_i]," Target Register %d ", rd_i);
+        registers_state[rd_i] = `WRITING_COMPLETED;
     end
 end
-/*
-always@(reg_write_i) begin
-    if(rd_i != 0 && reg_write_i) begin
-        registers[rd_i] = write_data_i; // write data to register;
-        $display("-->INTEGER REGISTER FILE Writed result %d ",registers[rd_i]," Target Register %d ", rd_i);
-    end
-end
-*/
+
 endmodule

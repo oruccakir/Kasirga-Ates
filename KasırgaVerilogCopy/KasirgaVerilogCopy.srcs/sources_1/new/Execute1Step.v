@@ -6,98 +6,99 @@
 include "definitions.vh";
 
 module ExecuteStep1 (
-    input wire clk_i, // Clock input
-    input wire rst_i, // Reset input
-    input wire enable_step_i, // Enable input
-    input wire data_completed_i, // data completed comes from helper memory
-    input wire [31:0] data_i,    // comes from memory that will assign to calculated result 
-    input wire [4:0] rd_i, // Destination register input from decode step
-    input wire [31:0] operand1_integer_i, // Operand 1 input comes from decode integer register file
-    input wire [31:0] operand2_integer_i, // Operand 2 input comes from decode integer register file or from another calculation logic
-    input wire [31:0] rs2_value_i,        // rs2 register value comes from decode integer register file
-    input wire [31:0] operand1_float_i,   // Operand 1 input comes from decode float register file
-    input wire [31:0] operand2_float_i,   // Operand 2 input comes from decode float register file
-    input wire [31:0] operand3_float_i,   // Operand 3 input comes from decode float register file
-    input wire [3:0] unit_type_i,         // for unit selection input comes from decode step for unit selection
-    input wire [4:0] instruction_type_i,  // instruction type it works inside of unit type selection logic depending on definitions step
-    input wire [1:0]register_selection_i,       // register selection info, comes from decode step
-    input wire [31:0] program_counter_i,     // comes from decode for branch instructions and for other necessary instructions
-    input wire [31:0] immediate_value_i,     // comes from decode step for branch and other instructions
-    input wire [10:0] unit_enables_i,
-    output wire [31:0] calculated_result_o, // calculated result output, goes to memory step
-    output wire execute1_finished_o,      // Flag for finishing execute step 1
-    output wire execute_working_info_o,   // Execute step working info, goes to decode step
-    output wire [4:0] rd_o,               // Target register info, goes to memory step
-    output wire [1:0] register_selection_o, // this info comes from decode step as input goes to memory step as output
-    output wire is_branch_address_calculated_o, // this goes to fetch step for branch address calculation, indicating whether completed or not
-    output wire [31:0] calculated_branch_address_o, // this goes to fetch step for branch address calculation, gives calculated branch address
-    output wire [31:0] data_address_o,// comes from memory that will assign to calculated result 
-    output wire read_enable_o, // read enable output goes to processor from there goes to memory
-    output wire write_enable_o, // write enable output goes to processor from there goes to memory
-    output wire [31:0] mem_address_o,  // Memory address output goes to memory
-    output wire [31:0] mem_writed_data_o, // Memory data output goes to memory
-    output wire branch_info_o, // comes from branch resolver unit as output and goes to fetch step 
-    output wire [2:0] write_register_info_o, // goes to writeback step for writing process
-    output wire [31:0] forwarded_data_o,
-    output wire [4:0] forwarded_rd_o
+    input wire clk_i,                                                               // Clock input
+    input wire rst_i,                                                               // Reset input
+    input wire data_completed_i,                                                    // data completed comes from helper memory
+    input wire [31:0] data_i,                                                       // comes from memory that will assign to calculated result 
+    input wire [4:0] rd_i,                                                          // Destination register input from decode step
+    input wire [31:0] operand1_integer_i,                                           // Operand 1 input comes from decode integer register file
+    input wire [31:0] operand2_integer_i,                                           // Operand 2 input comes from decode integer register file or from another calculation logic
+    input wire [31:0] rs2_value_i,                                                  // rs2 register value comes from decode integer register file
+    input wire [31:0] operand1_float_i,                                             // Operand 1 input comes from decode float register file
+    input wire [31:0] operand2_float_i,                                             // Operand 2 input comes from decode float register file
+    input wire [31:0] operand3_float_i,                                             // Operand 3 input comes from decode float register file
+    input wire [3:0] unit_type_i,                                                   // for unit selection input comes from decode step for unit selection
+    input wire [4:0] instruction_type_i,                                            // instruction type it works inside of unit type selection logic depending on definitions step
+    input wire [1:0] register_selection_i,                                          // register selection info, comes from decode step
+    input wire [31:0] program_counter_i,                                            // comes from decode for branch instructions and for other necessary instructions
+    input wire [31:0] immediate_value_i,                                            // comes from decode step for branch and other instructions
+    output wire [31:0] calculated_result_o,                                         // calculated result output, goes to writeback stage
+    output wire execute_working_info_o,                                             // Execute step working info, goes to decode step
+    output wire [4:0] rd_o,                                                         // Target register info, goes to writeback step
+    output wire [1:0] register_selection_o,                                         // this info comes from decode step as input goes to memory step as output
+    output wire is_branch_address_calculated_o,                                     // this goes to fetch step for branch address calculation, indicating whether completed or not
+    output wire [31:0] calculated_branch_address_o,                                 // this goes to fetch step for branch address calculation, gives calculated branch address
+    output wire [31:0] data_address_o,                                              // comes from memory that will assign to calculated result 
+    output wire read_enable_o,                                                      // read enable output goes to processor from there goes to memory
+    output wire write_enable_o,                                                     // write enable output goes to processor from there goes to memory
+    output wire [31:0] mem_address_o,                                               // Memory address output goes to memory
+    output wire [31:0] mem_writed_data_o,                                           // Memory data output goes to memory
+    output wire branch_info_o,                                                      // comes from branch resolver unit as output and goes to fetch step 
+    output wire [2:0] write_register_info_o,                                        // goes to writeback step for writing process
+    output wire [31:0] forwarded_data_o,                                            // forwarded data goes to decode stage
+    output wire [4:0] forwarded_rd_o                                                // forwarded rd goes to decode stage
 );
 
-reg [10:0] unit_enables_next;
-reg [3:0] unit_type; // unit type, goes to memory step
-reg [31:0] calculated_result; // reg for assign calculated result to calculated result output goes to memory step
-reg [4:0] rd;                // target register index, goes to memory step
-reg execute_working_info;   //  very important info for stalling goes to decode step
-reg [1:0]register_selection;    // register selection info goes to memory step
 
-reg [1:0] register_selection_next;
-reg [3:0] unit_type_next;
-reg [31:0] calculated_result_next;
-reg [4:0] rd_next;
-reg [4:0] forwarded_rd;
-reg [2:0] write_register_info;
+reg [31:0] calculated_result;                                                       // reg for assign calculated result to calculated result output goes to memory step
+reg [4:0] rd;                                                                       // target register index, goes to memory step
+reg execute_working_info;                                                           //very important info for stalling goes to decode step
+reg [1:0]register_selection;                                                        // register selection info goes to memory step
 
-reg enable_alu_unit = 1'b0; // Enable signal for ALU unit
-reg enable_integer_multiplication_unit = 1'b0; // Enable signal for integer multiplication unit
-reg enable_integer_division_unit = 1'b0; // Enable signal for integer division unit
-reg enable_floating_point_unit = 1'b0; // Enable signal for floating point unit
-reg enable_branch_resolver_unit = 1'b0; // Enable signal for branch resolver unit
-reg enable_control_unit = 1'b0; // Enable signal for control unit
-reg enable_control_status_unit = 1'b0; // Enable signal for control status unit
-reg enable_atomic_unit = 1'b0; // Enable signal for atomic unit
-reg enable_bit_manipulation_unit = 1'b0; // Enable signal for bit manipulation unit
-reg enable_memory_unit = 1'b0;          // Enable signal for memory unit
+reg execute1_finished;                                                              // Flag for finishing execute step 1, just fýr debugging
+integer i = -2;                                                                     // it is just for debugging the instruction number 
+                        
+reg [1:0] register_selection_next;                                                  // next register for register selection
+reg [3:0] unit_type_next;                                                           // next register for unit type
+reg [31:0] calculated_result_next;                                                  // next register for calculated result
+reg [4:0] rd_next;                                                                  // next register for rd 
+reg [4:0] forwarded_rd;                                                             // forwarded rd goes to decode stage
+reg [2:0] write_register_info;                                                      // write register info goes to writeback stage
 
-wire finished_alu_unit; // finished signal for ALU unit
-wire finished_integer_multiplication_unit; // finished signal for integer multiplication unit
-wire finished_integer_division_unit; // finished signal for integer division unit
-wire finished_floating_point_unit; // finished signal for floating point unit
-wire finished_branch_resolver_unit; // finished signal for branch resolver unit
-wire finished_control_unit; // finished signal for control unit
-wire finished_control_status_unit; // finished signal for control status unit
-wire finished_atomic_unit; // finished signal for atomic unit
-wire finished_bit_manipulation_unit;// finished signal for bit manipulation unit
-wire finished_memory_unit;     // finished signal for memory unit
+reg enable_alu_unit;                                                                // Enable signal for ALU unit
+reg enable_integer_multiplication_unit;                                             // Enable signal for integer multiplication unit
+reg enable_integer_division_unit;                                                   // Enable signal for integer division unit
+reg enable_floating_point_unit;                                                     // Enable signal for floating point unit
+reg enable_branch_resolver_unit;                                                    // Enable signal for branch resolver unit
+reg enable_control_unit;                                                            // Enable signal for control unit
+reg enable_control_status_unit;                                                     // Enable signal for control status unit
+reg enable_atomic_unit;                                                             // Enable signal for atomic unit
+reg enable_bit_manipulation_unit;                                                   // Enable signal for bit manipulation unit
+reg enable_memory_unit;                                                             // Enable signal for memory unit
+reg is_branch_address_calculated;                                                   // for branch instructions indicate branch calculation is completed or not
+reg other_resources;                                                                // sometimes we can use arithmetic logic for another units, this is for that purpose
+
+wire finished_alu_unit;                                                             // finished signal for ALU unit
+wire finished_integer_multiplication_unit;                                          // finished signal for integer multiplication unit
+wire finished_integer_division_unit;                                                // finished signal for integer division unit
+wire finished_floating_point_unit;                                                  // finished signal for floating point unit
+wire finished_branch_resolver_unit;                                                 // finished signal for branch resolver unit
+wire finished_control_unit;                                                         // finished signal for control unit
+wire finished_control_status_unit;                                                  // finished signal for control status unit
+wire finished_atomic_unit;                                                          // finished signal for atomic unit
+wire finished_bit_manipulation_unit;                                                // finished signal for bit manipulation unit
+wire finished_memory_unit;                                                          // finished signal for memory unit
 
 //results
-wire [31:0] calculated_alu_result;    // alu result reg
-wire [31:0] calculated_int_mul_result; // int multiplication unit result reg
-wire [31:0] calculated_int_div_result;  // int division unit result reg
-wire [31:0] calculated_fpu_result;      // floating point unit result reg
-wire [31:0] calculated_branch_result;   // bransh resolver unit result reg
-wire [31:0] calculated_bit_manip_result;  //  bit manipulation unit result reg
-wire [31:0] calculated_atomic_result;      // atomic unit result reg
-wire [31:0] calculated_control_status_result; // control status unit result reg 
-wire [31:0] calculated_memory_unit_result;   // memory_unit result reg
+wire [31:0] calculated_alu_result;                                                  // alu result reg
+wire [31:0] calculated_int_mul_result;                                              // int multiplication unit result reg
+wire [31:0] calculated_int_div_result;                                              // int division unit result reg
+wire [31:0] calculated_fpu_result;                                                  // floating point unit result reg
+wire [31:0] calculated_branch_result;                                               // bransh resolver unit result reg
+wire [31:0] calculated_bit_manip_result;                                            // bit manipulation unit result reg
+wire [31:0] calculated_atomic_result;                                               // atomic unit result reg
+wire [31:0] calculated_control_status_result;                                       // control status unit result reg 
+wire [31:0] calculated_memory_unit_result;                                          // memory_unit result reg
 
-wire integer_multiplication_unit_working_info;
-wire integer_division_unit_working_info;
-wire memory_unit_working_info;
-wire alu_working_info;
+wire integer_multiplication_unit_working_info;                                      // integer multiplication unit working info, nexessary for updating excepted working info
+wire integer_division_unit_working_info;                                            // integer division unit working info, nexessary for updating excepted working info
+wire memory_unit_working_info;                                                      // memory unit working info, nexessary for updating excepted working info
+wire floating_point_unit_working_info;                                              // floating point unit working info, nexessary for updating excepted working info
+wire bit_manipulation_unit_working_info;                                            // bit manipulation unit working info, nexessary for updating excepted working info
+wire atomic_unit_working_info;                                                      // atomic unit working info, nexessary for updating excepted working info
 
 
-reg is_branch_address_calculated = 1'b0; // for branch instructions indicate branch calculation
 
-reg other_resources = 1'b0;
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
     .enable_i(enable_alu_unit),
@@ -200,45 +201,20 @@ MemoryUnit memory_unit(
     .is_finished_o(finished_memory_unit)
 );
 
-// ExecuteStep1 module implementation
-reg execute1_finished = 1'b0; // Flag for finishing execute step 1 
-wire isWorking; // Flag for working
-integer i = -2; // it is just for debugging the instruction number
 
-localparam FIRST_CYCLE = 3'b000; // State for desiring instruction
-localparam SECOND_CYCLE = 3'b001; // State for instruction result
-localparam STALL = 3'b010;        // State for stalling the execute step
-reg [2:0] STATE = FIRST_CYCLE; // State for the module
 
 always@(*) begin
-    register_selection_next = register_selection_i;
-    unit_type_next = unit_type_i;
-    rd_next = rd_i;
-    unit_enables_next = unit_enables_i;
+    register_selection_next = register_selection_i;                               // assign register selection
+    unit_type_next = unit_type_i;                                                 // assign unit type
+    rd_next = rd_i;                                                               // assign target register
 end
 
+
+// debugging purposes
 always@(*) begin
- $display("@@EXECUTE STAGE Executed instruction num %d ",i);
- 
- /*
- case(unit_enables_i)
-    `RUN_NONE_UNIT                     : $display("RUN_NONE_UNIT");
-    `RUN_FLOATING_POINT_UNIT           : $display("RUN_FLOATING_POINT_UNIT");
-    `RUN_ARITHMETIC_LOGIC_UNIT         : $display("RUN_ARITHMETIC_LOGIC_UNIT");
-    `RUN_INTEGER_MULTIPLICATION_UNIT   : $display("RUN_INTEGER_MULTIPLICATION_UNIT");
-    `RUN_INTEGER_DIVISION_UNIT         : $display("RUN_INTEGER_DIVISION_UNIT");
-    `RUN_BRANCH_RESOLVER_UNIT          : $display("RUN_BRANCH_RESOLVER_UNIT");
-    `RUN_CONTROL_UNIT                  : $display("RUN_CONTROL_UNIT");
-    `RUN_CONTROL_STATUS_UNIT           : $display("RUN_CONTROL_STATUS_UNIT");
-    `RUN_ATOMIC_UNIT                   : $display("RUN_ATOMIC_UNIT");
-    `RUN_BIT_MANIPULATION_UNIT         : $display("RUN_BIT_MANIPULATION_UNIT");
-    `RUN_MEMORY_UNIT                   : $display("RUN_MEMORY_UNIT");
-    `RUN_BRANCH_RESOLVER_AND_ALU       : $display("RUN_BRANCH_RESOLVER_AND_ALU");
-    `RUN_MEMORY_UNIT_AND_ALU           : $display("RUN_MEMORY_UNIT_AND_ALU");
-    
- endcase
- */
- $display("----> UNIT : ");
+    $display("@@EXECUTE STAGE Executed instruction %h ", program_counter_i);
+    //unit_type = unit_type_i;
+    $display("----> UNIT : ");
     case(unit_type_i)
         `NONE_UNIT : begin
             $display("NONE UNIT Working");
@@ -397,32 +373,44 @@ always @(posedge execute1_finished) begin
 end
 
 
-
 always@(posedge clk_i) begin
     if(rst_i) begin
+        enable_alu_unit = 1'b0; 
+        enable_integer_multiplication_unit = 1'b0; 
+        enable_integer_division_unit = 1'b0; 
+        enable_floating_point_unit = 1'b0; 
+        enable_branch_resolver_unit = 1'b0; 
+        enable_control_unit = 1'b0; 
+        enable_control_status_unit = 1'b0; 
+        enable_atomic_unit = 1'b0;
+        enable_bit_manipulation_unit = 1'b0; 
+        enable_memory_unit = 1'b0;          
         register_selection_next = 2'b0;
         unit_type_next = 4'b0;
         calculated_result_next = 32'b0;
         rd_next = 5'b0;
         register_selection = 2'b0;
-        unit_type = 4'b0;
         calculated_result = 32'b0;
         rd = 5'b0;
+        execute1_finished <= 1'b0;
         execute_working_info <= 1'b0;
+        is_branch_address_calculated <=1'b0;
+        other_resources <= 1'b0;
     end
     else begin
-        if(execute_working_info_o == 1'b0) begin
-            register_selection <= register_selection_next;
-            rd <= rd_next;
-            write_register_info <= (register_selection_next == `INTEGER_REGISTER) ? 3'b100 : 
+        if(execute_working_info_o == 1'b0) begin                                                   // if execute working info is 0, then update the registers coneying to writeback stage
+            register_selection <= register_selection_next;                                         // update register selection
+            rd <= rd_next;                                                                         // update target register 
+            write_register_info <= (register_selection_next == `INTEGER_REGISTER) ? 3'b100 :       // update write register info
                                (register_selection_next == `FLOAT_REGISTER) ? 3'b010 : 
                                (register_selection_next == `CSR_REGISTER) ? 3'b001 : 
                                3'b000;
         end
-        forwarded_rd <= rd_next;
+        forwarded_rd <= rd_next;                                                                    // update forwarded rd for decode stage
     end
 end
 
+// at clock edge, assign calculated result to calculated result output and update the working info
 always@(posedge clk_i) begin    
     case(unit_type_i)
         `NONE_UNIT : begin
@@ -492,27 +480,22 @@ always@(posedge clk_i) begin
 end
 
 
-assign integer_multiplication_unit_working_info = (enable_integer_multiplication_unit & finished_integer_multiplication_unit == 1'b0);
-assign integer_division_unit_working_info = (enable_integer_division_unit & finished_integer_division_unit == 1'b0);
-assign memory_unit_working_info = (enable_memory_unit & finished_memory_unit == 1'b0);
+assign integer_multiplication_unit_working_info = (enable_integer_multiplication_unit & finished_integer_multiplication_unit == 1'b0);                     // assign integer multiplication unit working info
+assign integer_division_unit_working_info = (enable_integer_division_unit & finished_integer_division_unit == 1'b0);                                       // assign integer division unit working info
+assign memory_unit_working_info = (enable_memory_unit & finished_memory_unit == 1'b0);                                                                     // assign memory unit working info
 
-assign execute1_finished_o = execute1_finished;       // Assign execute finished
-assign calculated_result_o = calculated_result;       // Assign calculated result, goes to memory step
-assign execute_working_info_o =  integer_multiplication_unit_working_info ||
+assign calculated_result_o = calculated_result;       // Assign calculated result, goes to memory step                                                     // Assign calculated result, goes to writeback stage
+
+assign execute_working_info_o =  integer_multiplication_unit_working_info ||                                                                               // Assign execute eorking info                                               
                                  integer_division_unit_working_info;
                                                                   
-assign rd_o = rd;                                      // Assign target register goes to memory step
-assign register_selection_o = register_selection;       // Assing register selection, goes to memory step
-assign is_branch_address_calculated_o = is_branch_address_calculated; // Assign information of whether branch calculated or not
-assign calculated_branch_address_o = calculated_branch_result; // Assign branch address, goes to fetch step
+assign rd_o = rd;                                                                                                                                          // Assign target register goes to memory step
+assign register_selection_o = register_selection;                                                                                                          // Assing register selection, goes to memory step
+assign is_branch_address_calculated_o = is_branch_address_calculated;                                                                                      // Assign information of whether branch calculated or not
+assign calculated_branch_address_o = calculated_branch_result;                                                                                             // Assign branch address, goes to fetch step
 assign write_register_info_o = write_register_info;
-/*
-(register_selection == `INTEGER_REGISTER) ? 3'b100 : 
-                               (register_selection == `FLOAT_REGISTER) ? 3'b010 : 
-                               (register_selection == `CSR_REGISTER) ? 3'b001 : 
-                               3'b000;
-      */                         
-assign forwarded_data_o = calculated_result;
-assign forwarded_rd_o = forwarded_rd;
-
+                       
+assign forwarded_data_o = calculated_result;                                                                                                               // Assign forwarded data, goes to decode stage
+assign forwarded_rd_o = forwarded_rd;                                                                                                                      // Assign forwarded rd, goes to decode stage
+ 
 endmodule 

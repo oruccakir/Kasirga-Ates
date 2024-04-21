@@ -3,41 +3,33 @@
 // File: WriteBackStep.v
 include "definitions.vh";
 module WriteBackStep (
-    input wire clk_i, // Clock input
-    input wire rst_i, // Reset input
-    input wire [31:0] calculated_result_i,// it comes from other steps,
-    input wire [4:0] rd_i, // writeback target register
-    input wire [1:0] register_selection_i, // comes from mempory, depending on this input reg_write signals will be updated
-    input wire [2:0] write_register_info_i,
-    input instruction_count_i,
-    output wire [31:0] writebacked_result_o, // final result after all calculations
-    output wire reg_write_integer_o, // flag to write integer register
-    output wire reg_write_float_o, // flag to write float register
-    output wire reg_write_csr_o, //  flag to write csr register
-    output wire [4:0] rd_o,           // target register 
-    output instruction_count_o
+    input wire clk_i,                                            // Clock input
+    input wire rst_i,                                            // Reset input
+    input wire [31:0] calculated_result_i,                       // Calculated result, comes from execute step
+    input wire [4:0] rd_i,                                       // Target register, comes from decode step via execute step
+    input wire [1:0] register_selection_i,                       // Register selection, comes from decode step  via execute step
+    input wire [2:0] write_register_info_i,                      // Write register info, comes from decode step via execute step
+    output wire [31:0] writebacked_result_o,                     // Writebacked result, goes to decode step
+    output wire reg_write_integer_o,                             // Write integer register, goes to decode step
+    output wire reg_write_float_o,                               // Write float register, goes to decode step
+    output wire reg_write_csr_o,                                 // Write csr register, goes to decode step
+    output wire [4:0] rd_o                                       // Target register, goes to decode step
 );
 
-integer i=-1;
+
+integer i=-1;                                                    // for debugging the which instruction is fetched and conveyed
+// Debugging purpose
 always@(*) begin
     $display("@@ WRITEBACK STAGE writebacked result %d ", calculated_result_i ,"for instruction %d ",i);
-    /*
-        case(register_selection_i) 
-        `INTEGER_REGISTER: $display("--->Writing to : INTEGER_REGISTER");
-        `FLOAT_REGISTER:  $display("--->Writing to :  FLOAT_REGISTER");
-        `CSR_REGISTER:  $display("--->Writing to : CSR_REGISTER");
-        `NONE_REGISTER: $display("--->Not Writing : NONE_REGISTER");
-    endcase
-    */
-    i=i+1;
+    i=i+1;                                                       // increment counter when new instruction comes
 end
 
-assign instruction_count_o = instruction_count_i;
-assign writebacked_result_o = calculated_result_i; // Assign calculated result, goes to decode step
-assign reg_write_integer_o = write_register_info_i[2];
-assign reg_write_float_o = write_register_info_i[1];
-assign reg_write_csr_o = write_register_info_i[0];
-assign rd_o = rd_i;                               // Assign target register , goes to decode step
+
+assign writebacked_result_o = calculated_result_i;               // Assign calculated result, goes to decode step
+assign reg_write_integer_o = write_register_info_i[2];           // Assign register write info, goes to decode step
+assign reg_write_float_o = write_register_info_i[1];             // Assign register write info, goes to decode step
+assign reg_write_csr_o = write_register_info_i[0];               // Assign register write info, goes to decode step
+assign rd_o = rd_i;                                              // Assign target register , goes to decode step 
 
 
 endmodule
