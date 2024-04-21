@@ -51,10 +51,9 @@ wire [31:0] program_counter_decode;                                             
 wire [4:0] rd_to_writeback;                                                           // this info goes from execute step to writeback step
 wire [1:0] register_selection_execute;                                                // this info goes from execute step to writeback step
 wire branch_info;                                                                     // this info comes from execute step, indicates whether branch is taken or not
-wire [2:0] write_register_info;
-wire [31:0] forwarded_data;
-wire [4:0] forwarded_rd;
-wire [10:0] unit_enables;
+wire [2:0] write_register_info;                                                       // this info comes from execute step, indicates which register will be writed to writeback step
+wire [31:0] forwarded_data;                                                           // this info comes from execute step, indicates forwarded data goes to decode step
+wire [4:0] forwarded_rd;                                                              // this info comes from execute step, indicates forwarded register goes to decode step                                 
 
 
 // Fetch module
