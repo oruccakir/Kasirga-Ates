@@ -4,11 +4,7 @@
 // adres yapisi: [31:10](22 bit) ETIKET - [9:2](8 bit) SATIR SECIMI - [1:0](2 bit) BAYT SECIMI
 // buyruk onbellegi donulen veri yapisi: [53:0](54 bit) TOPLAM = [53:32](22 bit) ETIKET - [31:0](32 bit) VERI 
 
-`define ADRES_BIT 32 // adresler 32 bitlik
-`define VERI_BIT 32 // veriler 32 bit yani 4 bayt halinde
-`define BLOK_BIT 128 // onbellegin bir satiri yani 1 blogu 128 bit yani 16 bayt veri tutuyor bu da 4 tane veri demek
-`define ETIKET_BIT 22 // etiket adresin [31:10] bitleri
-
+`include "memory_definitions.vh"
 
 module instruction_cache_controller(
     input                                   clk_i,
@@ -69,10 +65,10 @@ module instruction_cache_controller(
                 end 
             end
             ONBELLEK_OKU: begin
-                if(b_onbellek_okuma_istek_etiket_veri_i[53:32] == adres[31:10]) begin // onbellekten gelen verinin tag ile benim elimdeki adresin tag ini karsilatiriyorum
+                if(b_onbellek_okuma_istek_etiket_veri_i[`ETIKET_BIT+`VERI_BIT-1:`VERI_BIT] == adres[`VERI_BIT-1:`VERI_BIT-`ETIKET_BIT]) begin // onbellekten gelen verinin tag ile benim elimdeki adresin tag ini karsilatiriyorum
                     sonraki_durum = BOSTA;
                 end
-                else if(b_onbellek_okuma_istek_etiket_veri_i[53:32] != adres[31:10]) begin // onbellekten gelen veri ile benim adresimin tagi uyusmadi bu yuzden anabellege gidicem
+                else begin
                     sonraki_durum = ANABELLEK_OKU_ONBELLEK_YAZ; 
                 end    
             end
