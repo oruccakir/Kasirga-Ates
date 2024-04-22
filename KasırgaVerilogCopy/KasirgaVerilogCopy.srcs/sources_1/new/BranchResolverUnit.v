@@ -11,11 +11,14 @@ module BranchResolverUnit (
     input wire [31:0] immediate_value_i,
     input wire [31:0] operand1_i,
     input wire [31:0] operand2_i,
+    input wire fetch_reset_branch_info_i,
+    input wire decode_reset_branch_info_i,
     output wire [31:0] result_o,
     output wire is_finished_o,
     output wire branch_info_o
 );
 
+reg is_finished = 1'b0;
 reg branch_info = 1'b0;
 reg [31:0] immediate_value = 32'b0;
 reg [31:0] program_counter_or_rs1 = 32'b0;
@@ -28,6 +31,10 @@ RippleCarryAdder32 adder(
     .cout(cout)
 );
 
+always@(posedge (fetch_reset_branch_info_i)) begin
+    branch_info = `BRANCH_NOT_TAKEN;
+    $display("Branch Completed");
+end
 
 always @(posedge enable_i) begin
     case(instruction_type_i)
@@ -89,6 +96,7 @@ always @(posedge enable_i) begin
 
 end
 
+assign is_finished_o = is_finished;
 assign result_o = result_addition;
 assign branch_info_o = branch_info;
 

@@ -16,7 +16,8 @@ module FetchStep (
     output reg [31:0] mem_address_o,                         // Memory address output, goes to memory
     output reg [31:0] instruction_to_decode_o,               // instruction that will be conveyed to decode step 
     output wire fetch_next_instruction_o,                    // this is the fetching instruction desire from memory
-    output reg [31:0] program_counter_o                      // this is for increasig program counter for some instructions, goes to decode step
+    output reg [31:0] program_counter_o,                      // this is for increasig program counter for some instructions, goes to decode step
+    output wire reset_branch_info_o                          // this is goes to directly execute step to reset branch working info
 );
 
 reg [31:0] program_counter_next;                             // next register for program_counter
@@ -25,8 +26,10 @@ reg [31:0] instruction_to_decode_next;                       // next register fo
 wire fetch_next_instruction;                                 // this is flag for getting instruction from memory or cache, crucial for stalling operations
 reg [31:0] instruction_to_decode;                            // instruction that will be convetyed to decode step
 reg [31:0] program_counter;                                  // program counter to access memory, data and instructions
+reg reset_branch_info;
 integer i = -1;                                              // for debugging the which instruction is fetched and conveyed
 
+//assign reset_branch_info = (branch_info_i == `BRANCH_TAKEN) ? 1'b1 : 1'b0;
 
 always@(*) begin
     $display("@@FETCH STAGE Fetched Instruction %h  ", instruction_i," instruction count %d ",i);     // debugging purpose
@@ -46,25 +49,31 @@ always@(posedge clk_i) begin
         program_counter_next <= 32'h8000_0000;
         instruction_to_decode_next <= 32'b0;
     end
-    else begin
-        if(fetch_next_instruction) begin                    // if fetch_next_instruction is true, then send necessary outputs to decode stage and fetch new instruction
+    else begin     
+        if(branch_info_i == `BRANCH_TAKEN) begin
+            program_counter_o <= program_counter;
+            program_counter <= calculated_branch_address_i;
+            mem_address_o <=calculated_branch_address_i;
+            instruction_to_decode_o <= 32'b0;
+            reset_branch_info <= 1'b1;
+            $display("Branch Address  Calculated Branch Taken %h",calculated_branch_address_i );
+        end
+        else if(fetch_next_instruction) begin                    // if fetch_next_instruction is true, then send necessary outputs to decode stage and fetch new instruction
             program_counter_o <= program_counter;
             program_counter <= program_counter_next;
-            mem_address_o <= program_counter_next;
+            mem_address_o <=program_counter_next;
             instruction_to_decode_o <= instruction_to_decode_next;
+            reset_branch_info <= 1'b0;
         end
+
     end
 end
 
 
-always@(posedge is_branch_address_calculated_i) begin                      // if branch address is calculated run this always block
-    if(branch_info_i == `BRANCH_TAKEN) begin
-        $display("Calculated branch address ",calculated_branch_address_i, " as hexadeciamal %h",calculated_branch_address_i); // for debugging display calculated branch address
-        program_counter = calculated_branch_address_i;                      // set program counter as newly calculated branch address
-    end
-end
+
 
 assign fetch_next_instruction_o = fetch_next_instruction;            // flag for getting the instruction from memory, goes to memory1
 assign fetch_next_instruction = ~decode_working_info_i;              // When decode stage is running, then do not fetch new instruction and do not update signals that will go to decode stage
+assign reset_branch_info_o = reset_branch_info;
 
 endmodule
