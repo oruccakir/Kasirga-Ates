@@ -138,6 +138,7 @@
 `define BIT_MANIPULATION_UNIT           4'h8
 `define MEMORY_UNIT                     4'h9
 `define NONE_UNIT                       4'hf
+`define NOP_UNIT                       4'hb
 
 // FLOATING POINT UNIT SELECTION
 `define FLOATING_MULTIPLICATION_UNIT    1'b0
@@ -186,3 +187,5 @@
 
 `define WRITING_IN_PROGRESS                1'b0
 `define WRITING_COMPLETED                  1'b1
+
+`define NOP                                5'b0

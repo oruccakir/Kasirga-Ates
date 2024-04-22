@@ -54,8 +54,8 @@ wire branch_info;                                                               
 wire [2:0] write_register_info;                                                       // this info comes from execute step, indicates which register will be writed to writeback step
 wire [31:0] forwarded_data;                                                           // this info comes from execute step, indicates forwarded data goes to decode step
 wire [4:0] forwarded_rd;                                                              // this info comes from execute step, indicates forwarded register goes to decode step                                 
-
-
+wire fetch_reset_branch_info;                                                         // this info comes from fetch step,and goes to execute step, branch resolver unit
+wire decode_reset_branch_info; 
 // Fetch module
 FetchStep fetch(
     .clk_i(clk_i),
@@ -69,7 +69,8 @@ FetchStep fetch(
     .mem_address_o(mem_address_o),
     .instruction_to_decode_o(instruction_to_decode),
     .fetch_next_instruction_o(get_instruction_o),
-    .program_counter_o(program_counter)
+    .program_counter_o(program_counter),
+    .reset_branch_info_o(fetch_reset_branch_info)
 );
 
 // Decode module
@@ -86,6 +87,7 @@ DecodeStep decode(
     .program_counter_i(program_counter),
     .forwarded_data_i(forwarded_data),
     .forwarded_rd_i(forwarded_rd),
+    .branch_info_i(branch_info),
     .rd_o(rd),
     .integer_operand1_o(integer_operand1),
     .integer_operand2_o(integer_operand2),
@@ -98,7 +100,8 @@ DecodeStep decode(
     .rs2_value_o(rs2_value),
     .register_selection_o(register_selection),
     .program_counter_o(program_counter_decode),
-    .immediate_value_o(immediate_value)
+    .immediate_value_o(immediate_value),
+    .reset_branch_info_o(decode_reset_branch_info)
 );
 
 // Execute1 module
@@ -119,6 +122,8 @@ ExecuteStep1 execute1(
     .register_selection_i(register_selection),
     .program_counter_i(program_counter_decode),
     .immediate_value_i(immediate_value),
+    .fetch_reset_branch_info_i(fetch_reset_branch_info),
+    .decode_reset_branch_info_i(decode_reset_branch_info),
     .calculated_result_o(calculated_result),
     .execute_working_info_o(execute_working_info),
     .rd_o(rd_to_writeback),
