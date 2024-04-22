@@ -5,10 +5,9 @@
 `include "definitions.vh"
 
 module DecodeStep (
-    input wire clk_i,                // Clock input
-    input wire rst_i,                // Reset input
-    input wire enable_step_i,        // Enable input
-    input wire stall_i,              // Stalling input
+    input wire clk_i,                      // Clock input
+    input wire rst_i,                      // Reset input
+    input wire execute_working_info_i,     // is execute working
 
     //getir
     input wire [31:0] getir_buyruk_i,       // Instruction input 
@@ -38,7 +37,8 @@ module DecodeStep (
     output reg [31:0] yurut_float_deger3_o,   
     output reg [31:0] yurut_immidiate_o,         // immidiate value
     output reg [31:0] yurut_ps_yeni_o,           // Geriyaz'a kadar çıktılar
-    output reg [ 4:0] yurut_rd_adres_o         
+    output reg [ 4:0] yurut_rd_adres_o ,
+    output reg        decode_working_info_o        
 );
 
 
@@ -56,9 +56,9 @@ wire [31:0] integer_deger2_sonraki_r;
 wire [31:0] float_deger1_sonraki_r;  
 wire [31:0] float_deger2_sonraki_r;  
 wire [31:0] float_deger3_sonraki_r;  
-reg [31:0] immidiate_sonraki_r;     
-reg [31:0] ps_yeni_sonraki_r;       
-reg [ 4:0] rd_adres_sonraki_r;       
+reg  [31:0] immidiate_sonraki_r;     
+reg  [31:0] ps_yeni_sonraki_r;       
+reg  [ 4:0] rd_adres_sonraki_r;       
 
 
 always@(*)begin
@@ -703,7 +703,7 @@ always@(*)begin
              reg_file_sec_r = `INTEGER_REGISTER;  
         end  
         default        : begin
-            
+            birim_secimi_sonraki_r = `NO_UNIT;
         end 
     endcase
 end
@@ -735,9 +735,9 @@ FloatRegisterFile FRF(
 );
 always@(posedge clk_i)begin
     if(rst_i) begin
-
+        yurut_birim_secimi_o <= `NO_UNIT;
     end
-    else begin
+    else if (execute_working_info_i == `EXECUTE_IS_NOT_WORKING)begin
         yurut_birim_secimi_o   <= birim_secimi_sonraki_r;
         yurut_islem_secimi_o   <= islem_secimi_sonraki_r;
         yurut_shamt_o          <= shamt_sonraki_r;
@@ -752,12 +752,10 @@ always@(posedge clk_i)begin
         yurut_float_deger1_o   <= float_deger1_sonraki_r;
         yurut_float_deger2_o   <= float_deger2_sonraki_r;
         yurut_float_deger3_o   <= float_deger3_sonraki_r;
-        
+        decode_working_info_o  <= `DECODE_IS_NOT_WORKING;   
+    end else begin
+        decode_working_info_o  <= `DECODE_IS_WORKING;
     end
 
 end
-
-
-    
-
 endmodule

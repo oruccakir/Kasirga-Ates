@@ -5,8 +5,7 @@
 module tb_Decode_Step();
     reg clk_i;                
     reg rst_i;                
-    reg enable_step_i;
-    reg stall_i;
+    reg execute_working_info_i;
     
     reg [31:0]getir_buyruk_i;
     reg [31:0] getir_ps_i;
@@ -33,12 +32,12 @@ module tb_Decode_Step();
     wire [31:0] yurut_immidiate_o;
     wire [31:0] yurut_ps_yeni_o;
     wire [ 4:0] yurut_rd_adres_o;
+    wire        decode_working_info_o;
     
     DecodeStep ds(
         .clk_i(clk_i),
         .rst_i(rst_i),
-        .enable_step_i(enable_step_i),
-        .stall_i(stall_i),
+        .execute_working_info_i(execute_working_info_i),
         .getir_buyruk_i(getir_buyruk_i),
         .getir_ps_i(getir_ps_i),
         .writeback_result_i(writeback_result_i),
@@ -59,7 +58,8 @@ module tb_Decode_Step();
         .yurut_float_deger3_o(yurut_float_deger3_o),
         .yurut_immidiate_o(yurut_immidiate_o),
         .yurut_ps_yeni_o(yurut_ps_yeni_o),
-        .yurut_rd_adres_o(yurut_rd_adres_o)
+        .yurut_rd_adres_o(yurut_rd_adres_o),
+        .decode_working_info_o(decode_working_info_o)
     ); 
     always begin
         clk_i =~clk_i;
@@ -69,7 +69,7 @@ module tb_Decode_Step();
     initial begin
         rst_i = 1'b0;
         clk_i = 1'b0;
-         
+        execute_working_info_i = `EXECUTE_IS_NOT_WORKING;
         
         getir_buyruk_i = 32'b010101010101_00000_000_00000_0010011; 
         #10;
