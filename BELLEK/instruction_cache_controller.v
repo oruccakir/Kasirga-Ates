@@ -25,14 +25,12 @@ module instruction_cache_controller(
     output      [`ADRES_BIT-1:0]            b_onbellek_okuma_istek_adres_o, // buyruk onbellegine sorgu yapacagim adres
     output                                  b_onbellek_okuma_istek_gecerli_o, // buyruk onbellegine verdigim adresten sorgu yapmasini soyluyorum
     input       [`ETIKET_BIT+`VERI_BIT-1:0] b_onbellek_okuma_istek_etiket_veri_i, // buyruk onbelleginin istenen adresten okudugu veri ve verinin tagi onbellekten geliyor, tag sayesinde gelen verinin aradigim veri olup olmadigina bakicam
-    input                                   b_onbellek_okuma_istek_hazir_i, // buyruk onbellegi istenen adresten veri okudugunu haber veriyor
         
         // buyruk onbellegi ne veri yazma, misslemisim yani bu yuzden anabellekten veri getiriyorum
     output      [`ADRES_BIT-1:0]            b_onbellek_yazma_istek_adres_o, // buyruk onbellegine yazacagim veri blogunun adresi, bu veri anabellekten geliyor
     output                                  b_onbellek_yazma_istek_gecerli_o, // buyruk onbellegine yaz diyorum
     output      [`BLOK_BIT-1:0]             b_onbellek_yazma_veri_blok_o, // buyruk onbellegine yazilacak blok halindekii veri
-    input                                   b_onbellek_yazma_veri_yazildi_i, // buyruk onbellegine yazsin diye verdigim blok halindeki veriyi yazdigini haber veriyor
-   
+    
     // main_memory_controller <> instruction_cache_controller
     output      [`ADRES_BIT-1:0]            anabellek_denetleyici_okuma_istek_adres_o, // anabellekten okumak istedigim adresi denetleyiciye veriyorum
     output                                  anabellek_denetleyici_okuma_istek_gecerli_o, // anabellekten okuma yapmak istedigimi denetleyiciye bildiriyorum 
@@ -67,34 +65,19 @@ module instruction_cache_controller(
             BOSTA: begin // getirden istek almaya hazir durumdayim demek
                 if (getir_okuma_istek_gecerli_i) begin // getirden istek aldim, once cache den okuma yapicam
                     adres = getir_okuma_istek_adres_i; // getirden gelen istegin adresini depoluyorum, cache ve gerekirse anabellege gondericem
-                    //b_onbellek_okuma_istek_gecerli_o = 1'b1; // ??? 
-                    //b_onbellek_okuma_istek_adres_o = adres; // ???
                     sonraki_durum = ONBELLEK_OKU; // getirden istek aldim cache den veri okuyup kontrol edicem  
                 end 
             end
             ONBELLEK_OKU: begin
-                if(b_onbellek_okuma_istek_hazir_i && b_onbellek_okuma_istek_etiket_veri_i[53:32] == adres[31:10]) begin // onbellekten gelen verinin tag ile benim elimdeki adresin tag ini karsilatiriyorum
-                    //getir_okuma_istek_buyruk_o = b_onbellek_okuma_istek_etiket_veri_i[31:0]; // ???
-                    //getir_okuma_istek_hazir_o = 1'b1; // ???
+                if(b_onbellek_okuma_istek_etiket_veri_i[53:32] == adres[31:10]) begin // onbellekten gelen verinin tag ile benim elimdeki adresin tag ini karsilatiriyorum
                     sonraki_durum = BOSTA;
                 end
-                else if(b_onbellek_okuma_istek_hazir_i && b_onbellek_okuma_istek_etiket_veri_i[53:32] != adres[31:10]) begin // onbellekten gelen veri ile benim adresimin tagi uyusmadi bu yuzden anabellege gidicem
-                    //anabellek_denetleyici_okuma_istek_adres_o = adres; // ???
-                    //anabellek_denetleyici_okuma_istek_gecerli_o = 1'b1; // ???
+                else if(b_onbellek_okuma_istek_etiket_veri_i[53:32] != adres[31:10]) begin // onbellekten gelen veri ile benim adresimin tagi uyusmadi bu yuzden anabellege gidicem
                     sonraki_durum = ANABELLEK_OKU_ONBELLEK_YAZ; 
                 end    
             end
             ANABELLEK_OKU_ONBELLEK_YAZ: begin
-                if(anabellek_denetleyici_okuma_istek_hazir_i && b_onbellek_yazma_veri_yazildi_i) begin
-                    //b_onbellek_yazma_istek_adres_o = adres; // ???
-                    //b_onbellek_yazma_veri_blok_o = anabellek_denetleyici_okuma_veri_blok_i; // ???
-                    //b_onbellek_yazma_istek_gecerli_o = 1'b1; // ???
-                    
-                    //if(b_onbellek_yazma_veri_yazildi) begin 
-                        //b_onbellek_okuma_istek_gecerli_o = getir_okuma_istek_gecerli_i; // ??? 
-                        //b_onbellek_okuma_istek_adres_o = adres; // ???
-                        //sonraki_durum = ONBELLEK_OKU;
-                    //end 
+                if(anabellek_denetleyici_okuma_istek_hazir_i) begin
                     sonraki_durum = ONBELLEK_OKU;
                 end
             end
@@ -102,17 +85,15 @@ module instruction_cache_controller(
     end
     
     // OUTPUTS
-    assign getir_okuma_istek_hazir_o = b_onbellek_okuma_istek_hazir_i && b_onbellek_okuma_istek_etiket_veri_i[53:32] == adres[31:10];
+    assign getir_okuma_istek_hazir_o = b_onbellek_okuma_istek_etiket_veri_i[53:32] == adres[31:10]; // eger tag onunde sonunda istenilen adresle uyusuyorsa bu getire devam et buyruk hazir diyor
     assign getir_okuma_istek_buyruk_o = b_onbellek_okuma_istek_etiket_veri_i[31:0];
    
-    assign b_onbellek_okuma_istek_gecerli_o = getir_okuma_istek_gecerli_i || b_onbellek_yazma_veri_yazildi_i; // or a gerek var mi emin degilim
     assign b_onbellek_okuma_istek_adres_o = adres;
     
     assign b_onbellek_yazma_istek_gecerli_o = anabellek_denetleyici_okuma_istek_hazir_i;
     assign b_onbellek_yazma_veri_blok_o = anabellek_denetleyici_okuma_veri_blok_i;
     assign b_onbellek_yazma_istek_adres_o = adres;
     
-    assign anabellek_denetleyici_okuma_istek_gecerli_o = b_onbellek_okuma_istek_hazir_i && b_onbellek_okuma_istek_etiket_veri_i[53:32] != adres[31:10];
     assign anabellek_denetleyici_okuma_istek_adres_o = adres;
     
     
