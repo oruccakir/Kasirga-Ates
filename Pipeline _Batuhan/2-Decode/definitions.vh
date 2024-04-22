@@ -6,6 +6,13 @@
 `define FLOAT_REGISTER          2'b1
 `define CSR_REGISTER            2'b10
 
+// CONTROL SIGNALS FOR PIPELINE STEPS
+`define EXECUTE_IS_WORKING      1'b1
+`define EXECUTE_IS_NOT_WORKING  1'b0
+`define DECODE_IS_WORKING       1'b1
+`define DECODE_IS_NOT_WORKING   1'b0
+
+
 // CONTROL SIGNALS FOR UNIT SELECTION 
 `define FLOATING_POINT_UNIT             4'h0
 `define ARITHMETIC_LOGIC_UNIT           4'h1
@@ -17,6 +24,9 @@
 `define ATOMIC_UNIT                     4'h7
 `define BIT_MANIPULATION_UNIT           4'h8
 `define MEMORY_UNIT                     4'h9
+
+`define NO_UNIT                         4'ha
+
 
 
 // Control Signals for ALU operations
