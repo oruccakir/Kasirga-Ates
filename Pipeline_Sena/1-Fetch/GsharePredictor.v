@@ -27,9 +27,7 @@ module GsharePredictor(
     input [31:0] buyruk_i,
     
     input [31:0] yurut_ps_i,
-    input yurut_ps_gecerli,
-    input yurut_yanlis_tahmin,
-    input [31:0] yurut_dogru_adres_i,
+    input yurut_ps_gecerli_i,
     input yurut_atladi_i,
     
     output reg sonuc_dallan_o,
@@ -89,7 +87,7 @@ module GsharePredictor(
                 end
             end
             genel_gecmis_yazmaci_next[4:1] = genel_gecmis_yazmaci[3:0];
-            genel_gecmis_yazmaci_next[0] = yurut_dallan;
+            genel_gecmis_yazmaci_next[0] = yurut_atladi_i;
         end
     end
     always @(posedge clk_i) begin
