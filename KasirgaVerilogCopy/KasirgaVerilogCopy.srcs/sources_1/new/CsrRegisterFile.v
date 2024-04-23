@@ -1,6 +1,6 @@
 // File: CsrRegisterFile.v
 // Purpose: Define a module for the CSR register file
-
+/*
 include "definitions.vh";
 
 module CsrRegisterFile(
@@ -81,3 +81,4 @@ always @(posedge clk_i or posedge rst_i) begin
 end
 
 endmodule
+*/

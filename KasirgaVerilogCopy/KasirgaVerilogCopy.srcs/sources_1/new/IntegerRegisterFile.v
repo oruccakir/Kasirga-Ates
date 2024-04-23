@@ -1,7 +1,7 @@
 // File: IntegerRegisterFile.v
 // Purpose: Define a module for the integer register file
 
-`include "definitions.vh";
+include "definitions.vh";
 
 module IntegerRegisterFile (  
   input wire clk_i, // clock signal

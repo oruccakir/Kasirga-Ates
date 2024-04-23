@@ -5,7 +5,7 @@
 // File: Processor.v
 
 // Include the definitions
-`include "definitions.vh";
+include "definitions.vh";
 // Current Processor
 module Processor(
     input wire clk_i,                                                                  // Clock signal 

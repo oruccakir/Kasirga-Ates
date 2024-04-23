@@ -3,7 +3,7 @@
 // Functionality: This module performs the first part of the execute stage of the pipeline.
 // File: ExecuteStep1.v
 
-include "definitions.vh";
+`include "definitions.vh";
 
 module ExecuteStep1 (
     input wire clk_i,                                                               // Clock input
@@ -229,8 +229,8 @@ always@(*) begin
          end
         `ARITHMETIC_LOGIC_UNIT: begin
             $display("-->ALU UNIT working");
-            $display("-->EX Operand 1 %d",operand1_integer_i);
-            $display("-->EX Operand 2 %d",operand2_integer_i);
+            $display("-->EX Operand 1 %d",$signed(operand1_integer_i));
+            $display("-->EX Operand 2 %d",$signed(operand2_integer_i));
             $display("-->Executed Instruction :");
             case(instruction_type_i)
                 `ALU_ADD : $display("ADD");
@@ -431,7 +431,7 @@ always@(posedge clk_i) begin
             enable_alu_unit = 1'b0; 
             arithmetic_logic_unit.is_finished = 1'b0;
             calculated_result = calculated_alu_result;
-            $display("--->ALU RESULT %d ",calculated_result);
+            $display("--->ALU RESULT %d ",$signed(calculated_result));
         end
         `INTEGER_MULTIPLICATION_UNIT: begin
             if(finished_integer_multiplication_unit) begin
