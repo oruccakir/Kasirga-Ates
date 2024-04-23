@@ -128,7 +128,7 @@ always@(*) begin
 end
 
 
-always@(*/*posedge decode_finished*/) begin                 
+always@(*) begin                 
     $display("@@DECODE STAGE Decoded instruction  %h ",instruction_i);
     $display("-->IMM %d ",imm_generated_operand2_next);
     $display("-->Opcode: %b ", opcode); // Display opcode
@@ -141,7 +141,6 @@ always@(*/*posedge decode_finished*/) begin
         `CSR_REGISTER:  $display("--->Which file : CSR_REGISTER");
         `NONE_REGISTER: $display("--->Which file : NONE_REGISTER");
     endcase
-   // decode_finished = 1'b0;
 end
 
 always @(*) begin
@@ -583,10 +582,7 @@ always @(*) begin
                7'b1111000: instruction_type_next = `FLT_FMVWX; // set instruction type
            endcase                     
           end
-        endcase        
-       // decode_finished = 1'b1;
-        
-        
+        endcase             
 end
 
 always@(posedge branch_info_i) begin
@@ -602,7 +598,6 @@ end
 
 always@(posedge clk_i) begin
     if(rst_i) begin 
-        decode_finished <= 1'b0;
         enable_first = 1'b0;    enable_generate <= 1'b0;
         opcode <= 7'b0;    rs1 <= 5'b0;   rs2 <= 5'b0;    rs3 <= 5'b0;
         rd <= 5'b0;                         rd_next <= 5'b0;
