@@ -23,7 +23,6 @@ module ExecuteStep1 (
     input wire [31:0] program_counter_i,                                            // comes from decode for branch instructions and for other necessary instructions
     input wire [31:0] immediate_value_i,                                            // comes from decode step for branch and other instructions
     input wire fetch_reset_branch_info_i,                                           // comes from fetch step to reset branch info signal
-    input wire decode_reset_branch_info_i,                                          // comes from deoce step to reset branch info signal
     output wire [31:0] calculated_result_o,                                         // calculated result output, goes to writeback stage
     output wire execute_working_info_o,                                             // Execute step working info, goes to decode step
     output wire [4:0] rd_o,                                                         // Target register info, goes to writeback step
@@ -47,7 +46,7 @@ reg [4:0] rd;                                                                   
 reg execute_working_info;                                                           //very important info for stalling goes to decode step
 reg [1:0]register_selection;                                                        // register selection info goes to memory step
 
-reg execute1_finished;                                                              // Flag for finishing execute step 1, just fýr debugging
+reg execute1_finished;                                                              // Flag for finishing execute step 1, just fÄ±r debugging
 integer i = -2;                                                                     // it is just for debugging the instruction number 
                         
 reg [1:0] register_selection_next;                                                  // next register for register selection
@@ -100,8 +99,7 @@ wire bit_manipulation_unit_working_info;                                        
 wire atomic_unit_working_info;                                                      // atomic unit working info, nexessary for updating excepted working info
 wire branch_resolver_working_info;                                                  // branch resolver working info, necessary for updating excepted working info
 
-wire branch_info;
-reg branch_result_info;
+
 
 // Arithmetic Logic Unit module
 ArithmeticLogicUnit arithmetic_logic_unit(
@@ -156,7 +154,6 @@ BranchResolverUnit branch_resolver_unit(
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .fetch_reset_branch_info_i(fetch_reset_branch_info_i),
-    .decode_reset_branch_info_i(decode_reset_branch_info_i),
     .result_o(calculated_branch_result),
     .branch_info_o(branch_info_o),
     .is_finished_o(finished_branch_resolver_unit)
@@ -385,7 +382,6 @@ end
 
 always@(posedge clk_i) begin
     if(rst_i) begin
-        branch_result_info = 1'b0;
         enable_alu_unit = 1'b0; 
         enable_integer_multiplication_unit = 1'b0; 
         enable_integer_division_unit = 1'b0; 
@@ -461,7 +457,6 @@ always@(posedge clk_i) begin
            enable_floating_point_unit = 1'b1;
         end
         `BRANCH_RESOLVER_UNIT: begin
-            branch_result_info = branch_info;
             enable_branch_resolver_unit = 1'b0;
             other_resources = 1'b0;
             calculated_result = calculated_branch_result;
@@ -510,8 +505,7 @@ assign rd_o = rd;                                                               
 assign register_selection_o = register_selection;                                                                                                          // Assing register selection, goes to memory step
 assign is_branch_address_calculated_o = is_branch_address_calculated;                                                                                      // Assign information of whether branch calculated or not
 assign calculated_branch_address_o = calculated_branch_result; //calculated_branch_result;                                                                                             // Assign branch address, goes to fetch step
-assign write_register_info_o = write_register_info;
-//assign branch_info_o = branch_result_info;                
+assign write_register_info_o = write_register_info;               
 assign forwarded_data_o = calculated_result;                                                                                                               // Assign forwarded data, goes to decode stage
 assign forwarded_rd_o = forwarded_rd;                                                                                                                      // Assign forwarded rd, goes to decode stage
  

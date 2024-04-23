@@ -22,14 +22,12 @@ module FetchStep (
 
 reg [31:0] program_counter_next;                             // next register for program_counter
 reg [31:0] instruction_to_decode_next;                       // next register for instruction that will be conveyed to decode step
-
 wire fetch_next_instruction;                                 // this is flag for getting instruction from memory or cache, crucial for stalling operations
 reg [31:0] instruction_to_decode;                            // instruction that will be convetyed to decode step
 reg [31:0] program_counter;                                  // program counter to access memory, data and instructions
-reg reset_branch_info;
+reg reset_branch_info;                                       // this is for resetting branch info in execute stage
 integer i = -1;                                              // for debugging the which instruction is fetched and conveyed
 
-//assign reset_branch_info = (branch_info_i == `BRANCH_TAKEN) ? 1'b1 : 1'b0;
 
 always@(*) begin
     $display("@@FETCH STAGE Fetched Instruction %h  ", instruction_i," instruction count %d ",i);     // debugging purpose
@@ -50,8 +48,8 @@ always@(posedge clk_i) begin
         instruction_to_decode_next <= 32'b0;
     end
     else begin     
-        if(branch_info_i == `BRANCH_TAKEN) begin
-            program_counter_o <= program_counter;
+        if(branch_info_i == `BRANCH_TAKEN) begin                  // if branch taken, send NOP instruction to decode step and update program counter and memory adddress with calculated branch address
+            program_counter_o <= program_counter;                 
             program_counter <= calculated_branch_address_i;
             mem_address_o <=calculated_branch_address_i;
             instruction_to_decode_o <= 32'b0;
@@ -71,9 +69,8 @@ end
 
 
 
-
-assign fetch_next_instruction_o = fetch_next_instruction;            // flag for getting the instruction from memory, goes to memory1
 assign fetch_next_instruction = ~decode_working_info_i;              // When decode stage is running, then do not fetch new instruction and do not update signals that will go to decode stage
-assign reset_branch_info_o = reset_branch_info;
+assign fetch_next_instruction_o = fetch_next_instruction;            // flag for getting the instruction from memory, goes to memory1
+assign reset_branch_info_o = reset_branch_info;                      // We should reset the branch info output in execute stage for branch resolver unit, so we should convey this signal to execute stage
 
 endmodule

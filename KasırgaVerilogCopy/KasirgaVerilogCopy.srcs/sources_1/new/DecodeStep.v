@@ -29,8 +29,7 @@ module DecodeStep (
     output wire [31:0] rs2_value_o,                    // output for rs2 value, this is important for memory operations, goes to execute
     output wire [1:0] register_selection_o,            // output for register selection, important for writeback step, goes to execute step
     output wire [31:0] program_counter_o,              // output for program counter, necessary for brach instructions, goes to execute step
-    output wire [31:0] immediate_value_o,               // output for immeadiate value, necessart for branch instructions, goes to execute step
-    output wire reset_branch_info_o                     //  // this is goes to directly execute step to reset branch working info
+    output wire [31:0] immediate_value_o               // output for immeadiate value, necessart for branch instructions, goes to execute stage
 );
 
 reg [6:0] opcode;                                     // Opcode
@@ -52,7 +51,6 @@ reg enable_first;                                     // this flag is necessary 
 reg enable_generate;                                  // this is necessary for immediate generator and assigning operand 2 value
 reg [31:0] program_counter;                           // necessary for branch instructions, goes to execute step
 reg [31:0] imm_generated_operand2;                    // imm generated operand2
-reg branch_reset_info;
 
 reg [31:0] rs2_value;
 reg [3:0] unit_type_next;
@@ -649,20 +647,19 @@ always@(posedge clk_i) begin
 end
 
 
-assign rd_o = rd;                           // Assign destination register is important for keeping the target register info for writeback, // this info comes later again to this step, goes to execute step
-assign integer_operand1_o = integer_operand1;  // assign operand1 output, goes to execute step
-assign integer_operand2_o = integer_operand2; // Assign operand 2 depending on the instruction and condition, goes to execute
-assign rs2_value_o = rs2_value;          // assign operand2_integer to rs2_value for memory operations, goes to execute step
-assign float_operand1_o = operand1_float;       // Assign float operand 1, goes to execute step
-assign float_operand2_o = operand2_float;       // Assign float operand 2, goes to execute step
-assign float_operand3_o = operand3_float;       // Assign float operand 3, goes to execute step
-assign unit_type_o = unit_type;                 // Assign unit type, goes to execute step, important for which sub module should work       
-assign instruction_type_o = instruction_type;   // Assign instruction type, again important for which instruction should work in which sub module
-assign decode_working_info_o = decode_working_info; // Assign decode working info, will be conveyed to fetch step for stalling operation
-assign register_selection_o = register_selection;  // Assign register selection info, will be conveyed to execute step
-assign program_counter_o = program_counter;       // Assign program counter, goes to execute step
-assign immediate_value_o = imm_generated_operand2; // Assign immediate value, goes to execute step;
-assign reset_branch_info_o = branch_reset_info;
+assign rd_o = rd;                                                                // Assign destination register is important for keeping the target register info for writeback, // this info comes later again to this step, goes to execute step
+assign integer_operand1_o = integer_operand1;                                    // assign operand1 output, goes to execute step
+assign integer_operand2_o = integer_operand2;                                    // Assign operand 2 depending on the instruction and condition, goes to execute
+assign rs2_value_o = rs2_value;                                                  // assign operand2_integer to rs2_value for memory operations, goes to execute step
+assign float_operand1_o = operand1_float;                                        // Assign float operand 1, goes to execute step
+assign float_operand2_o = operand2_float;                                        // Assign float operand 2, goes to execute step
+assign float_operand3_o = operand3_float;                                        // Assign float operand 3, goes to execute step
+assign unit_type_o = unit_type;                                                  // Assign unit type, goes to execute step, important for which sub module should work       
+assign instruction_type_o = instruction_type;                                    // Assign instruction type, again important for which instruction should work in which sub module
+assign decode_working_info_o = decode_working_info;                              // Assign decode working info, will be conveyed to fetch step for stalling operation
+assign register_selection_o = register_selection;                                // Assign register selection info, will be conveyed to execute step
+assign program_counter_o = program_counter;                                      // Assign program counter, goes to execute step
+assign immediate_value_o = imm_generated_operand2;                               // Assign immediate value, goes to execute step;
 
 task generate_operand2(
     input [31:0] instruction_i
