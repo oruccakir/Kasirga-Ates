@@ -34,7 +34,7 @@ module GsharePredictor(
     input yurut_atladi_i,
 
     output reg dogru_ps_gecerli_o,//'b1 olduğunda getir psyi güncelleyecek.
-    output [31:0] reg dogru_ps_o
+    output reg [31:0]  dogru_ps_o
 
     );
     

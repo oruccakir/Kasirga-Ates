@@ -14,7 +14,7 @@ module FetchStep (
 
     // getir <> coz
     output reg [31:0] coz_buyruk_o,
-    output coz__buyruk_gecerli_o,
+    output reg coz_buyruk_gecerli_o,
     output reg [31:0] coz_ps_o,
 
     //dallanma birimi (yurut) <> getir
@@ -45,7 +45,7 @@ wire [31:0] dogru_ps;
 always @(*) begin
     dallanma_tahmini_gecerli = 'b0;
     buyruk_jal_j_type = 'b0;//bunlar hiçbir yerde işe yaramıyor?
-    buyruk_jalr_i_type = 'b0
+    buyruk_jalr_i_type = 'b0;
     buyruk_branch_b_type = 'b0;
 
     if (bellek_gecerli_i) begin
@@ -54,13 +54,13 @@ always @(*) begin
             case (bellek_deger_i[3:2])
                 'b11: begin
                     buyruk_jal_j_type = 'b1;
-                    ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {12'b1111_1111_1111, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]} : {12'0000_0000_0000, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]};//son bit 0 mı olacak?
+                    ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {12'b1111_1111_1111, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]} : {12'b0000_0000_0000, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]};//son bit 0 mı olacak?
                 end
-                '01: begin
+                'b01: begin
                     buyruk_jalr_i_type = 'b1;//hedef adresi bulmak için rs1 yazmacının değerine eklenmesi lazım????
                     ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31:20]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31:20]};
                 end
-                '00: begin
+                'b00: begin
                     buyruk_branch_b_type = 'b1;
                     ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]};//son bit 0 mı olacak?
                 end
@@ -82,7 +82,7 @@ GsharePredictor ongoru(
     .clk_i                              (clk_i),
     .rst_i                              (rst_i),
     
-    .ongoru_genisletilmis_anlık_i       (ongoru_genisletilmis_anlik),
+    .ongoru_genisletilmis_anlik_i       (ongoru_genisletilmis_anlik),
     .tahmin_ps_gecerli_i                (dallanma_tahmini_gecerli),
     .tahmin_ps_i                        (ps),
 
