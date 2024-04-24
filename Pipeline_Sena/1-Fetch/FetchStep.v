@@ -10,7 +10,9 @@ module FetchStep (
     // buyruk önbelleği <> getir
     input bellek_gecerli_i,
     input [31:0] bellek_deger_i,
-    output [31:0] bellek_ps_i,
+    output bellek_istek_o,
+    output [31:0] bellek_ps_o,
+    
 
     // getir <> coz
     output reg [31:0] coz_buyruk_o,
@@ -121,6 +123,7 @@ always @(posedge clk_i) begin
     end
 end
 
-assign bellek_ps_i = ps;
+assign bellek_istek_o = (coz_buyruk_gecerli_o) ? 'b1 : 'b0;
+assign bellek_ps_o = ps;
 
 endmodule
