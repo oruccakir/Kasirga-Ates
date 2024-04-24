@@ -2,16 +2,14 @@
 // Functionality: This module performs the execute stage of the pipeline.
 // File: execute_stage.v
 
-//inout kullanimi?????????????
-// nop buyruðu eklenecek
+// nop buyruï¿½u eklenecek
 module execute_stage(
-    input     wire                                  clk_i,                                      // clock signal
-    input     wire                                  rst_i,                                      // reset signal
+    input                                           clk_i,                                      // clock signal
+    input                                           rst_i,                                      // reset signal
 
     //-------------------------------from memory_stage----------------------------------------------
-    input     wire                                  is_memory_stage_finished_i,                         // memory stage finished signal for Stall
-
-    
+    input     wire                                  execute_stall_required_i,                            // durdurmak iï¿½in
+    output    wire                                  execute_busy_flag_o,   
     //-------------------------------from decode_stage----------------------------------------------
     
     //olmali mi
@@ -50,11 +48,10 @@ module execute_stage(
     input                                           aq_i,                                       // acquire signal              
     input                                           rl_i,                                       // release signal   
     input                        [4:0]              shamt_i,                                    // shift amount for bit manipulation unit
-
- /*   input      wire             [3:0]               unit_selection_i,                           // which unit should be executed
-    input      wire             [4:0]               process_selection_i,                        // in the unit, which instruction should be executed    
-  */
+    input                       [2:0]               rm_i,                                       // rounding mode for floating point unit
   
+    input       wire            [4:0]               rd_i,                                      // Destination register input from decode step, goes to memory step for write back
+    output      reg             [4:0]               rd_o,
     //------------------------------to memory_stage-----------------------------------------------------------------
     /*  
     memory_operation_type_o: should be added to definitions.vh file 
@@ -72,19 +69,17 @@ module execute_stage(
     output      reg                                 extension_mode_o,                           // 0 : zero extension, 1 : sign extension for halfword and byte operations
 
     output      reg             [31:0]              calculated_result_o,                        // calculated result output, goes to memory step)
-    inout       wire            [4:0]               rd_io,                                      // Destination register input from decode step, goes to memory step for write back
     output      reg             [1:0]               register_type_selection_o,                    // 0: integer register file, 1: float register file 2:csr register file ?????
 
     
     //--------------------------to fetch stage--------------------------------------------------------------
     output      reg                                  is_branched_o,                             // branched or not
-    output      reg             [31:0]               branched_address_o,                        // branched address to be fetched right instruction
+    output      reg             [31:0]               branched_address_o                         // branched address to be fetched right instruction
     
-    // to decode stage for sta
-    output      reg                                  is_execute_finished_o                       // finish signal
-
 
 );
+
+reg execute_busy_flag;
 
 
 wire finished_alu_unit;
@@ -186,6 +181,7 @@ floating_point_unit fpu(  // sadece word okur ve yazar
     .operand2_i(operand2_float_i),
     .operand3_i(operand3_float_i),
     .immediate_value_i(immediate_value_i),
+    .rm_i(rm_i),
     .fpu_result_o(calculated_fpu_result),
     .register_type_selection_o(register_type_selection_floating_point),
     .finished_o(finished_floating_point_unit)
@@ -239,67 +235,118 @@ branch_resolver_unit bru(
 
 
 // Control Status Unit module
+wire finished_control_status_unit;
 control_status_unit csu(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_control_status_unit_i(enable_control_status_unit_i)
+    .enable_control_status_unit_i(enable_control_status_unit_i),
+    .finished_o(finished_control_status_unit)
 );
 
 always@(posedge clk_i) begin
     if(rst_i) begin
-        is_execute_finished_o <= 0;
-    end
+        execute_busy_flag <= 0;
+        rd_o<=0;
+        memory_operation_type_o<=0;
+        memory_write_data_o<=0;
+        calculated_memory_address_o<=0;
+        extension_mode_o<=0;
+        calculated_result_o<=0;
+        register_type_selection_o<=0;
+        is_branched_o<=0;
+        branched_address_o<=0;
+   end
     else begin
-        if(is_memory_stage_finished_i) begin  // if the memory stage is finished, execute stage results are ready to go to memory stage
-            if(enable_alu_unit_i && finished_alu_unit) begin
-                calculated_memory_address_o<=calculated_memory_address_alu;
-                calculated_result_o<=calculated_result_alu_o;
-                extension_mode_o<=extension_mode_alu_o;
-                memory_operation_type_o<=memory_operation_type_alu_o;
-                register_type_selection_o<=register_type_selection_alu;
-                arithmetic_logic_unit.finished_o<=1'b0;   
-                is_execute_finished_o<=1'b1;        
-            end else if (enable_integer_multiplication_unit_i && finished_integer_multiplication_unit) begin
-                calculated_result_o<=calculated_result_mul_o;
-                register_type_selection_o<=register_type_selection_mul;
-                floating_point_unit.finished_o<=1'b0;
-                is_execute_finished_o<=1'b1;        
-            end else if (enable_integer_division_unit_i && finished_integer_division_unit ) begin
-                calculated_result_o<=calculated_int_div_result;
-                register_type_selection_o<=register_type_selection_div;
-                integer_division_unit.finished_o<=1'b0;
-                is_execute_finished_o<=1'b1;
-            end else if (enable_atomic_unit_i  && finished_atomic_unit) begin
-                calculated_memory_address_o<=calculated_memory_address_atomic;
-                calculated_result_o<=calculated_atomic_result;
-                extension_mode_o<=extension_mode_au_o;
-                memory_operation_type_o<=memory_operation_type_au_o;
-                register_type_selection_o<=register_type_selection_atomic;
-                atomic_unit.finished_o<=1'b0;
-                is_execute_finished_o<=1'b1;
-            end else if (enable_floating_point_unit_i && finished_floating_point_unit) begin
-                calculated_result_o<= calculated_fpu_result;
-                register_type_selection_o<=register_type_selection_floating_point;
-                floating_point_unit.finished_o<=1'b0;
-                is_execute_finished_o<=1'b1;
-            end else if (enable_bit_manipulation_unit && finished_bit_manipulation_unit) begin
-                calculated_result_o <= calculated_bmu_result;
-                register_type_selection_o<=register_type_selection_manipulation;
-                bit_manipulation_unit.finished_o<=1'b0;
-                is_execute_finished_o<=1'b1;
-            end else if (enable_branch_resolver_unit_i && finished_branch_resolver_unit) begin
-                register_type_selection_o<=register_type_selection_branch_resolver;
-                branched_address_o<=branched_address;
-                is_branched_o<=is_branched;
-                branch_resolver_unit.finished_o<=1'b0;
-                is_execute_finished_o<=1'b1;
-            end else if (enable_control_status_unit_i) begin
-                is_execute_finished_o<=1'b1;
-            end else begin // if no unit is enabled or no unit is finished, execute stage is not finished
-                is_execute_finished_o<=0;
+        if(~execute_busy_flag && ~execute_stall_required_i) begin  // if not busy, change the outputs
+            if(enable_alu_unit_i) begin
+                if(finished_alu_unit)begin
+                    calculated_memory_address_o<=calculated_memory_address_alu;
+                    calculated_result_o<=calculated_result_alu_o;
+                    extension_mode_o<=extension_mode_alu_o;
+                    memory_operation_type_o<=memory_operation_type_alu_o;
+                    register_type_selection_o<=register_type_selection_alu;
+                    arithmetic_logic_unit.finished_o<=1'b0; 
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end      
             end
+            else if (enable_integer_multiplication_unit_i) begin
+                if(finished_integer_multiplication_unit)begin
+                    calculated_result_o<=calculated_result_mul_o;
+                    register_type_selection_o<=register_type_selection_mul;
+                    floating_point_unit.finished_o<=1'b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end        
+            end
+            else if (enable_integer_division_unit_i) begin
+                if(finished_integer_division_unit) begin
+                    calculated_result_o<=calculated_int_div_result;
+                    register_type_selection_o<=register_type_selection_div;
+                    integer_division_unit.finished_o<=1'b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end
+            end
+            else if (enable_atomic_unit_i) begin
+                if(finished_atomic_unit) begin
+                    calculated_memory_address_o<=calculated_memory_address_atomic;
+                    calculated_result_o<=calculated_atomic_result;
+                    extension_mode_o<=extension_mode_au_o;
+                    memory_operation_type_o<=memory_operation_type_au_o;
+                    register_type_selection_o<=register_type_selection_atomic;
+                    atomic_unit.finished_o<=1'b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end          
+            end 
+            else if (enable_floating_point_unit_i) begin
+                if(finished_floating_point_unit)begin
+                    calculated_result_o<= calculated_fpu_result;
+                    register_type_selection_o<=register_type_selection_floating_point;
+                    floating_point_unit.finished_o<=1'b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end         
+            end
+            else if (enable_bit_manipulation_unit ) begin
+                if(finished_bit_manipulation_unit) begin
+                    calculated_result_o <= calculated_bmu_result;
+                    register_type_selection_o<=register_type_selection_manipulation;
+                    bit_manipulation_unit.finished_o<=1'b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end       
+            end  
+            else if (enable_branch_resolver_unit_i) begin
+                if(finished_branch_resolver_unit)begin
+                    register_type_selection_o<=register_type_selection_branch_resolver;
+                    branched_address_o<=branched_address;
+                    is_branched_o<=is_branched;
+                    branch_resolver_unit.finished_o<=1'b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end      
+            end
+            else if (enable_control_status_unit_i) begin
+                if(finished_control_status_unit)begin
+                    control_status_unit.finished_o<='b0;
+                    execute_busy_flag<=0;  
+                 end else begin
+                    execute_busy_flag<=1;
+                 end  
+            end  // else???????????
         end
     end
 end
-                
+
+assign execute_busy_flag_o = execute_busy_flag;
+             
 endmodule

@@ -15,6 +15,14 @@ module arithmetic_logic_unit(
    output                      reg                  finished_o                              // Finished signal
 );
 
+always@(*) begin
+    if(enable_alu_unit_i)begin
+        finished_o=1;
+    end
+end
+
+
+
 
 
 

@@ -21,7 +21,7 @@ module GsharePredictor(
     input clk_i,
     input rst_i,
     
-    input ongoru_genisletilmis_anlik_i,
+    input [31:0] ongoru_genisletilmis_anlik_i,
     input tahmin_ps_gecerli_i,
     input [31:0] tahmin_ps_i,   
 

@@ -9,6 +9,7 @@ module floating_point_unit(
    input          wire     [31:0]         operand2_i,                         // Operand 2 input
    input          wire     [31:0]         operand3_i,                         // Operand 3 input
    input          wire     [31:0]         immediate_value_i,                  // immediate values
+   input          wire     [2:0]               rm_i,
    output         reg      [31:0]         fpu_result_o,                       // Result output
    output         reg                     register_type_selection_o,          // is destination register floating or integer   
    output         reg                     finished_o   // is floating point unit finished or not     
@@ -69,9 +70,6 @@ localparam WAIT_FOR_FIRST_STAGE=2'b01;
 localparam WAIT_FOR_SECOND_STAGE=2'b10;
 
 always@(posedge clk_i) begin
-    enable_floating_point_addition<=1'b0;
-    enable_floating_point_division<=1'b0;
-    enable_floating_point_multiplication<=1'b0;
    if(enable_floating_point_unit_i) begin
       case(float_operation_i)
         `FLT_FMADD:begin   //rd=rs1*rs2+rs3
