@@ -4,8 +4,8 @@ module execute_tb();
     reg                                  rst_i;                                      // reset signal
 
     //-------------------------------from memory_stage----------------------------------------------
-    reg                                  is_memory_stage_finished_i;                        // memory stage finished signal for Stall
-
+    reg                 execute_stall_required_i;
+    wire                execute_busy_flag_o;
     
     //-------------------------------from decode_stage----------------------------------------------
     
@@ -45,11 +45,7 @@ module execute_tb();
     reg                                           aq_i;                                       // acquire signal              
     reg                                           rl_i;                                       // release signal   
     reg                        [4:0]              shamt_i;                                    // shift amount for bit manipulation unit
-
- /*   reg             [3:0]               unit_selection_i,                           // which unit should be executed
-    reg             [4:0]               process_selection_i,                        // in the unit, which instruction should be executed    
-  */
-  
+    reg                         [2:0]                   rm_i;
     //------------------------------to memory_stage-----------------------------------------------------------------
     /*  
     memory_operation_type_o: should be added to definitions.vh file 
@@ -67,7 +63,11 @@ module execute_tb();
     wire                                extension_mode_o;                           // 0 : zero extension, 1 : sign extension for halfword and byte operations
 
     wire            [31:0]              calculated_result_o;                        // calculated result output, goes to memory step)
-    wire            [4:0]               rd_io;                                      // Destination register input from decode step, goes to memory step for write back
+    
+    reg            [4:0]               rd_i;                                      // Destination register input from decode step, goes to memory step for write back
+
+    wire            [4:0]               rd_o;                                      // Destination register input from decode step, goes to memory step for write back
+        
     wire            [1:0]               register_type_selection;                    // 0: integer register file, 1: float register file 2:csr register file ?????
 
     
@@ -78,12 +78,13 @@ module execute_tb();
     // to decode stage for sta
     wire                                 is_execute_finished_o;                       // finish signal
 
-
+    
     
     execute_stage ex_tb(
         .clk_i(clk_i),
         .rst_i(rst_i),
-        .is_memory_stage_finished_i(is_memory_stage_finished_i),
+        .execute_stall_required_i(execute_stall_required_i),
+        .execute_busy_flag_o(execute_busy_flag_o),
         .operand1_integer_i(operand1_integer_i),
         .operand2_integer_i(operand2_integer_i),
         .operand1_float_i(operand1_float_i),
@@ -109,16 +110,17 @@ module execute_tb();
         .aq_i(aq_i),
         .rl_i(rl_i),
         .shamt_i(shamt_i),
+        .rm_i(rm_i),
         .memory_operation_type_o(memory_operation_type_o),
         .memory_write_data_o(memory_write_data_o),
         .calculated_memory_address_o(calculated_memory_address),
         .extension_mode_o(extension_mode_o),
         .calculated_result_o(calculated_result_o),
-        .rd_io(rd_io),
+        .rd_i(rd_i),
+        .rd_o(rd_o),
         .register_type_selection_o(register_type_selection),
         .is_branched_o(is_branched_o),
-        .branched_address_o(branched_address_o),
-        .is_execute_finished_o(is_execute_finished_o)
+        .branched_address_o(branched_address_o)
     );
 
     
@@ -132,9 +134,37 @@ module execute_tb();
         rst_i = 1;
         #1;
         rst_i = 0;
-
         #1;
-        is_memory_stage_finished_i = 1;
+        execute_stall_required_i = 0;
+        operand1_integer_i = 32'h00000000;
+        operand2_integer_i = 32'h00000000;
+        operand1_float_i = 32'h00000000;
+        operand2_float_i = 32'h00000000;
+        operand3_float_i = 32'h00000000;
+        immediate_value_i = 32'h00000000;
+        program_counter_i = 32'h00000000;
+        which_operation_alu_i = 5'b00000;
+        which_operation_mul_i = 2'b00;
+        which_operation_div_i = 2'b00;
+        which_operation_atomic_i = 3'b000;
+        which_operation_floating_point_i = 5'h2;
+        which_operation_bit_manipulation_i = 5'b00000;
+        which_branch_operation_i = 3'b000;
+        enable_alu_unit_i = 1;
+        enable_integer_multiplication_unit_i = 0;
+        enable_integer_division_unit_i = 0;
+        enable_atomic_unit_i = 0;
+        enable_floating_point_unit_i = 0;
+        enable_bit_manipulation_unit = 0;
+        enable_branch_resolver_unit_i = 0;
+        enable_control_status_unit_i = 0;
+        aq_i = 0;
+        rl_i = 0;
+        rd_i=0;
+        shamt_i = 5'b00000;    
+        #1;
+        
+        execute_stall_required_i = 0;
         operand1_integer_i = 32'h00000000;
         operand2_integer_i = 32'h00000000;
         operand1_float_i = 32'h00000000;
@@ -159,7 +189,9 @@ module execute_tb();
         enable_control_status_unit_i = 0;
         aq_i = 0;
         rl_i = 0;
-        shamt_i = 5'b00000;      
+        rd_i=0;
+        shamt_i = 5'b00000;   
+          
     end
     
 endmodule
