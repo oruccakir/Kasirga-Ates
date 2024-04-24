@@ -1,9 +1,5 @@
-import cocotb
-from cocotb.triggers import RisingEdge
-from cocotb.regression import TestFactory
-import cocotb
-from cocotb.triggers import Timer
-import random
+# Purpose: To test the ALU module
+from imports import *
 ALU_ADD      =           0
 ALU_SUB      =            1
 ALU_XOR     =           2
@@ -23,161 +19,161 @@ ALU_ANDI         =      15
 ALU_SLLI          =      16
 ALU_SRLI          =      17
 ALU_SRAI          =      18
-"""
-@cocotb.test()
-async def test_alu_addition(dut):
-    test_sayisi = 1000
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**31)
-        deger2  = int(random.random()*2**31)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        dut.enable_i.value = 1
-        dut.other_resources_i.value = 0
-        dut.aluOp_i.value = ALU_ADD
-        sonuc = deger1 + deger2
-        await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {sonuc}\nModul ciktisi = {dut.result_o.value}"
-"""
-"""
-@cocotb.test()
-async def test_alu_subtraction(dut):
-    test_sayisi = 1000
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**31)
-        deger2  = int(random.random()*2**31)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        dut.enable_i.value = 1
-        dut.other_resources_i.value = 0
-        dut.aluOp_i.value = 1
-        sonuc = deger1 - deger2
 
-        module_output = int(dut.result_o.value.binstr, 2)  # Get the binary string of the output
+@cocotb.test()
+async def test_alu_addition(alu):
+    number_of_tests = 1000
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**31)
+        operand2  = int(random.random()*2**31)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        alu.enable_i.value = 1
+        alu.other_resources_i.value = 0
+        alu.aluOp_i.value = ALU_ADD
+        result = operand1 + operand2
+        await Timer(2,units="ns")
+        assert(result == alu.result_o.value),f"Expected Result = {result}\nModule Output = {alu.result_o.value}"
+
+"""
+@cocotb.test()
+async def test_alu_subtraction(alu):
+    number_of_tests = 1000
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**31)
+        operand2  = int(random.random()*2**31)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        alu.enable_i.value = 1
+        alu.other_resources_i.value = 0
+        alu.aluOp_i.value = 1
+        result = operand1 - operand2
+
+        module_output = int(alu.result_o.value.binstr, 2)  # Get the binary string of the output
         if module_output >= 2**31:  # Adjust if the number is negative
             module_output -= 2**32
-        print("Beklenen : ",sonuc, " Modul : ",dut.result_o.value)
+        print("Beklenen : ",result, " Modul : ",alu.result_o.value)
         await Timer(2,units="ns")
-        assert(sonuc == module_output),f"Beklenen sonuc = {sonuc}    {deger1} -  {deger2}\nModul ciktisi = {module_output}"
+        assert(result == module_output),f"Expected Result = {result}    {operand1} -  {operand2}\nModule Output = {module_output}"
 """
 @cocotb.test()
-async def test_alu_and(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_AND
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**32)
-        deger2  = int(random.random()*2**32)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 & deger2
+async def test_alu_and(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_AND
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**32)
+        operand2  = int(random.random()*2**32)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 & operand2
         await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
 
 @cocotb.test()
-async def test_alu_or(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_OR
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**32)
-        deger2  = int(random.random()*2**32)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 | deger2
+async def test_alu_or(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_OR
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**32)
+        operand2  = int(random.random()*2**32)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 | operand2
         await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
 
 @cocotb.test()
-async def test_alu_xor(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_XOR
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**32)
-        deger2  = int(random.random()*2**32)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 ^ deger2
+async def test_alu_xor(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_XOR
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**32)
+        operand2  = int(random.random()*2**32)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 ^ operand2
         await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
 
 @cocotb.test()
-async def test_alu_sll(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_SLL
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**32)
-        deger2  = int(random.random()*2**5)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = (deger1 << deger2) % 2**32
+async def test_alu_sll(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_SLL
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**32)
+        operand2  = int(random.random()*2**5)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = (operand1 << operand2) % 2**32
         await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
-
-
-@cocotb.test()
-async def test_alu_srl(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_SRL
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**32)
-        deger2  = int(random.random()*2**5)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 >> deger2
-        await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
-
-@cocotb.test()
-async def test_alu_sra(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_SRA
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**31)
-        deger2  = int(random.random()*2**5)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 >> (deger2 % 2**5)
-        await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
-
-@cocotb.test()
-async def test_alu_slt(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_SLT
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**31)
-        deger2  = int(random.random()*2**31)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 < deger2
-        await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
 
 
 @cocotb.test()
-async def test_alu_sltu(dut):
-    test_sayisi = 1000
-    dut.enable_i.value = 1
-    dut.other_resources_i.value = 0
-    dut.aluOp_i.value = ALU_SLTU
-    for test_idx in range(test_sayisi):
-        deger1  = int(random.random()*2**32)
-        deger2  = int(random.random()*2**32)
-        dut.operand1_i.value = deger1
-        dut.operand2_i.value = deger2
-        sonuc = deger1 < deger2
+async def test_alu_srl(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_SRL
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**32)
+        operand2  = int(random.random()*2**5)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 >> operand2
         await Timer(2,units="ns")
-        assert(sonuc == dut.result_o.value),f"Beklenen sonuc = {bin(sonuc)}    {deger1} -  {deger2}\nModul ciktisi = {dut.result_o.value}"
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
+
+@cocotb.test()
+async def test_alu_sra(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_SRA
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**31)
+        operand2  = int(random.random()*2**5)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 >> (operand2 % 2**5)
+        await Timer(2,units="ns")
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
+
+@cocotb.test()
+async def test_alu_slt(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_SLT
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**31)
+        operand2  = int(random.random()*2**31)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 < operand2
+        await Timer(2,units="ns")
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
+
+
+@cocotb.test()
+async def test_alu_sltu(alu):
+    number_of_tests = 1000
+    alu.enable_i.value = 1
+    alu.other_resources_i.value = 0
+    alu.aluOp_i.value = ALU_SLTU
+    for test_idx in range(number_of_tests):
+        operand1  = int(random.random()*2**32)
+        operand2  = int(random.random()*2**32)
+        alu.operand1_i.value = operand1
+        alu.operand2_i.value = operand2
+        result = operand1 < operand2
+        await Timer(2,units="ns")
+        assert(result == alu.result_o.value),f"Expected Result = {bin(result)}    {operand1} -  {operand2}\nModule Output = {alu.result_o.value}"
