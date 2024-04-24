@@ -15,6 +15,7 @@ module FetchStep (
     
 
     // getir <> coz
+    input coz_bos_i,
     output reg [31:0] coz_buyruk_o,
     output reg coz_buyruk_gecerli_o,
     output reg [31:0] coz_ps_o,
@@ -115,7 +116,7 @@ always @(posedge clk_i) begin
     end
     else begin
         ps <= ps_next;
-        if (bellek_gecerli_i) begin
+        if (coz_bos_i) begin
             coz_buyruk_gecerli_o <= 'b1;
             coz_buyruk_o <= bellek_deger_i;
             coz_ps_o <= ps;
@@ -123,7 +124,7 @@ always @(posedge clk_i) begin
     end
 end
 
-assign bellek_istek_o = (coz_buyruk_gecerli_o) ? 'b1 : 'b0;
+assign bellek_istek_o = (coz_bos_i) ? 'b1 : 'b0;
 assign bellek_ps_o = ps;
 
 endmodule
