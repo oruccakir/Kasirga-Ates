@@ -23,6 +23,7 @@ module ExecuteStep1 (
     input wire [31:0] program_counter_i,                                            // comes from decode for branch instructions and for other necessary instructions
     input wire [31:0] immediate_value_i,                                            // comes from decode step for branch and other instructions
     input wire fetch_reset_branch_info_i,                                           // comes from fetch step to reset branch info signal
+    input wire [31:0] branch_predictor_address_i,                                   // comes from fetch step via decode step
     output wire [31:0] calculated_result_o,                                         // calculated result output, goes to writeback stage
     output wire execute_working_info_o,                                             // Execute step working info, goes to decode step
     output wire [4:0] rd_o,                                                         // Target register info, goes to writeback step
@@ -154,6 +155,7 @@ BranchResolverUnit branch_resolver_unit(
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .fetch_reset_branch_info_i(fetch_reset_branch_info_i),
+    .branch_predictor_address_i(branch_predictor_address_i),
     .result_o(calculated_branch_result),
     .branch_info_o(branch_info_o),
     .is_finished_o(finished_branch_resolver_unit)

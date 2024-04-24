@@ -17,9 +17,11 @@ module FetchStep (
     output reg [31:0] instruction_to_decode_o,               // instruction that will be conveyed to decode step 
     output wire fetch_next_instruction_o,                    // this is the fetching instruction desire from memory
     output reg [31:0] program_counter_o,                      // this is for increasig program counter for some instructions, goes to decode step
-    output wire reset_branch_info_o                          // this is goes to directly execute step to reset branch working info
+    output wire reset_branch_info_o,                          // this is goes to directly execute step to reset branch working info
+    output wire [31:0] branch_predictor_address_o                    // this is goes to execute step via decode to understand the predictor result
 );
 
+reg [31:0] branch_predictor_address;                         // branch_precitor address output
 reg [31:0] program_counter_next;                             // next register for program_counter
 reg [31:0] instruction_to_decode_next;                       // next register for instruction that will be conveyed to decode step
 wire fetch_next_instruction;                                 // this is flag for getting instruction from memory or cache, crucial for stalling operations
@@ -42,6 +44,7 @@ end
 
 always@(posedge clk_i) begin
     if(rst_i) begin
+        branch_predictor_address <= 32'b0;
         program_counter <= 32'h8000_0000;
         instruction_to_decode <= 32'b0;
         program_counter_next <= 32'h8000_0000;

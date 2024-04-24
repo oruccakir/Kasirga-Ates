@@ -170,6 +170,9 @@
 `define BRANCH_TAKEN                    1'b1
 `define BRANCH_NOT_TAKEN                1'b0
 
+`define BRANCH_SHOULD_HAVE_BEEN_TAKEN     1'b1
+`define BRANCH_SHOULD_HAVE_NOT_BEEN_TAKEN 1'b0       
+
 
 `define RUN_NONE_UNIT                     11'b00000000000
 `define RUN_FLOATING_POINT_UNIT           11'b10000000000

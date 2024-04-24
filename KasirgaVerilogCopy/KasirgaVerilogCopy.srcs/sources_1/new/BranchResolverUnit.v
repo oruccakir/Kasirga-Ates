@@ -12,6 +12,7 @@ module BranchResolverUnit (
     input wire [31:0] operand1_i,
     input wire [31:0] operand2_i,
     input wire fetch_reset_branch_info_i,
+    input wire [31:0] branch_predictor_address_i,
     output wire [31:0] result_o,
     output wire is_finished_o,
     output wire branch_info_o

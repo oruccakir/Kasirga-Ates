@@ -55,7 +55,8 @@ wire [2:0] write_register_info;                                                 
 wire [31:0] forwarded_data;                                                           // this info comes from execute step, indicates forwarded data goes to decode step
 wire [4:0] forwarded_rd;                                                              // this info comes from execute step, indicates forwarded register goes to decode step                                 
 wire fetch_reset_branch_info;                                                         // this info comes from fetch step,and goes to execute step, branch resolver unit
-
+wire [31:0] branch_predictor_address;                                                 // this info comes from fetch step, and goes to decode
+wire [31:0] branch_predictor_address_to_execute;                                      // this info comes from decode step and goes to execute
 // Fetch module
 FetchStep fetch(
     .clk_i(clk_i),
@@ -70,7 +71,8 @@ FetchStep fetch(
     .instruction_to_decode_o(instruction_to_decode),
     .fetch_next_instruction_o(get_instruction_o),
     .program_counter_o(program_counter),
-    .reset_branch_info_o(fetch_reset_branch_info)
+    .reset_branch_info_o(fetch_reset_branch_info),
+    .branch_predictor_address_o(branch_predictor_address)
 );
 
 // Decode module
@@ -88,6 +90,7 @@ DecodeStep decode(
     .forwarded_data_i(forwarded_data),
     .forwarded_rd_i(forwarded_rd),
     .branch_info_i(branch_info),
+    .branch_predictor_address_i(branch_predictor_address),
     .rd_o(rd),
     .integer_operand1_o(integer_operand1),
     .integer_operand2_o(integer_operand2),
@@ -100,7 +103,8 @@ DecodeStep decode(
     .rs2_value_o(rs2_value),
     .register_selection_o(register_selection),
     .program_counter_o(program_counter_decode),
-    .immediate_value_o(immediate_value)
+    .immediate_value_o(immediate_value),
+    .branch_predictor_address_o(branch_predictor_address_to_execute)
 );
 
 // Execute1 module
@@ -122,6 +126,7 @@ ExecuteStep1 execute1(
     .program_counter_i(program_counter_decode),
     .immediate_value_i(immediate_value),
     .fetch_reset_branch_info_i(fetch_reset_branch_info),
+    .branch_predictor_address_i(branch_predictor_address_to_execute),
     .calculated_result_o(calculated_result),
     .execute_working_info_o(execute_working_info),
     .rd_o(rd_to_writeback),
