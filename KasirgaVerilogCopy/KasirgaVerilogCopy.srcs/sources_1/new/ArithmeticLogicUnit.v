@@ -27,7 +27,6 @@ RippleCarryAdder32 adder(
 );
 // Perform the operation based on the aluOp
 always @(*) begin
-    $display("ALU STARTED %d",aluOp_i);
     if(other_resources_i)
         $display("  ALU is working for other resources");
       case (aluOp_i)

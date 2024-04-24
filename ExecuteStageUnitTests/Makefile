@@ -1,9 +1,16 @@
 # Makefile
+SOURCE = ../KasirgaVerilogCopy/KasirgaVerilogCopy.srcs/sources_1/new
 TOPLEVEL_LANG = verilog
-VERILOG_SOURCES += ../ExecuteStageUnitTests/*.v
-VERILOG_SOURCES += ../ExecuteStageUnitTests/*.vh
 
-IVERILOG_OPTS = -I ../ExecuteStageUnitTests/*.vh
+VERILOG_INCLUDE_DIRS = $(SOURCE)
+
+VERILOG_SOURCES += $(SOURCE)/ArithmeticLogicUnit.v \
+                $(SOURCE)/RippleCarryAdder32.v \
+                $(SOURCE)/wallace.v \
+                $(SOURCE)/definitions.vh \
+                 
+
+
 
 TOPLEVEL = ArithmeticLogicUnit
 MODULE = alu_test  # Python test modülü adı
