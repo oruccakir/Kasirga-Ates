@@ -57,6 +57,7 @@ wire [4:0] forwarded_rd;                                                        
 wire fetch_reset_branch_info;                                                         // this info comes from fetch step,and goes to execute step, branch resolver unit
 wire [31:0] branch_predictor_address;                                                 // this info comes from fetch step, and goes to decode
 wire [31:0] branch_predictor_address_to_execute;                                      // this info comes from decode step and goes to execute
+
 // Fetch module
 FetchStep fetch(
     .clk_i(clk_i),
