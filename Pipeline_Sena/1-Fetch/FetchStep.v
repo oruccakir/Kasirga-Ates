@@ -26,7 +26,7 @@ module FetchStep (
     input yurut_atladi_i
 );
 
-reg [31:0] ps;
+reg [31:0] ps = 0;
 reg [31:0] ps_next;
 
 
@@ -119,7 +119,7 @@ always @(posedge clk_i) begin
         if (coz_bos_i) begin
             coz_buyruk_gecerli_o <= 'b1;
             coz_buyruk_o <= bellek_deger_i;
-            coz_ps_o <= ps;
+            coz_ps_o <= ps_next;
         end
     end
 end
