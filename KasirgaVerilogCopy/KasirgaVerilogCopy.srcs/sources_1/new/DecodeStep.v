@@ -74,12 +74,12 @@ wire data_forwarding_info_rs2;
 
 wire data_dependency_info_rs1;
 wire data_dependency_info_rs2;
+wire rs1_state;
+wire rs2_state;
 
 wire decode_next_instruction;
 wire decode_working_info;
 reg change_integer_register_state;
-
-reg decode_finished;
 
 // Integer Register File module
 IntegerRegisterFile integerRegisterFile(
@@ -89,9 +89,13 @@ IntegerRegisterFile integerRegisterFile(
     .rs2_i(rs2), // Source register 2
     .rd_i(target_register_i), // Destination register
     .write_data_i(writebacked_result_i), // Writebacked result
+    .rd_state_i(rd_next),
+    .change_integer_register_state_i(change_integer_register_state),
     .reg_write_i(reg_write_integer_i), // Write data flag
     .read_data1_o(operand1_integer),    // Operand 1
-    .read_data2_o(operand2_integer)   // Operand 2
+    .read_data2_o(operand2_integer),   // Operand 2
+    .read_rs1_state_o(rs1_state),
+    .read_rs2_state_o(rs2_state)
 );
 
 // Float Register File module
@@ -116,8 +120,8 @@ integer i = -2; // debugging for which instruction decoded
 assign data_forwarding_info_rs1 = (forwarded_rd_i == rs1 && forwarded_rd_i != 1'b0);
 assign data_forwarding_info_rs2 = (forwarded_rd_i == rs2 && forwarded_rd_i != 1'b0);
 
-assign data_dependency_info_rs1 = integerRegisterFile.registers_state[rs1] == `WRITING_IN_PROGRESS && rs1 != rd_next;
-assign data_dependency_info_rs2 = integerRegisterFile.registers_state[rs2] == `WRITING_IN_PROGRESS && rs2 != rd_next;
+assign data_dependency_info_rs1 =  rs1_state == `WRITING_IN_PROGRESS && rs1 != rd_next;
+assign data_dependency_info_rs2 =  rs2_state == `WRITING_IN_PROGRESS && rs2 != rd_next;
 
 
 assign decode_next_instruction = (execute_working_info_i == 1'b0 && data_dependency_info_rs1 == 1'b0 && data_dependency_info_rs2 == 1'b0 && branch_info_i != `BRANCH_TAKEN);
@@ -635,9 +639,7 @@ always@(posedge clk_i) begin
            imm_generated_operand2 <= imm_generated_operand2_next;
            rs2_value <= operand2_integer_next;
            integer_operand1 <=    (enable_first) ? first_operand  : (data_forwarding_info_rs1) ? forwarded_data_i : operand1_integer_next;
-           integer_operand2 <= (enable_generate) ? second_operand : (data_forwarding_info_rs2) ? forwarded_data_i : operand2_integer_next; 
-           if(change_integer_register_state) 
-                integerRegisterFile.registers_state[rd_next] <= `WRITING_IN_PROGRESS;          
+           integer_operand2 <= (enable_generate) ? second_operand : (data_forwarding_info_rs2) ? forwarded_data_i : operand2_integer_next;          
         end
     end
 end

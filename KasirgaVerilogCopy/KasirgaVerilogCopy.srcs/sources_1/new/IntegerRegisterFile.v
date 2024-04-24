@@ -11,9 +11,12 @@ module IntegerRegisterFile (
   input wire [4:0] rd_i,  // write register
   input wire [31:0] write_data_i, // data to write
   input wire reg_write_i, // write enable
-  input wire instruction_count_i,
+  input wire [4:0] rd_state_i, // for changing register state
+  input wire change_integer_register_state_i, // for changing register state
   output wire [31:0] read_data1_o, // data from read register 1
-  output wire [31:0] read_data2_o // data from read register 2
+  output wire [31:0] read_data2_o, // data from read register 2
+  output wire read_rs1_state_o,
+  output wire read_rs2_state_o
 );
 
 reg [31:0] registers [31:0];
@@ -45,7 +48,14 @@ end
 
 assign read_data1_o = registers[rs1_i]; // read data from register 1
 assign read_data2_o = registers[rs2_i]; // read data from register 2
-
+assign read_rs1_state_o = registers_state[rs1_i];  // read state info for rs1
+assign read_rs2_state_o = registers_state[rs2_i];  // read state info for rs2
+/*
+always@(change_integer_register_state_i) begin
+    $display("Writing in Progess to %d ",rd_state_i);
+    registers_state[rd_state_i] = `WRITING_IN_PROGRESS;
+end
+*/
 always@(posedge clk_i) begin
     if(rst_i) begin
         for(i=0; i<32; i=i+1)  begin
@@ -57,6 +67,10 @@ always@(posedge clk_i) begin
         registers[rd_i] = write_data_i; // write data to register;
         $display("-->INTEGER REGISTER FILE Writed result %d ",registers[rd_i]," Target Register %d ", rd_i);
         registers_state[rd_i] = `WRITING_COMPLETED;
+    end
+    if(change_integer_register_state_i) begin
+        $display("Writing in Progess to %d ",rd_state_i);
+        registers_state[rd_state_i] = `WRITING_IN_PROGRESS;
     end
 end
 
