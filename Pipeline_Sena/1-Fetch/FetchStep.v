@@ -6,75 +6,121 @@
 module FetchStep (
     input clk_i, // Clock input
     input rst_i, // Reset input
-    // buyruk önbelleği
+
+    // buyruk önbelleği <> getir
     input bellek_gecerli_i,
     input [31:0] bellek_deger_i,
-    output reg [31:0] bellek_adres_o, 
+    output [31:0] bellek_ps_i,
 
-    // yurut asamasi
-    input yurut_ps_gecerli_i,
+    // getir <> coz
+    output reg [31:0] coz_buyruk_o,
+    output coz__buyruk_gecerli_o,
+    output reg [31:0] coz_ps_o,
+
+    //dallanma birimi (yurut) <> getir
     input [31:0] yurut_ps_i,
-    input yurut_atladi_i
-
+    input yurut_ps_gecerli_i,
+	input yurut_atladi_i
 );
 
-reg [31:0] instruction_o_next, instruction_o;
-wire [31:0] memory_buyruk;
-
-reg tahmin_et;
-wire tahmin;
-wire [31:0] tahmin_ps;
-
-reg [31:0] ps = mem_adres_i;
+reg [31:0] ps;
 reg [31:0] ps_next;
 
-HelperMemory hm(
-    .clk_i              (clk_i),
-    .adres_i            (ps),
-    .write_data_enable_i(1'b0),
-    .read_data_o        (memory_buyruk)
-    );
 
-GsharePredictor gp(
-	.clk_i              (clk_i),
-    .rst_i              (rst_i),
-    .getir_ps_i         (ps),
-    .getir_ps_gecerli_i (tahmin_et),
-    .buyruk_i           (memory_buyruk),
-    .yurut_ps_i         (yurut_ps_i),
-    .yurut_ps_gecerli_i (yurut_ps_gecerli_i),
-    .yurut_atladi_i     (yurut_atladi_i),
-    .sonuc_dallan_o     (tahmin),
-    .sonuc_dallan_ps_o  (tahmin_ps)
-    );
+// dallanma öngörücüsü için gerekli input ve outputlar
+reg dallanma_tahmini_gecerli;
+reg buyruk_jal_j_type;
+reg buyruk_jalr_i_type;
+reg buyruk_branch_b_type;
+reg [31:0] ongoru_genisletilmis_anlik;
 
-always @* begin
-	tahmin_et = 1'b0;
+wire [31:0] ongorulen_ps;
+wire ongorulen_ps_gecerli;
+
+reg yanlis_tahmin;
+
+wire dogru_ps_gecerli;//'b1 olduğunda getir psyi güncelleyecek.
+wire [31:0] dogru_ps;
+
+always @(*) begin
+    dallanma_tahmini_gecerli = 'b0;
+    buyruk_jal_j_type = 'b0;//bunlar hiçbir yerde işe yaramıyor?
+    buyruk_jalr_i_type = 'b0
+    buyruk_branch_b_type = 'b0;
+
 	if (bellek_gecerli_i) begin
-		instruction_o_next = memory_buyruk;
-		if (mem_adres_i[6:5] == 2'b11) begin
-			tahmin_et = 1'b1;
-			ps_next = tahmin_ps;
+		dallanma_tahmini_gecerli = (bellek_deger_i[1:0] == 'b11);
+	    if (dallanma_tahmini_gecerli) begin
+		    case (bellek_deger_i[3:2])
+				'b11: begin
+					buyruk_jal_j_type = 'b1;
+					ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {12'b1111_1111_1111, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]} : {12'0000_0000_0000, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]};//son bit 0 mı olacak?
+				end
+				'01: begin
+					buyruk_jalr_i_type = 'b1;//hedef adresi bulmak için rs1 yazmacının değerine eklenmesi lazım????
+					ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31:20]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31:20]};
+				end
+				'00: begin
+                    buyruk_branch_b_type = 'b1;
+					ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]};//son bit 0 mı olacak?
+				end
+				default: begin
+					dallanma_tahmini_gecerli = 'b0;
+				end
+			endcase
 		end
 	end
-	else if (yurut_ps_gecerli) begin
-		if (yurut_atladi_i != tahmin) begin
-			ps_next = yurut_ps_i;
-		end
+end
+
+always @(*) begin
+	if (yurut_ps_gecerli_i) begin
+		yanlis_tahmin = (ps != yurut_ps_i) ? 'b1 : 'b0;
+	end
+end
+
+GsharePredictor ongoru(
+	.clk_i								(clk_i),
+    .rst_i								(rst_i),
+    
+    .ongoru_genisletilmis_anlık_i		(ongoru_genisletilmis_anlik),
+    .tahmin_ps_gecerli_i				(dallanma_tahmini_gecerli),
+    .tahmin_ps_i						(ps),
+
+    .ongorulen_ps_gecerli_o				(ongorulen_ps_gecerli),
+    .ongorulen_ps_o						(ongorulen_ps),
+
+    .yurut_ps_gecerli_i				    (yurut_ps_gecerli_i),	
+    .yurut_ps_i							(yurut_ps_i),
+    .yanlis_tahmin_i					(yanlis_tahmin),
+    .yurut_atladi_i						(yurut_atladi_i),
+
+    .dogru_ps_gecerli_o					(dogru_ps_gecerli),
+    .dogru_ps_o							(dogru_ps));
+
+always @(*) begin
+	ps_next = ps + 4;
+    if (ongorulen_ps_gecerli) begin
+		ps_next = ongorulen_ps;
+	end
+	if (dogru_ps_gecerli) begin
+		ps_next = dogru_ps;
 	end
 end
 
 always @(posedge clk_i) begin
 	if (rst_i) begin
-		instruction_o <= 0;
-		ps <= 0;
+		ps <= 32'b0;
 	end
 	else begin
-		if (bellek_gecerli_i) begin
-		    instruction_o <= instruction_o_next;    
-		end
 		ps <= ps_next;
+		if (bellek_gecerli_i) begin
+			coz_buyruk_gecerli_o <= 'b1;
+			coz_buyruk_o <= bellek_deger_i;
+			coz_ps_o <= ps;
+		end
     end
 end
+
+assign bellek_ps_i = ps;
 
 endmodule
