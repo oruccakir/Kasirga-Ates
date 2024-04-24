@@ -137,8 +137,8 @@ always@(*) begin
     $display("@@DECODE STAGE Decoded instruction  %h ",instruction_i);
     $display("-->IMM %d ",imm_generated_operand2_next);
     $display("-->Opcode: %b ", opcode); // Display opcode
-    $display("-->rs1 : %d ", rs1);       // Display source register 1
-    $display("-->rs2 : %d ", rs2);       // Display source register 2
+    $display("-->rs1 : %d ", rs1," Value : %d ",operand1_integer);       // Display source register 1
+    $display("-->rs2 : %d ", rs2," Value : %d ",operand2_integer);       // Display source register 2
     $display("-->rd  : %d ", rd_next);         // Display destination register);
     case(register_selection_next) 
         `INTEGER_REGISTER: $display("--->Which file : INTEGER_REGISTER");
