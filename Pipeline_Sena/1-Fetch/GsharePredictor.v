@@ -31,11 +31,7 @@ module GsharePredictor(
     input yurut_ps_gecerli_i,
     input [31:0] yurut_ps_i,  
     input yanlis_tahmin_i,
-    input yurut_atladi_i,
-
-    output reg dogru_ps_gecerli_o,//'b1 olduğunda getir psyi güncelleyecek.
-    output reg [31:0]  dogru_ps_o
-
+    input yurut_atladi_i
     );
     
     localparam GT = 2'd0;//güclü atlamaz
@@ -107,12 +103,11 @@ module GsharePredictor(
                 cift_kutuplu_tablo[i] <= cift_kutuplu_tablo_next[i];
             end
             if (tahmin_ps_gecerli_i) begin
-                ongorulen_ps_gecerli_o <= 'b1;
-                ongorulen_ps_o <= (dallan) ? ongoru_genisletilmis_anlik_i : tahmin_ps_i + 4;
+                ongorulen_ps_o <= (dallan) ? tahmin_ps_i + ongoru_genisletilmis_anlik_i : tahmin_ps_i + 4;
+                ongorulen_ps_gecerli_o <= 1'b1;
             end
-            if (yurut_ps_gecerli_i) begin
-                dogru_ps_gecerli_o <= 'b1;
-                dogru_ps_o <= yurut_ps_i;
+            else begin
+                ongorulen_ps_gecerli_o <= 1'b0;
             end
         end
     end    
