@@ -4,6 +4,7 @@
 `timescale 1ns / 1ps
 `include "definitions.vh"
 
+
 module DecodeStep (
     input wire clk_i,                      // Clock input
     input wire rst_i,                      // Reset input
