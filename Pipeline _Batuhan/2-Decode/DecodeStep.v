@@ -29,7 +29,6 @@ module DecodeStep (
     output reg        yurut_IMU_en_o,
     output reg        yurut_IDU_en_o,
     output reg        yurut_BRU_en_o,
-    output reg        yurut_CU_en_o,
     output reg        yurut_CSU_en_o,
     output reg        yurut_AU_en_o,
     output reg        yurut_BMU_en_o,
@@ -47,12 +46,12 @@ module DecodeStep (
     output reg [31:0] yurut_immidiate_o,         // immidiate value
     output reg [31:0] yurut_ps_yeni_o,           // Geriyaz'a kadar çıktılar
     output reg [ 4:0] yurut_rd_adres_o ,
-    output reg        decode_working_info_o        
+    output wire       decode_working_info_o        
 );
 
 
 wire[`BIT_SAYISI_COZ-1:0] buyruk_w = {getir_buyruk_i[31:27], getir_buyruk_i[25:20], getir_buyruk_i[14:12], getir_buyruk_i[6:2]};
-
+assign decode_working_info_o = execute_working_info_i;
 reg         FPU_en_sonraki;
 reg         ALU_en_sonraki;
 reg         IMU_en_sonraki;
@@ -1752,7 +1751,6 @@ always@(*)begin
           yurut_IMU_en_o         <= `DISABLE;
           yurut_IDU_en_o         <= `DISABLE;
           yurut_BRU_en_o         <= `DISABLE;
-          yurut_CU_en_o          <= `DISABLE;
           yurut_CSU_en_o         <= `DISABLE;
           yurut_AU_en_o          <= `DISABLE;
           yurut_BMU_en_o         <= `DISABLE;
@@ -1793,7 +1791,6 @@ always@(posedge clk_i)begin
           yurut_IMU_en_o         <= `DISABLE;
           yurut_IDU_en_o         <= `DISABLE;
           yurut_BRU_en_o         <= `DISABLE;
-          yurut_CU_en_o          <= `DISABLE;
           yurut_CSU_en_o         <= `DISABLE;
           yurut_AU_en_o          <= `DISABLE;
           yurut_BMU_en_o         <= `DISABLE;
@@ -1805,7 +1802,6 @@ always@(posedge clk_i)begin
         yurut_IMU_en_o         <= IMU_en_sonraki;
         yurut_IDU_en_o         <= IDU_en_sonraki;
         yurut_BRU_en_o         <= BRU_en_sonraki;
-        yurut_CU_en_o          <= CU_en_sonraki;
         yurut_CSU_en_o         <= CSU_en_sonraki;
         yurut_AU_en_o          <= AU_en_sonraki;
         yurut_BMU_en_o         <= BMU_en_sonraki;
@@ -1823,9 +1819,9 @@ always@(posedge clk_i)begin
         yurut_float_deger1_o   <= float_deger1_sonraki_r;
         yurut_float_deger2_o   <= float_deger2_sonraki_r;
         yurut_float_deger3_o   <= float_deger3_sonraki_r;
-        decode_working_info_o  <= `DECODE_IS_NOT_WORKING;   
+        //decode_working_info_o  <= `DECODE_IS_NOT_WORKING;   
     end else begin
-        decode_working_info_o  <= `DECODE_IS_WORKING;
+        //decode_working_info_o  <= `DECODE_IS_WORKING;
     end
 
 end
