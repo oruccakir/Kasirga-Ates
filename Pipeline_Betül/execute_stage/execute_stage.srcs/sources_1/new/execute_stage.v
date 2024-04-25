@@ -2,20 +2,16 @@
 // Functionality: This module performs the execute stage of the pipeline.
 // File: execute_stage.v
 
-// nop buyru�u eklenecek
+// nop buyru?u eklenecek
 module execute_stage(
     input                                           clk_i,                                      // clock signal
     input                                           rst_i,                                      // reset signal
 
     //-------------------------------from memory_stage----------------------------------------------
-    input     wire                                  execute_stall_required_i,                            // durdurmak i�in
+    input     wire                                  execute_stall_required_i,                            // durdurmak i?in
     output    wire                                  execute_busy_flag_o,   
     //-------------------------------from decode_stage----------------------------------------------
     
-    //olmali mi
-    //input wire [31:0] rs2_value_i,        // rs2 register value comes from decode integer register file
-
-
 
     input      wire             [31:0]              operand1_integer_i,                         // Operand 1 input comes from decode integer register file
     input      wire             [31:0]              operand2_integer_i,                         // Operand 2 input comes from decode integer register file or from another calculation logic
@@ -28,13 +24,7 @@ module execute_stage(
     
     input      wire             [31:0]              program_counter_i,                          // because of address calculate for branch instructions
 
-    input      wire             [4:0]               which_operation_alu_i,                      // which operation should be executed in ALU 31
-    input      wire             [1:0]               which_operation_mul_i,                      // which operation should be executed in integer multiplication unit 4
-    input      wire             [1:0]               which_operation_div_i,                      // which operation should be executed in integer division unit 4
-    input      wire             [2:0]               which_operation_atomic_i,                   // which operation should be executed in atomic unit 11
-    input      wire             [4:0]               which_operation_floating_point_i,           // which operation should be executed in floating point unit 23
-    input      wire             [4:0]               which_operation_bit_manipulation_i,         // which operation should be executed in bit manipulation unit 32
-    input      wire             [3:0]               which_branch_operation_i,                   // which branch operation should be executed in branch resolver unit 11
+    input      wire             [ 4:0]              which_operation_i,                          // which operation should be executed in ALU 31
 
     input      wire                                 enable_alu_unit_i,                          // enable signal for ALU unit
     input      wire                                 enable_integer_multiplication_unit_i,       // enable signal for integer multiplication unit
@@ -47,11 +37,11 @@ module execute_stage(
 
     input                                           aq_i,                                       // acquire signal              
     input                                           rl_i,                                       // release signal   
-    input                        [4:0]              shamt_i,                                    // shift amount for bit manipulation unit
-    input                       [2:0]               rm_i,                                       // rounding mode for floating point unit
+    input                       [ 4:0]              shamt_i,                                    // shift amount for bit manipulation unit
+    input                       [ 2:0]              rm_i,                                       // rounding mode for floating point unit
   
-    input       wire            [4:0]               rd_i,                                      // Destination register input from decode step, goes to memory step for write back
-    output      reg             [4:0]               rd_o,
+    input       wire            [ 4:0]              rd_i,                                      // Destination register input from decode step, goes to memory step for write back
+    output      reg             [ 4:0]              rd_o,
     //------------------------------to memory_stage-----------------------------------------------------------------
     /*  
     memory_operation_type_o: should be added to definitions.vh file 
@@ -79,8 +69,6 @@ module execute_stage(
 
 );
 
-reg execute_busy_flag;
-
 
 wire finished_alu_unit;
 wire [31:0] calculated_result_alu_o;
@@ -96,7 +84,7 @@ arithmetic_logic_unit alu(
     .operand2_i(operand2_integer_i),
     .immediate_value_i(immediate_value_i),
     .program_counter_i(program_counter_i),
-    .aluOp_i(which_operation_alu_i),
+    .aluOp_i(which_operation_i),
     .calculated_memory_address_o(calculated_memory_address_alu),
     .calculated_result_o(calculated_result_alu_o),
     .extension_mode_o(extension_mode_alu_o),
@@ -116,7 +104,7 @@ integer_multiplication_unit imu(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_integer_multiplication_unit_i(enable_integer_multiplication_unit_i),
-    .mulOp_i(which_operation_mul_i),
+    .mulOp_i(which_operation_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .result_o(calculated_result_mul_o),
@@ -133,7 +121,7 @@ integer_division_unit idu(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_integer_division_unit_i(enable_integer_division_unit_i),
-    .divOp_i(which_operation_div_i),
+    .divOp_i(which_operation_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
     .result_o(calculated_int_div_result),
@@ -154,7 +142,7 @@ atomic_unit au(
     .enable_atomic_unit_i(enable_atomic_unit_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
-    .atomicOp_i(which_operation_atomic_i),
+    .atomicOp_i(which_operation_i),
     .aq_i(aq_i),
     .rl_i(rl_i),
     .calculated_memory_address_o(calculated_memory_address_atomic),
@@ -176,7 +164,7 @@ floating_point_unit fpu(  // sadece word okur ve yazar
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_floating_point_unit_i(enable_floating_point_unit_i),
-    .float_operation_i(which_operation_floating_point_i),
+    .float_operation_i(which_operation_i),
     .operand1_i(operand1_float_i),
     .operand2_i(operand2_float_i),
     .operand3_i(operand3_float_i),
@@ -202,7 +190,7 @@ bit_manipulation_unit bmu(
     .operand2_i(operand2_integer_i),
     .immediate_value_i(immediate_value_i),
     .shamt_i(shamt_i),
-    .bmuOp_i(which_operation_bit_manipulation_i),
+    .bmuOp_i(which_operation_i),
     .result_o(calculated_bmu_result),
     .register_type_selection_o(register_type_selection_manipulation),
     .finished_o(finished_bit_manipulation_unit)
@@ -219,7 +207,7 @@ branch_resolver_unit bru(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .enable_branch_resolver_unit_i(enable_branch_resolver_unit_i),
-    .branch_instruction_selection_i(which_branch_operation_i),
+    .branch_instruction_selection_i(which_operation_i),
     .program_counter_i(program_counter_i),
     .immediate_value_i(immediate_value_i),
     .operand1_integer_i(operand1_integer_i),
@@ -245,7 +233,6 @@ control_status_unit csu(
 
 always@(posedge clk_i) begin
     if(rst_i) begin
-        execute_busy_flag <= 0;
         rd_o<=0;
         memory_operation_type_o<=0;
         memory_write_data_o<=0;
@@ -255,9 +242,9 @@ always@(posedge clk_i) begin
         register_type_selection_o<=0;
         is_branched_o<=0;
         branched_address_o<=0;
-   end
-    else begin
-        if(~execute_busy_flag && ~execute_stall_required_i) begin  // if not busy, change the outputs
+    end else begin
+        if(~execute_stall_required_i) begin  // if not busy, change the outputs
+            rd_o<=rd_i; // every time
             if(enable_alu_unit_i) begin
                 if(finished_alu_unit)begin
                     calculated_memory_address_o<=calculated_memory_address_alu;
@@ -266,9 +253,6 @@ always@(posedge clk_i) begin
                     memory_operation_type_o<=memory_operation_type_alu_o;
                     register_type_selection_o<=register_type_selection_alu;
                     arithmetic_logic_unit.finished_o<=1'b0; 
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
                  end      
             end
             else if (enable_integer_multiplication_unit_i) begin
@@ -276,22 +260,14 @@ always@(posedge clk_i) begin
                     calculated_result_o<=calculated_result_mul_o;
                     register_type_selection_o<=register_type_selection_mul;
                     floating_point_unit.finished_o<=1'b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
-                 end        
-            end
-            else if (enable_integer_division_unit_i) begin
+                end
+            end else if (enable_integer_division_unit_i) begin
                 if(finished_integer_division_unit) begin
                     calculated_result_o<=calculated_int_div_result;
                     register_type_selection_o<=register_type_selection_div;
                     integer_division_unit.finished_o<=1'b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
-                 end
-            end
-            else if (enable_atomic_unit_i) begin
+                end
+            end else if (enable_atomic_unit_i) begin
                 if(finished_atomic_unit) begin
                     calculated_memory_address_o<=calculated_memory_address_atomic;
                     calculated_result_o<=calculated_atomic_result;
@@ -299,9 +275,6 @@ always@(posedge clk_i) begin
                     memory_operation_type_o<=memory_operation_type_au_o;
                     register_type_selection_o<=register_type_selection_atomic;
                     atomic_unit.finished_o<=1'b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
                  end          
             end 
             else if (enable_floating_point_unit_i) begin
@@ -309,9 +282,6 @@ always@(posedge clk_i) begin
                     calculated_result_o<= calculated_fpu_result;
                     register_type_selection_o<=register_type_selection_floating_point;
                     floating_point_unit.finished_o<=1'b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
                  end         
             end
             else if (enable_bit_manipulation_unit ) begin
@@ -319,9 +289,6 @@ always@(posedge clk_i) begin
                     calculated_result_o <= calculated_bmu_result;
                     register_type_selection_o<=register_type_selection_manipulation;
                     bit_manipulation_unit.finished_o<=1'b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
                  end       
             end  
             else if (enable_branch_resolver_unit_i) begin
@@ -330,23 +297,17 @@ always@(posedge clk_i) begin
                     branched_address_o<=branched_address;
                     is_branched_o<=is_branched;
                     branch_resolver_unit.finished_o<=1'b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
                  end      
             end
             else if (enable_control_status_unit_i) begin
-                if(finished_control_status_unit)begin
+                 if(finished_control_status_unit)begin
                     control_status_unit.finished_o<='b0;
-                    execute_busy_flag<=0;  
-                 end else begin
-                    execute_busy_flag<=1;
-                 end  
+                 end
             end  // else???????????
         end
     end
 end
 
-assign execute_busy_flag_o = execute_busy_flag;
-             
+assign execute_busy_flag_o = (enable_alu_unit_i && ~finished_alu_unit) || (enable_atomic_unit_i && ~finished_atomic_unit) || (enable_floating_point_unit_i && ~finished_floating_point_unit) || (enable_bit_manipulation_unit && ~finished_bit_manipulation_unit) || (enable_branch_resolver_unit_i && ~finished_branch_resolver_unit) || (enable_control_status_unit_i && ~finished_control_status_unit) || (enable_integer_division_unit_i && ~finished_integer_division_unit) || (enable_integer_multiplication_unit_i && ~finished_integer_multiplication_unit) ;
+           
 endmodule
