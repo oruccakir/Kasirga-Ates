@@ -20,11 +20,4 @@ always@(*) begin
         finished_o=1;
     end
 end
-
-
-
-
-
-
-
 endmodule

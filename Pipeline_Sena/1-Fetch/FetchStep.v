@@ -73,13 +73,22 @@ always @(*) begin
             endcase
         end
     end
-end
-
-always @(*) begin
     if (yurut_ps_gecerli_i) begin
         yanlis_tahmin = (ps != yurut_ps_i) ? 'b1 : 'b0;
     end
+
+    if (coz_bos_i) begin
+        ps_next = ps + 4;
+    end
+    if (ongorulen_ps_gecerli) begin
+        ps_next = ongorulen_ps;
+    end
+    if (dogru_ps_gecerli) begin
+        ps_next = dogru_ps;
+    end
+
 end
+
 
 GsharePredictor ongoru(
     .clk_i                              (clk_i),
@@ -100,26 +109,20 @@ GsharePredictor ongoru(
     .dogru_ps_gecerli_o                 (dogru_ps_gecerli),
     .dogru_ps_o                         (dogru_ps));
 
-always @(*) begin
-    ps_next = ps + 4;
-    if (ongorulen_ps_gecerli) begin
-        ps_next = ongorulen_ps;
-    end
-    if (dogru_ps_gecerli) begin
-        ps_next = dogru_ps;
-    end
-end
 
 always @(posedge clk_i) begin
     if (rst_i) begin
         ps <= 32'b0;
     end
-    else begin
-        ps <= ps_next;
+    else begin      
         if (coz_bos_i) begin
             coz_buyruk_gecerli_o <= 'b1;
             coz_buyruk_o <= bellek_deger_i;
             coz_ps_o <= ps_next;
+            ps <= ps_next;
+        end
+        else begin
+            coz_buyruk_gecerli_o <= 1'b0;
         end
     end
 end

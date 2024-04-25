@@ -69,16 +69,17 @@ localparam START=2'b00;
 localparam WAIT_FOR_FIRST_STAGE=2'b01;
 localparam WAIT_FOR_SECOND_STAGE=2'b10;
 
-always@(posedge clk_i) begin
+always@(*) begin
    if(enable_floating_point_unit_i) begin
       case(float_operation_i)
-        `FLT_FMADD:begin   //rd=rs1*rs2+rs3
+        `FLT_FMADD_S:begin   //rd=rs1*rs2+rs3
            case(state)
                 START:begin
                     enable_floating_point_multiplication<=1'b1;
                     multiplication_operand_1<=operand1_i;
                     multiplication_operand_2<=operand2_i;
                     state<=WAIT_FOR_FIRST_STAGE;
+                    finished_o<=1'b0;
                 end
                 WAIT_FOR_FIRST_STAGE:begin
                     if(is_multiplication_finished) begin
@@ -87,12 +88,9 @@ always@(posedge clk_i) begin
                         addition_operand_2<=operand3_i;
                         state<=WAIT_FOR_SECOND_STAGE;
                         floating_point_multiplication.finished_o<=1'b0;
+                        finished_o<=1'b0;
                     end
-                    else begin 
-                        enable_floating_point_multiplication<=1'b1;
-                        multiplication_operand_1<=operand1_i;
-                        multiplication_operand_2<=operand2_i;
-                    end
+                    
                 end
                 WAIT_FOR_SECOND_STAGE:begin
                     if(is_addition_finished) begin
@@ -101,15 +99,10 @@ always@(posedge clk_i) begin
                         state<=START;
                         floating_addition_unit.finished_o<=1'b0;
                     end
-                    else begin
-                        enable_floating_point_addition<=1'b1;
-                        addition_operand_1<=multiplication_result;
-                        addition_operand_2<=operand3_i;
-                    end
                 end          
            endcase
         end
-        `FLT_FMSUB:begin // f[rd] = f[rs1]?f[rs2]-f[rs3]
+        `FLT_FMSUB_S:begin // f[rd] = f[rs1]?f[rs2]-f[rs3]
             case(state)
                 START:begin
                     enable_floating_point_multiplication<=1'b1;
@@ -146,7 +139,7 @@ always@(posedge clk_i) begin
                 end          
             endcase     
         end
-        `FLT_FNMSUB:begin  //f[rd] = -f[rs1]?f[rs2]+f[rs3]
+        `FLT_FNMSUB_S:begin  //f[rd] = -f[rs1]?f[rs2]+f[rs3]
             case(state)
                 START:begin
                     enable_floating_point_multiplication<=1'b1;
@@ -184,7 +177,7 @@ always@(posedge clk_i) begin
            endcase
         
         end
-        `FLT_FNMADD: begin // f[rd] = -f[rs1]?f[rs2]-f[rs3]
+        `FLT_FNMADD_S: begin // f[rd] = -f[rs1]?f[rs2]-f[rs3]
             case(state)
                 START:begin
                     enable_floating_point_multiplication<=1'b1;
@@ -221,7 +214,7 @@ always@(posedge clk_i) begin
                 end          
            endcase     
         end
-        `FLT_FADD:begin //f[rd] = f[rs1] + f[rs2]
+        `FLT_FADD_S:begin //f[rd] = f[rs1] + f[rs2]
             case(state)
                 START:begin
                     enable_floating_point_addition<=1'b1;
@@ -244,7 +237,7 @@ always@(posedge clk_i) begin
                 end
             endcase       
         end
-        `FLT_FSUB: begin  // f[rd] = f[rs1] - f[rs2]
+        `FLT_FSUB_S: begin  // f[rd] = f[rs1] - f[rs2]
             case(state)
                 START:begin
                     enable_floating_point_addition<=1'b1;
@@ -267,7 +260,7 @@ always@(posedge clk_i) begin
                 end
             endcase              
         end
-        `FLT_FMUL: begin  // f[rd] = f[rs1] * f[rs2]
+        `FLT_FMUL_S: begin  // f[rd] = f[rs1] * f[rs2]
             case(state)
                 START:begin
                     enable_floating_point_multiplication<=1'b1;
@@ -290,7 +283,7 @@ always@(posedge clk_i) begin
                 end
             endcase        
         end
-        `FLT_FDIV: begin    //f[rd] = f[rs1] / f[rs2]
+        `FLT_FDIV_S: begin    //f[rd] = f[rs1] / f[rs2]
             case(state)
                 START:begin
                     enable_floating_point_division<=1'b1;
@@ -313,45 +306,45 @@ always@(posedge clk_i) begin
                 end
             endcase   
         end
-        `FLT_FSQRT: begin
+        `FLT_FSQRT_S: begin
             
         
         end
-        `FLT_FSGNJ: begin  //f[rd] = {f[rs2][31], f[rs1][30:0]}
+        `FLT_FSGNJ_S: begin  //f[rd] = {f[rs2][31], f[rs1][30:0]}
             
         
         end
-        `FLT_FSGNJN: begin
+        `FLT_FSGNJN_S: begin
         
         end
-        `FLT_FSGNJX: begin
+        `FLT_FSGNJX_S: begin
         
         end
-        `FLT_FMIN: begin
+        `FLT_FMIN_S: begin
         
         end
-        `FLT_FMAX: begin
+        `FLT_FMAX_S: begin
         
         end
-        `FLT_FCVTW: begin
+        `FLT_FCVT_W_S: begin
         
         end
-        `FLT_FCVTWU: begin
+        `FLT_FCVT_WU_S: begin
         
         end
-        `FLT_FMVXW: begin
+        `FLT_FMV_X_W: begin
         
         end
-        `FLT_FCLASS: begin
+        `FLT_FCLASS_S: begin
         
         end
-        `FLT_FCVTSW: begin
+        `FLT_FCVT_S_W: begin
         
         end
-        `FLT_FCVTSWU: begin
+        `FLT_FCVT_S_WU: begin
         
         end
-        `FLT_FMVWX: begin
+        `FLT_FMV_W_X: begin
         
         end 
       endcase
