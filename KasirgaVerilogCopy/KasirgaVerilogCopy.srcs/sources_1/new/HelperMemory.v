@@ -23,7 +23,7 @@ module HelperMemory #(
 localparam UNDEFINED = DEBUG == "TRUE" ? {DATA_BIT{1'bZ}} : {DATA_BIT{1'b0}};
 
 reg data_completed = 1'b0;
-reg instruction_completed = 1'b0;
+reg instruction_completed;
 
 reg [DATA_BIT-1:0] memory [0:MEMORY_INDEX-1];
 reg [DATA_BIT-1:0] read_data_cmb;
@@ -50,8 +50,10 @@ integer data_counter = 0;
 always @(*)begin
    // read_ins_cmb = UNDEFINED;
    
-    if(mem_access_valid_ins && get_instruction_i)
+    if(mem_access_valid_ins && get_instruction_i) begin
         read_ins_cmb = memory[MEM_INDEX_INS];
+        instruction_completed = 1'b1;
+     end
                     
         if(read_enable_i) begin
             if(data_counter == data_latency) begin
@@ -83,8 +85,9 @@ end
 
 always@(posedge rst_i) begin
         read_ins_cmb <= 32'b0;
+        instruction_completed <= 1'b0;
         for (i = 0; i < MEMORY_INDEX; i = i + 1) begin
-        memory[i] <= 0;
+            memory[i] <= 0;
     end
 end
 
