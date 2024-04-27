@@ -58,6 +58,26 @@ wire fetch_reset_branch_info;                                                   
 wire [31:0] branch_predictor_address;                                                 // this info comes from fetch step, and goes to decode
 wire [31:0] branch_predictor_address_to_execute;                                      // this info comes from decode step and goes to execute
 
+
+FetchStep fetch(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    
+    .bellek_deger_i(instruction_i),
+    .bellek_gecerli_i(instruction_completed_i),
+    .bellek_ps_o(mem_address_o),
+    .bellek_istek_o(get_instruction_o),
+    
+    .coz_bos_i(1'b1),
+    .coz_buyruk_o(instruction_to_decode),
+    .coz_ps_o(program_counter),
+    
+    .yurut_ps_i(calculated_branch_address),
+    .yurut_ps_gecerli_i(is_branch_address_calculated),
+    .yurut_atladi_i(branch_info)
+);
+
+/*
 // Fetch module
 FetchStep fetch(
     .clk_i(clk_i),
@@ -75,6 +95,7 @@ FetchStep fetch(
     .reset_branch_info_o(fetch_reset_branch_info),
     .branch_predictor_address_o(branch_predictor_address)
 );
+
 
 // Decode module
 DecodeStep decode(
@@ -159,5 +180,5 @@ WriteBackStep writeback(
     .rd_o(target_register)
 );
 
-
+*/
 endmodule
