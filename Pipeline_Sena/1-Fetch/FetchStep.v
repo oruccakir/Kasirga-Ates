@@ -26,7 +26,7 @@ module FetchStep (
     input              yurut_atladi_i    //dallanma öngörüsüne verilecek düzeltme sinyali
 );
 
-reg [31:0] ps=0;
+reg [31:0] ps=32'h8000_0000;
 reg [31:0] ps_next;
 
 
@@ -96,12 +96,19 @@ GsharePredictor ongoru(
     .yurut_atladi_i                     (yurut_atladi_i));
 
 
+
+integer i = 0;
+always @(*) begin
+    $display("Gelen instruction %h",bellek_deger_i," Num %d ",i);
+    i = i +1;
+end
+
 always @(posedge clk_i) begin
     if (rst_i) begin
         yeni_baslamadi <= 0;
         bellek_istek_o <= 1'b1;
         bellek_ps_o <= 0;
-        ps <= 32'b0;
+        ps <= 32'h8000_0000;
     end
     else begin
         
