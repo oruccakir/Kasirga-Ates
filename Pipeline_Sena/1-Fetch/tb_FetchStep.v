@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module tb_Fetchstep();
+module tb_fetchstep();
     reg clk_i; // Clock input
     reg rst_i; // Reset input
 
@@ -54,16 +54,16 @@ module tb_Fetchstep();
         
 
         //durum 1
-        bellek_gecerli_i = 1'b1;
-        bellek_deger_i = 32'b00000000_10111000_11111111_00010001; 
+        bellek_gecerli_i = 1'b0;
+        bellek_deger_i = 10; 
         coz_bos_i = 1'b1;
         yurut_ps_i = 32'd0;
         yurut_ps_gecerli_i = 1'b0;
         yurut_atladi_i = 1'b0;
         
         #10;
-        if (bellek_istek_o == 1 && bellek_ps_o == 4 && coz_buyruk_o == bellek_deger_i && coz_buyruk_gecerli_o == 1 && coz_ps_o == 4) begin
-            $display("passed");
+        if (bellek_istek_o == 1 && bellek_ps_o == 0 && coz_buyruk_gecerli_o == 0) begin
+            $display("test 1 passed");
         end
         else begin
             $display(bellek_istek_o);
@@ -73,18 +73,17 @@ module tb_Fetchstep();
             $display(coz_buyruk_gecerli_o);
             $display(coz_ps_o);
         end
-
         //durum 2
-        bellek_gecerli_i = 1'b1;
-        bellek_deger_i = 32'b00000000_10111000_11111111_00010001; 
-        coz_bos_i = 1'b0;
+        bellek_gecerli_i = 1'b0;
+        bellek_deger_i = 10; 
+        coz_bos_i = 1'b1;
         yurut_ps_i = 32'd0;
         yurut_ps_gecerli_i = 1'b0;
         yurut_atladi_i = 1'b0;
         
         #10;
-        if (bellek_istek_o == 0 && bellek_ps_o == 4 && coz_buyruk_o == bellek_deger_i && coz_buyruk_gecerli_o == 0 && coz_ps_o == 4) begin
-            $display("passed");
+        if (bellek_istek_o == 1 && bellek_ps_o == 0 && coz_buyruk_gecerli_o == 0) begin
+            $display("test 2 passed");
         end
         else begin
             $display(bellek_istek_o);
@@ -94,19 +93,40 @@ module tb_Fetchstep();
             $display(coz_buyruk_gecerli_o);
             $display(coz_ps_o);
         end
-
 
         //durum 3
         bellek_gecerli_i = 1'b1;
-        bellek_deger_i = 32'b00000000_10111000_11111111_00010011; 
+        bellek_deger_i = 10; 
         coz_bos_i = 1'b1;
-        yurut_ps_i = 32'b11111111_10111000_11111111_00010011;
+        yurut_ps_i = 32'd0;
+        yurut_ps_gecerli_i = 1'b0;
+        yurut_atladi_i = 1'b0;
+        
+        #10;
+        if (bellek_istek_o == 1 && bellek_ps_o == 4 && coz_buyruk_o == 10 && coz_buyruk_gecerli_o == 1 && coz_ps_o == 0) begin
+            $display("test 3 passed");
+        end
+        else begin
+            $display(bellek_istek_o);
+            $display(bellek_ps_o);
+            $display(coz_buyruk_o);
+            $display(bellek_deger_i);
+            $display(coz_buyruk_gecerli_o);
+            $display(coz_ps_o);
+        end
+
+
+        //durum 4
+        bellek_gecerli_i = 1'b0;
+        bellek_deger_i = 30; 
+        coz_bos_i = 1'b0;
+        yurut_ps_i = 696;
         yurut_ps_gecerli_i = 1'b1;
         yurut_atladi_i = 1'b0;
         
         #10;
-        if (bellek_istek_o == 1 && bellek_ps_o == 8 && coz_buyruk_o == bellek_deger_i && coz_buyruk_gecerli_o == 1 && coz_ps_o == 8) begin
-            $display("passed");
+        if (bellek_istek_o ==  1 && bellek_ps_o == 696 && coz_buyruk_gecerli_o == 0 ) begin
+            $display("test 4 passed");
         end
         else begin
             $display(bellek_istek_o);
@@ -116,18 +136,40 @@ module tb_Fetchstep();
             $display(coz_buyruk_gecerli_o);
             $display(coz_ps_o);
         end
-
-        //durum 4
-        bellek_gecerli_i = 1'b0;
-        bellek_deger_i = 32'b00000000_10111000_11111111_00010011; 
-        coz_bos_i = 1'b0;
-        yurut_ps_i = 32'b11111111_10111000_11111111_00010011;
-        yurut_ps_gecerli_i = 1'b1;
+        
+        
+        //durum 5
+        bellek_gecerli_i = 1'b1;
+        bellek_deger_i = 90; 
+        coz_bos_i = 1'b1;
+        yurut_ps_i = 696;
+        yurut_ps_gecerli_i = 1'b0;
         yurut_atladi_i = 1'b1;
         
         #10;
-        if (bellek_istek_o == 0 && bellek_ps_o == 8 && coz_buyruk_o == bellek_deger_i && coz_buyruk_gecerli_o == 0 && coz_ps_o == 8) begin
-            $display("passed");
+        if (bellek_istek_o == 1 && bellek_ps_o == 700 && coz_buyruk_o == 90 && coz_buyruk_gecerli_o == 1 && coz_ps_o == 696) begin
+            $display("test 5 passed");
+        end
+        else begin
+            $display(bellek_istek_o);
+            $display(bellek_ps_o);
+            $display(coz_buyruk_o);
+            $display(bellek_deger_i);
+            $display(coz_buyruk_gecerli_o);
+            $display(coz_ps_o);
+        end
+        
+        //durum 6
+        bellek_gecerli_i = 1'b0;
+        bellek_deger_i = 56; 
+        coz_bos_i = 1'b0;
+        yurut_ps_i = 32'b11111111_10111000_11111111_00010011;
+        yurut_ps_gecerli_i = 1'b0;
+        yurut_atladi_i = 1'b0;
+        
+        #10;
+        if (bellek_istek_o == 0 && bellek_ps_o == 700 && coz_buyruk_o == 90 && coz_buyruk_gecerli_o == 0 && coz_ps_o == 696) begin
+            $display("test 6 passed");
         end
         else begin
             $display(bellek_istek_o);
@@ -138,6 +180,7 @@ module tb_Fetchstep();
             $display(coz_ps_o);
         end
 
+       
 
         
 

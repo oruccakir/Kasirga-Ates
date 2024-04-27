@@ -4,29 +4,29 @@
 // File: FetchStep.v
 
 module FetchStep (
-    input clk_i, // Clock input
-    input rst_i, // Reset input
+    input         clk_i, // Clock input
+    input         rst_i, // Reset input
 
     // buyruk önbelleği <> getir
-    input bellek_gecerli_i,
-    input [31:0] bellek_deger_i,
-    output reg bellek_istek_o,
-    output reg [31:0] bellek_ps_o,
+    input              bellek_gecerli_i, //bellekten gelen buyruk geçerli 
+    input      [31:0]  bellek_deger_i,   //bellekten gelen bıyruk
+    output reg         bellek_istek_o,   //bellekten sonraki buyruk için istek
+    output reg [31:0]  bellek_ps_o,      //sonraki buyruğun program sayacı
     
 
     // getir <> coz
-    input coz_bos_i,
-    output reg [31:0] coz_buyruk_o,
-    output reg coz_buyruk_gecerli_o,
-    output reg [31:0] coz_ps_o,
+    input              coz_bos_i,        //çöz aşamasında buyruk yok
+    output reg [31:0]  coz_buyruk_o,     //çöz aşamasına verilecek olan buyruk
+    output reg         coz_buyruk_gecerli_o,//çöz aşamasına buyruk verildi
+    output reg [31:0]  coz_ps_o,         //çöz aşamasına verilecek olan buyruğun program sayacı
 
     //dallanma birimi (yurut) <> getir
-    input [31:0] yurut_ps_i,
-    input yurut_ps_gecerli_i,
-    input yurut_atladi_i
+    input      [31:0]  yurut_ps_i,       //yürüt aşamasından gelen dallanma buyruğunun adresi
+    input              yurut_ps_gecerli_i,//yürüt aşamasından doğru program sayacı geldi
+    input              yurut_atladi_i    //dallanma öngörüsüne verilecek düzeltme sinyali
 );
 
-reg [31:0] ps = 0;
+reg [31:0] ps=0;
 reg [31:0] ps_next;
 
 
@@ -38,6 +38,7 @@ wire [31:0] ongorulen_ps;
 wire ongorulen_ps_gecerli;
 
 reg yanlis_tahmin;
+reg yeni_baslamadi=0;
 
 always @(*) begin
     ps_next = ps;
@@ -45,6 +46,7 @@ always @(*) begin
     dallanma_tahmini_gecerli = 'b0;
 
     if (bellek_gecerli_i) begin
+        yeni_baslamadi = 1;
         dallanma_tahmini_gecerli = (bellek_deger_i[1:0] == 'b11);
         if (dallanma_tahmini_gecerli) begin
             case (bellek_deger_i[3:2])
@@ -72,7 +74,7 @@ always @(*) begin
     else if (yanlis_tahmin && yurut_ps_gecerli_i) begin
         ps_next = yurut_ps_i;
     end
-    else begin
+    else if (bellek_gecerli_i) begin
         ps_next = ps + 4;
     end
 end
@@ -96,25 +98,38 @@ GsharePredictor ongoru(
 
 always @(posedge clk_i) begin
     if (rst_i) begin
+        yeni_baslamadi <= 0;
+        bellek_istek_o <= 1'b1;
+        bellek_ps_o <= 0;
         ps <= 32'b0;
     end
     else begin
-        bellek_ps_o <= ps_next;
-        if (bellek_gecerli_i) begin
-            coz_buyruk_gecerli_o = 1'b1;
+        
+        if (bellek_gecerli_i && coz_bos_i) begin //&&coz_bos_i gereksiz mi
+            coz_buyruk_gecerli_o = 1'b1;//<= olursa bi şey değişir mi?
             coz_ps_o = ps;
             coz_buyruk_o = bellek_deger_i;
         end
         else begin
             coz_buyruk_gecerli_o = 1'b0;
         end
-        if (coz_bos_i || yanlis_tahmin) begin
-            bellek_istek_o = 1'b1;
-            ps = ps_next;
+
+        ps = ps_next;
+
+        if (!yeni_baslamadi) begin
+            bellek_ps_o = ps_next;
+            bellek_istek_o = 1'b1;         
         end
         else begin
-            bellek_istek_o = 1'b0;
+            if ((coz_bos_i && bellek_gecerli_i) || yanlis_tahmin) begin//bellekten bilgi geldiyse???aşama boş kalabilir mi? ve çöz boş veya yanlış dallanma tahminiyse belleğe istek atılır.
+                bellek_ps_o = ps_next;
+                bellek_istek_o = 1'b1;         
+            end
+            else begin
+                bellek_istek_o = 1'b0;
+            end
         end
+        
     end
 end
 
