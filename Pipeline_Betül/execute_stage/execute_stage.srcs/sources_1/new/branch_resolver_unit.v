@@ -13,7 +13,7 @@ module branch_resolver_unit(
    output                                               register_type_selection_o,
    output                 [31:0]                        branched_address_o,
    output                                               is_branched_o,
-   output     reg                                       finished_o
-
+   output     reg                                       finished_o,
+   output     reg                                       is_branched_address_valid_o
     );
 endmodule
