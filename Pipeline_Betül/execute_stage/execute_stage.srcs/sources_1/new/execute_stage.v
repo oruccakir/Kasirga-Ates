@@ -64,8 +64,8 @@ module execute_stage(
     
     //--------------------------to fetch stage--------------------------------------------------------------
     output      reg                                  is_branched_o,                             // branched or not
-    output      reg             [31:0]               branched_address_o                         // branched address to be fetched right instruction
-    
+    output      reg             [31:0]               branched_address_o,                        // branched address to be fetched right instruction
+    output      reg                                  is_branched_address_valid_o
 
 );
 
@@ -203,6 +203,7 @@ wire finished_branch_resolver_unit;
 wire register_type_selection_branch_resolver;
 wire is_branched;
 wire [31:0] branched_address;
+wire is_branched_address_valid;
 branch_resolver_unit bru(
     .clk_i(clk_i),
     .rst_i(rst_i),
@@ -218,7 +219,8 @@ branch_resolver_unit bru(
     .register_type_selection_o(register_type_selection_branch_resolver),
     .branched_address_o(branched_address), // calculated branch address
     .is_branched_o(is_branched),  // branched or not 
-    .finished_o(finished_branch_resolver_unit)
+    .finished_o(finished_branch_resolver_unit),
+    .is_branched_address_valid_o(is_branched_address_valid)
 );
 
 
@@ -296,6 +298,7 @@ always@(posedge clk_i) begin
                     register_type_selection_o<=register_type_selection_branch_resolver;
                     branched_address_o<=branched_address;
                     is_branched_o<=is_branched;
+                    is_branched_address_valid_o<=is_branched_address_valid;
                     branch_resolver_unit.finished_o<=1'b0;
                  end      
             end
@@ -308,6 +311,6 @@ always@(posedge clk_i) begin
     end
 end
 
-assign execute_busy_flag_o = (enable_alu_unit_i && ~finished_alu_unit) || (enable_atomic_unit_i && ~finished_atomic_unit) || (enable_floating_point_unit_i && ~finished_floating_point_unit) || (enable_bit_manipulation_unit && ~finished_bit_manipulation_unit) || (enable_branch_resolver_unit_i && ~finished_branch_resolver_unit) || (enable_control_status_unit_i && ~finished_control_status_unit) || (enable_integer_division_unit_i && ~finished_integer_division_unit) || (enable_integer_multiplication_unit_i && ~finished_integer_multiplication_unit) ;
+assign execute_busy_flag_o = enable_alu_unit_i && ~finished_alu_unit || enable_atomic_unit_i && ~finished_atomic_unit || enable_floating_point_unit_i && ~finished_floating_point_unit || enable_bit_manipulation_unit && ~finished_bit_manipulation_unit || enable_branch_resolver_unit_i && ~finished_branch_resolver_unit || enable_control_status_unit_i && ~finished_control_status_unit || enable_integer_division_unit_i && ~finished_integer_division_unit || enable_integer_multiplication_unit_i && ~finished_integer_multiplication_unit ;
            
 endmodule
