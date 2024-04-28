@@ -109,7 +109,7 @@ module FetchStep (
 
 reg [31:0] ps=32'h8000_0000;
 reg [31:0] ps_next;
-
+reg gecerli;
 
 // dallanma öngörücüsü için gerekli input ve outputlar
 reg dallanma_tahmini_gecerli;
@@ -119,7 +119,6 @@ wire [31:0] ongorulen_ps;
 wire ongorulen_ps_gecerli;
 
 reg yanlis_tahmin;
-reg yeni_baslamadi=0;
 
 always @(*) begin
     ps_next = ps;
@@ -127,7 +126,7 @@ always @(*) begin
     dallanma_tahmini_gecerli = 'b0;
 
     if (bellek_gecerli_i) begin
-        yeni_baslamadi = 1;
+        gecerli = 1;
         dallanma_tahmini_gecerli = (bellek_deger_i[1:0] == 'b11);
         if (dallanma_tahmini_gecerli) begin
             case (bellek_deger_i[3:2])
@@ -145,6 +144,8 @@ always @(*) begin
                 end
             endcase
         end
+        if (coz_bos_i)
+            ps_next = ps + 4;
     end
     if (yurut_ps_gecerli_i) begin
         yanlis_tahmin = (yurut_ps_i != ps_next) ? 'b1 : 'b0; 
@@ -154,9 +155,6 @@ always @(*) begin
     end
     else if (yanlis_tahmin && yurut_ps_gecerli_i) begin
         ps_next = yurut_ps_i;
-    end
-    else if (bellek_gecerli_i) begin
-        ps_next = ps + 4;
     end
 end
 
@@ -186,32 +184,26 @@ end
 
 always @(posedge clk_i) begin
     if (rst_i) begin
-        yeni_baslamadi <= 0;
         bellek_istek_o <= 1'b1;
-        bellek_ps_o <= 0;
+        bellek_ps_o <= 32'h8000_0000;
         ps <= 32'h8000_0000;
+        gecerli = 0;
     end
     else begin
-        
-        if (bellek_gecerli_i && coz_bos_i) begin //&&coz_bos_i gereksiz mi
-            coz_buyruk_gecerli_o = 1'b1;//<= olursa bi þey deðiþir mi?
+        if (bellek_gecerli_i && coz_bos_i) begin
             coz_ps_o = ps;
-            coz_buyruk_o = bellek_deger_i;
+            coz_buyruk_o = bellek_deger_i;     //ç
+            coz_buyruk_gecerli_o = 1'b1;     
         end
         else begin
-            coz_buyruk_gecerli_o = 1'b0;
+            coz_buyruk_gecerli_o = 0;
         end
-
         ps = ps_next;
-
-        if (!yeni_baslamadi) begin
-            bellek_ps_o = ps_next;
-            bellek_istek_o = 1'b1;         
-        end
-        else begin
-            if ((coz_bos_i && bellek_gecerli_i) || yanlis_tahmin) begin//bellekten bilgi geldiyse???aþama boþ kalabilir mi? ve çöz boþ veya yanlýþ dallanma tahminiyse belleðe istek atýlýr.
+         
+        if ((coz_bos_i && bellek_gecerli_i) || yanlis_tahmin) begin//bellekten bilgi geldiyse???aþama boþ kalabilir mi? ve çöz boþ veya yanlýþ dallanma tahminiyse belleðe istek atýlýr.
                 bellek_ps_o = ps_next;
-                bellek_istek_o = 1'b1;         
+                bellek_istek_o = 1'b1;
+                gecerli = 0;         
             end
             else begin
                 bellek_istek_o = 1'b0;
@@ -219,7 +211,6 @@ always @(posedge clk_i) begin
         end
         
     end
-end
 
 
 endmodule

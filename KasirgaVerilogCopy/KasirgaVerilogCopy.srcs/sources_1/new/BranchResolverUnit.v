@@ -3,6 +3,25 @@
 // File: BranchResolverUnit.v
 
 module BranchResolverUnit (
+   input                                                clk_i,
+   input                                                rst_i,
+   input                                                enable_branch_resolver_unit_i,
+   input                  [3:0]                         branch_instruction_selection_i,
+   input                  [31:0]                        program_counter_i,
+   input                  [31:0]                        immediate_value_i,
+   input                  [31:0]                        operand1_integer_i,
+   input                  [31:0]                        operand2_integer_i,
+   input                  [31:0]                        operand1_float_i,
+   input                  [31:0]                        operand2_float_i,
+   input                  [31:0]                        operand3_float_i,
+   output                                               register_type_selection_o,
+   output                 [31:0]                        branched_address_o,
+   output                                               is_branched_o,
+   output     reg                                       finished_o,
+   output     reg                                       is_branched_address_valid_o
+);
+/*
+module BranchResolverUnit (
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_i, // Enable input
@@ -30,7 +49,7 @@ RippleCarryAdder32 adder(
     .sum(result_addition),
     .cout(cout)
 );
-
+/*
 always@(posedge (fetch_reset_branch_info_i)) begin
     branch_info = `BRANCH_NOT_TAKEN;
     $display("Branch Completed");
@@ -99,5 +118,5 @@ end
 assign is_finished_o = is_finished;
 assign result_o = result_addition;
 assign branch_info_o = branch_info;
-
+*/
 endmodule

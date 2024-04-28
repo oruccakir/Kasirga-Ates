@@ -25,6 +25,7 @@ module Processor(
 
 wire decode_working_info;                                                             // working info for decode stage
 wire execute_working_info;                                                            // working info for execute stage
+wire memory_working_info;                                                             // working info for memeory stage
 wire [31:0] writebacked_result;                                                       // will be writed to available register
 wire [4:0] rd;                                                                        // Destination register
 wire [31:0] integer_operand1;                                                         // Operand 1 in integer format
@@ -57,7 +58,25 @@ wire [4:0] forwarded_rd;                                                        
 wire fetch_reset_branch_info;                                                         // this info comes from fetch step,and goes to execute step, branch resolver unit
 wire [31:0] branch_predictor_address;                                                 // this info comes from fetch step, and goes to decode
 wire [31:0] branch_predictor_address_to_execute;                                      // this info comes from decode step and goes to execute
-
+wire [ 4:0] rd_to_memory;
+wire [31:0] memory_calculated_address;
+wire [31:0] memory_write_data;
+wire [ 2:0] memory_operation_selection;
+wire        memory_extension_mode;
+wire        yurut_FPU_en;
+wire        yurut_ALU_en;
+wire        yurut_IMU_en;
+wire        yurut_IDU_en;
+wire        yurut_BRU_en;
+wire        yurut_CSU_en;
+wire        yurut_AU_en;
+wire        yurut_BMU_en;
+wire        yurut_MU_en;
+wire        yurut_shamt;
+wire        yurut_aq;
+wire        yurut_rl;
+wire [2:0]  yurut_rm;
+wire [31:0] calculated_result_to_writeback;
 
 FetchStep fetch(
     .clk_i(clk_i),
@@ -68,7 +87,7 @@ FetchStep fetch(
     .bellek_ps_o(mem_address_o),
     .bellek_istek_o(get_instruction_o),
     
-    .coz_bos_i(1'b1),
+    .coz_bos_i(!decode_working_info),
     .coz_buyruk_o(instruction_to_decode),
     .coz_ps_o(program_counter),
     
@@ -97,12 +116,47 @@ FetchStep fetch(
 );
 
 
+*/
+// Decode module
+DecodeStep decode(
+.clk_i(clk_i),
+.rst_i(rst_i),                     
+.execute_working_info_i(execute_working_info),    
+.getir_buyruk_i(instruction_to_decode),           
+.getir_ps_i(program_counter),                
+.yurut_FPU_en_o(yurut_FPU_en),
+.yurut_ALU_en_o(yurut_ALU_en),
+.yurut_IMU_en_o(yurut_IMU_en),
+.yurut_IDU_en_o(yurut_IDU_en),
+.yurut_BRU_en_o(yurut_BRU_en),
+.yurut_CSU_en_o(yurut_CSU_en),
+.yurut_AU_en_o(yurut_AU_en),
+.yurut_BMU_en_o(yurut_BMU_en),
+.yurut_MU_en_o(yurut_MU_en),             
+.yurut_islem_secimi_o(instruction_type),      
+.yurut_shamt_o(yurut_shamt),
+.yurut_rm_o(yurut_rm),
+.yurut_aq_o(yurut_aq),
+.yurut_rl_o(yurut_rl),               
+.yurut_integer_deger1_o(integer_operand1),    
+.yurut_integer_deger2_o(integer_operand2),    
+.yurut_float_deger1_o(float_operand1),      
+.yurut_float_deger2_o(float_operand2),      
+.yurut_float_deger3_o(float_operand3),      
+.yurut_immidiate_o(immediate_value),         
+.yurut_ps_yeni_o(program_counter_decode),           
+.yurut_rd_adres_o(rd),
+.decode_working_info_o(decode_working_info)          
+  
+);
+/*
+
 // Decode module
 DecodeStep decode(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .instruction_i(instruction_to_decode),
-    .writebacked_result_i(writebacked_result),
+    .writeback_result_i(writebacked_result),
     .reg_write_integer_i(reg_write_integer),
     .reg_write_float_i(reg_write_float),
     .reg_write_csr_i(reg_write_csr),
@@ -128,7 +182,45 @@ DecodeStep decode(
     .immediate_value_o(immediate_value),
     .branch_predictor_address_o(branch_predictor_address_to_execute)
 );
-
+*/
+// Execute1 module
+Execute1Step execute1(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .execute_stall_required_i(memory_working_info),
+    .execute_busy_flag_o(execute_working_info),
+    .operand1_integer_i(integer_operand1),
+    .operand2_integer_i(integer_operand2),
+    .operand1_float_i(float_operand1),
+    .operand2_float_i(float_operand2),
+    .operand3_float_i(float_operand3),
+    .immediate_value_i(immediate_value),
+    .program_counter_i(program_counter_decode),
+    .which_operation_i(instruction_type),
+    .enable_alu_unit_i(yurut_ALU_en),
+    .enable_integer_multiplication_unit_i(yurut_IMU_en),
+    .enable_integer_division_unit_i(yurut_IDU_en),
+    .enable_atomic_unit_i(yurut_AU_en),
+    .enable_floating_point_unit_i(yurut_FPU_en),
+    .enable_bit_manipulation_unit(yurut_BMU_en),
+    .enable_branch_resolver_unit_i(yurut_BRU_en),
+    .enable_control_status_unit_i(yurut_CSU_en),
+    .aq_i(yurut_aq),
+    .rl_i(yurut_rl),
+    .shamt_i(yurut_shamt),
+    .rm_i(yurut_rm),
+    .memory_operation_type_o(memory_operation_selection),
+    .memory_write_data_o(memory_write_data),
+    .calculated_memory_address_o(memory_calculated_address),
+    .extension_mode_o(memory_extension_mode),
+    .calculated_result_o(calculated_result),
+    .rd_i(rd),
+    .rd_o(rd_to_memory),
+    .register_type_selection_o(register_selection),
+    .is_branched_o(branch_info),
+    .branched_address_o(calculated_branch_address)
+);
+/*
 // Execute1 module
 ExecuteStep1 execute1(
     .clk_i(clk_i),
@@ -164,6 +256,43 @@ ExecuteStep1 execute1(
     .forwarded_data_o(forwarded_data),
     .forwarded_rd_o(forwarded_rd)
 );
+*/
+MemoryStep memory(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .data_i(data_i),
+    .mem_address_i(memory_calculated_address),
+    //.unit_type_i(unit_type_to_memory),
+    .data_completed_i(data_completed_i),
+    .memOp_i(memory_operation_selection),
+    .calculated_result_i(calculated_result),
+    .rd_i(rd_to_memory),
+    .mem_stored_data_i(memory_write_data),
+    .register_selection_i(register_selection),
+    .mem_data_o(write_data_o),
+    .mem_address_o(data_address_o),
+    .calculated_result_o(calculated_result_to_writeback),
+    .memory_working_info_o(memory_working_info),
+    .rd_o(rd_to_writeback),
+    .read_enable_o(read_enable_o),
+    .write_enable_o(write_enable_o),
+    .write_register_info_o(write_register_info)
+);
+
+// Writeback module
+WriteBackStep writeback(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .calculated_result_i(calculated_result_to_writeback),
+    .rd_i(rd_to_writeback),
+    .write_register_info_i(write_register_info),
+    .writebacked_result_o(writebacked_result),
+    .reg_write_integer_o(reg_write_integer),
+    .reg_write_float_o(reg_write_float),
+    .reg_write_csr_o(reg_write_csr),
+    .rd_o(target_register)
+);
+/*
 
 // Writeback module
 WriteBackStep writeback(
@@ -179,6 +308,7 @@ WriteBackStep writeback(
     .reg_write_csr_o(reg_write_csr),
     .rd_o(target_register)
 );
+
 
 */
 endmodule

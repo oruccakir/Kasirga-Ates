@@ -98,7 +98,7 @@ initial begin
     memory_write('h8000_0020, 32'h0235cb33); //  8   div x22, x11, x3
     */
     
-    memory_write('h8000_0000, 32'h00940633); // 1   add x12, x8, x9
+    memory_write('h8000_0000, 32'h00940633); // 1    add x12, x8, x9
     memory_write('h8000_0004, 32'h008381b3); //  2   add  x3, x7, x8
     memory_write('h8000_0008, 32'h40360f33);  // 3   sub x30, x12, x3
     memory_write('h8000_000c, 32'h15ef0e93); //  4   addi x29 x30 350
