@@ -51,15 +51,20 @@ module instruction_cache_controller(
     
     reg [`BUYRUK_ADRES_BIT-1:0] veri;
     
+    reg getir_okuma_istek_hazir;
+    reg [`BUYRUK_ADRES_BIT-1:0] getir_okuma_istek_buyruk;
+    
     always @(posedge clk_i) begin
         if(rst_i) begin
             simdiki_durum <= BOSTA;
             adres_r <= 0; 
+            getir_okuma_istek_hazir <= 0;
         end
         else begin
             simdiki_durum <= sonraki_durum;
             adres_r <= adres_ns;
         end
+        //$display("simdiki durum: %d", simdiki_durum);
     end
     
     always @(*) begin
@@ -67,25 +72,37 @@ module instruction_cache_controller(
         
         case(simdiki_durum)
             BOSTA: begin // getirden istek almaya hazir durumdayim demek
+            $display("simdiki durum: %d", simdiki_durum);
+            getir_okuma_istek_hazir = 0;
                 if (getir_okuma_istek_gecerli_i) begin // getirden istek aldim, once cache den okuma yapicam
                     adres_ns = getir_okuma_istek_adres_i; // getirden gelen istegin adresini depoluyorum, cache ve gerekirse anabellege gondericem
                     sonraki_durum = ONBELLEK_OKU; // getirden istek aldim cache den veri okuyup kontrol edicem  
                 end 
             end
             ONBELLEK_OKU: begin
+            $display("simdiki durum: %d", simdiki_durum);
                 if(b_onbellek_okuma_istek_etiket_blok_i[`BUYRUK_ETIKET_BIT+`BUYRUK_BLOK_BIT-1:`BUYRUK_BLOK_BIT] == adres_r[`BUYRUK_VERI_BIT-1:`BUYRUK_VERI_BIT-`BUYRUK_ETIKET_BIT]) begin // onbellekten gelen verinin tag ile benim elimdeki adresin tag ini karsilatiriyorum
+                    $display("hitledim");
+                    getir_okuma_istek_hazir = 1;
+                    getir_okuma_istek_buyruk = veri;
                     sonraki_durum = BOSTA;
                 end
                 else begin
+                    $display("missledim");
+                    getir_okuma_istek_hazir = 0;
                     sonraki_durum = ANABELLEK_OKU_ONBELLEK_YAZ; 
                 end    
             end
             ANABELLEK_OKU_ONBELLEK_YAZ: begin
+            $display("simdiki durum: %d", simdiki_durum);
+            getir_okuma_istek_hazir = 0;
                 if(anabellek_denetleyici_okuma_istek_hazir_i) begin
                     sonraki_durum = ONBELLEK_OKU_TEKRAR;
                 end
             end
             ONBELLEK_OKU_TEKRAR: begin // yazildiktan sonra bir cevrim de okumaya sure veriyorum
+            $display("simdiki durum: %d", simdiki_durum);
+            getir_okuma_istek_hazir = 0;
                 sonraki_durum = ONBELLEK_OKU;
             end
         endcase 
@@ -109,10 +126,13 @@ module instruction_cache_controller(
     end
     
     // OUTPUTS
-    assign getir_okuma_istek_hazir_o = b_onbellek_okuma_istek_etiket_blok_i[`BUYRUK_ETIKET_BIT+`BUYRUK_BLOK_BIT-1:`BUYRUK_BLOK_BIT] == adres_r[`BUYRUK_VERI_BIT-1:`BUYRUK_VERI_BIT-`BUYRUK_ETIKET_BIT]; // eger tag onunde sonunda istenilen adresle uyusuyorsa bu getire devam et buyruk hazir diyor
-    assign getir_okuma_istek_buyruk_o = veri;
+    //assign getir_okuma_istek_hazir_o = ( b_onbellek_okuma_istek_etiket_blok_i[`BUYRUK_ETIKET_BIT+`BUYRUK_BLOK_BIT-1:`BUYRUK_BLOK_BIT] == adres_r[`BUYRUK_VERI_BIT-1:`BUYRUK_VERI_BIT-`BUYRUK_ETIKET_BIT] ); // eger tag onunde sonunda istenilen adresle uyusuyorsa bu getire devam et buyruk hazir diyor
+    assign getir_okuma_istek_hazir_o = getir_okuma_istek_hazir;
     
-    assign b_onbellek_istek_gecerli_o = (sonraki_durum == ONBELLEK_OKU) || (sonraki_durum == ANABELLEK_OKU_ONBELLEK_YAZ);
+    //assign getir_okuma_istek_buyruk_o = veri;
+    assign getir_okuma_istek_buyruk_o = getir_okuma_istek_buyruk;
+    
+    assign b_onbellek_istek_gecerli_o = (sonraki_durum == ONBELLEK_OKU) || (simdiki_durum == ANABELLEK_OKU_ONBELLEK_YAZ) || (sonraki_durum == ONBELLEK_OKU_TEKRAR);
     
     assign b_onbellek_okuma_istek_adres_o = adres_ns[`satir_indexi]; // BRAM sadece satir indexini istiyor
     
@@ -120,7 +140,7 @@ module instruction_cache_controller(
     assign b_onbellek_yazma_veri_blok_o = {adres_r[`etiket], anabellek_denetleyici_okuma_veri_blok_i};
     assign b_onbellek_yazma_istek_adres_o = adres_r[`etiket];
     
-    assign anabellek_denetleyici_okuma_istek_gecerli_o = (sonraki_durum == ANABELLEK_OKU_ONBELLEK_YAZ);
+    assign anabellek_denetleyici_okuma_istek_gecerli_o = (simdiki_durum == ANABELLEK_OKU_ONBELLEK_YAZ);
     assign anabellek_denetleyici_okuma_istek_adres_o = adres_r;
     
     endmodule
