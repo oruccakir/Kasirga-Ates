@@ -232,7 +232,7 @@ module HelperMemory #(
 
 localparam UNDEFINED = DEBUG == "TRUE" ? {DATA_BIT{1'bZ}} : {DATA_BIT{1'b0}};
 
-reg data_completed = 1'b0;
+reg data_completed;
 reg instruction_completed;
 reg instruction_completed_next;
 
@@ -240,6 +240,7 @@ reg [DATA_BIT-1:0] memory [0:MEMORY_INDEX-1];
 reg [DATA_BIT-1:0] read_data_cmb;
 reg [31:0]  read_ins_cmb;
 reg [31:0] read_ins;
+reg [31:0] read_data;
 
 wire mem_access_valid_ins = (ins_address_i >= INITIAL_ADDRES) && (ins_address_i < (INITIAL_ADDRES + MEMORY_INDEX));
 wire mem_access_valid_data = (data_address_i >= INITIAL_ADDRES) && (data_address_i < (INITIAL_ADDRES + MEMORY_INDEX));
@@ -263,22 +264,10 @@ always @(*)begin
         read_ins_cmb = memory[MEM_INDEX_INS];
      end
                     
-        if(read_enable_i) begin
-            if(data_counter == data_latency) begin
-                if(mem_access_valid_data) begin
-                    read_data_cmb = memory[MEM_INDEX_DATA];
-                    $display("Reading from this address %h",data_address_i);
-                    $display("Data is being reading %h ",read_data_cmb);
-                end
-                data_counter = 0;
-                data_completed = 1'b1;
-            end
-            else begin
-                data_counter = data_counter + 1;
-            end
-        end
-        else
-            data_completed = 1'b0;
+    if(read_enable_i) begin
+        read_data_cmb = memory[MEM_INDEX_DATA];
+    end
+
             
 end
 
@@ -289,6 +278,8 @@ always @(posedge clk_i) begin
         instruction_completed_next <= 1'b0;
         read_ins_cmb <= 32'b0;
         instruction_completed <= 1'b0;
+        data_completed <= 1'b0;
+        read_data <= 32'b0;
     end
     else begin
         if(instruction_counter == 10) begin
@@ -304,6 +295,17 @@ always @(posedge clk_i) begin
             read_ins <= read_ins_cmb;
             instruction_completed <= instruction_completed_next;
         end
+        
+        if(data_counter == 15) begin
+            data_completed = 1'b1;
+            data_counter = 1'b0;
+            read_data = read_data_cmb;
+        end
+        else begin
+            data_counter = data_counter + 1;
+            data_completed = 1'b0;
+        end
+      
         if (mem_access_valid_data && write_enable_i) begin
             $display("Memory WRITE writed data ",write_data_i);
             $display("Memory WRITE writed address %h ",data_address_i);
@@ -313,7 +315,7 @@ always @(posedge clk_i) begin
 end
 
 
-assign read_data_o = read_data_cmb;
+assign read_data_o = read_data;
 assign data_completed_o = data_completed;
 assign instruction_completed_o = instruction_completed;
 assign read_ins_o = read_ins;
