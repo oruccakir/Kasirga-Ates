@@ -62,6 +62,7 @@ reg         CSU_en_sonraki;
 reg         AU_en_sonraki;
 reg         BMU_en_sonraki;
 reg         MU_en_sonraki;
+reg [ 4:0]  rd_sonraki_r;
 reg [ 1:0]  reg_file_sec_r;
 reg [ 4:0]  islem_secimi_sonraki_r;
 reg [ 4:0]  shamt_sonraki_r;
@@ -2006,6 +2007,7 @@ always@(*)begin
         end 
         
     endcase
+    rd_sonraki_r = getir_buyruk_i[11:7];
 end
 
 IntegerRegisterFile IRF (
@@ -2082,7 +2084,7 @@ always@(posedge clk_i)begin
         yurut_rl_o               <= rl_sonraki_r;
         yurut_immidiate_o        <= immidiate_sonraki_r;
         yurut_ps_yeni_o          <= ps_yeni_sonraki_r;
-        yurut_rd_adres_o         <= getir_buyruk_i[11:7]; 
+        yurut_rd_adres_o         <= rd_sonraki_r; 
         yurut_integer_deger1_o   <= (enable_first_operand)  ? first_operand  :  integer_deger1_sonraki_r;
         yurut_integer_deger2_o   <= (enable_second_operand) ? second_operand :  integer_deger2_sonraki_r;
         yurut_float_deger1_o     <= float_deger1_sonraki_r;
