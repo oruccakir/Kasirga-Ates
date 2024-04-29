@@ -24,7 +24,8 @@ module GsharePredictor(
     input [31:0] ongoru_genisletilmis_anlik_i,
     input tahmin_ps_gecerli_i,
     input [31:0] tahmin_ps_i,   
-
+    
+    output reg ongorulen_atladi_o,
     output reg ongorulen_ps_gecerli_o,
     output reg [31:0] ongorulen_ps_o,
 
@@ -34,10 +35,10 @@ module GsharePredictor(
     input yurut_atladi_i
     );
     
-    localparam GT = 2'd0;//güclü atlamaz
-    localparam ZT = 2'd1;//zayýf atlamaz
-    localparam ZA = 2'd2;//güclü atlar
-    localparam GA = 2'd3;//zayýf atlar
+    localparam GT = 2'd0;//guclu atlamaz
+    localparam ZT = 2'd1;//zayif atlamaz
+    localparam ZA = 2'd2;//guclu atlar
+    localparam GA = 2'd3;//zayif atlar
     
     
     reg [1:0] cift_kutuplu_tablo [31:0];
@@ -56,7 +57,7 @@ module GsharePredictor(
     end
     
     always @* begin
-        //reg outputlarý 0 yapmayý unutma
+        //reg outputlari 0 yapmayi unutma
         for (i = 0; i < 32; i = i + 1) begin
             cift_kutuplu_tablo_next[i] = cift_kutuplu_tablo[i];
         end
@@ -105,6 +106,7 @@ module GsharePredictor(
             if (tahmin_ps_gecerli_i) begin
                 ongorulen_ps_o <= (dallan) ? tahmin_ps_i + ongoru_genisletilmis_anlik_i : tahmin_ps_i + 4;
                 ongorulen_ps_gecerli_o <= 1'b1;
+                ongorulen_atladi_o <= dallan;
             end
             else begin
                 ongorulen_ps_gecerli_o <= 1'b0;
