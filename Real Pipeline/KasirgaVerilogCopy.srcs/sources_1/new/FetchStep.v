@@ -80,6 +80,7 @@ endmodule
 */
 
 `timescale 1ns / 1ps
+`include "definitions.vh"
 // Purpose: FetchStep module for the Fetch stage of the pipeline.
 // Functionality: Fetches the instruction from the instruction memory.
 // File: FetchStep.v
@@ -88,7 +89,7 @@ module FetchStep (
     input         clk_i, // Clock input
     input         rst_i, // Reset input
 
-    // buyruk �nbelle�i <> getir
+    // buyruk onbellegi <> getir
     input              bellek_gecerli_i, //bellekten gelen buyruk gecerli 
     input      [31:0]  bellek_deger_i,   //bellekten gelen buyruk
     output reg         bellek_istek_o,   //bellekten sonraki buyruk icin istek
@@ -151,7 +152,7 @@ always @(*) begin
     if (ongorulen_ps_gecerli) begin
         ps_next = ongorulen_ps;
     end
-    else if (yurut_atladi_i && yurut_ps_gecerli_i) begin
+    else if (yurut_yanlis_tahmin && yurut_ps_gecerli_i) begin
         ps_next = yurut_ps_i;
     end
     else if (buyruk_gecerli && coz_bos_i)begin
@@ -173,7 +174,7 @@ GsharePredictor ongoru(
 
     .yurut_ps_gecerli_i                 (yurut_ps_gecerli_i),	
     .yurut_ps_i                         (yurut_ps_i),
-    .yanlis_tahmin_i                    (yanlis_tahmin),
+    .yanlis_tahmin_i                    (yurut_yanlis_tahmin),
     .yurut_atladi_i                     (yurut_atladi_i));
 
 
@@ -188,26 +189,26 @@ always @(posedge clk_i) begin
     if (rst_i) begin
         bellek_ps_o <= 32'h8000_0000;
         ps <= 32'h8000_0000;
-        dallanma_tahmini_gecerli = 0;
+        dallanma_tahmini_gecerli = 'b0;
     end
     else begin
         if (buyruk_gecerli && coz_bos_i) begin
             coz_ps_o = ps;
             coz_buyruk_o = buyruk_next;
-            coz_buyruk_gecerli_o = 1'b1;     
+            coz_buyruk_gecerli_o = 'b1;     
         end
         else begin
-            coz_buyruk_gecerli_o = 0;
+            coz_buyruk_gecerli_o = 'b0;
         end
         ps = ps_next;
          
-        if ((coz_bos_i && buyruk_gecerli) || yanlis_tahmin) begin//bellekten bilgi geldiyse???asama bos kalabilir mi? ve coz bos veya yanlis dallanma tahminiyse bellege istek atilir.
+        if ((coz_bos_i && buyruk_gecerli) || yurut_yanlis_tahmin) begin//bellekten buyruk geldiyse???asama bos kalabilir mi? ve coz bos veya yanlis dallanma tahminiyse bellege istek atilir.
                 bellek_ps_o = ps;
-                bellek_istek_o = 1'b1;
-                buyruk_gecerli = 0;
+                bellek_istek_o = 'b1;
+                buyruk_gecerli = 'b0;
             end
             else begin
-                bellek_istek_o = 1'b0;
+                bellek_istek_o = 'b0;
             end
         end
         
