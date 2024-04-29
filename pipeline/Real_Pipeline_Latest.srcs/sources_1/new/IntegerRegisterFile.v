@@ -38,7 +38,7 @@ integer i = 0;
 always@(posedge clk_i) begin
   if(rst_i)begin
     for(i=0; i<32; i=i+1)begin
-      register_states   <= `WRITING_COMPLETED;
+      register_states[i]   <= `WRITING_COMPLETED;
     end
     register_file[0]  <= 32'd0;
     register_file[1]  <= 32'd1;

@@ -38,7 +38,7 @@ module Execute1Step(
     input      wire                                 enable_control_status_unit_i,               // enable signal for control status unit
     input      wire                                 enable_memory_unit_i,                       // enable for memory operations goes to memory stage
     input      wire                                 enable_atomic_unit_i,                       // enable signal for atomic unit  
-
+    input      wire                                 enable_arithmetic_logic_unit_i,
 
     input                       [ 1:0]              register_type_selection_i,                  // destination register: floating register or integer register
     
@@ -198,14 +198,17 @@ always@(posedge clk_i) begin
         register_type_selection_o<=2'b0;
         calculated_result_o<=32'b0;
     end else begin
-        if(~execute_stall_required_i) begin  // if not busy, change the outputs
+        if(1) begin  //memory degisince ~execute_stall_required_i cevir
             rd_o<=rd_i;
             enable_atomic_unit_o<=enable_atomic_unit_i;
             enable_memory_unit_o<=enable_memory_unit_i;
             memory_operation_type_o<=which_operation_i[3:0];
             mem_stored_data_o<=mem_stored_data_i;
             register_type_selection_o<=register_type_selection_i;
-            if (enable_integer_multiplication_unit_i && finished_integer_multiplication_unit) begin
+            if(enable_arithmetic_logic_unit_i)begin
+                calculated_result_o<=calculated_result_alu;
+            end
+            else if (enable_integer_multiplication_unit_i && finished_integer_multiplication_unit) begin
                 calculated_result_o<=calculated_result_mul;
                 imu.finished_o<=1'b0;
             end 

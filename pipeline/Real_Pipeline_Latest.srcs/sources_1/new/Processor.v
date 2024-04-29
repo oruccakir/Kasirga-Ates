@@ -120,15 +120,16 @@ FetchStep fetch(
 // Decode module
 DecodeStep decode(
 .clk_i(clk_i),
-.rst_i(rst_i),     
+.rst_i(rst_i), 
+.execute_working_info_i(execute_working_info),
+.forwarded_data_i(forwarded_data),
+.forwarded_rd_i(forwarded_rd),     
 .writeback_result_i(writebacked_result),
 .writeback_address_i(target_register),
 .write_integer_file_i(reg_write_integer),
-.write_float_file_i(reg_write_float),
-                
-.execute_working_info_i(execute_working_info),    
+.write_float_file_i(reg_write_float),                  
 .getir_buyruk_i(instruction_to_decode),           
-.getir_ps_i(program_counter),                
+.getir_ps_i(program_counter),               
 .yurut_FPU_en_o(yurut_FPU_en),
 .yurut_ALU_en_o(yurut_ALU_en),
 .yurut_IMU_en_o(yurut_IMU_en),
@@ -148,10 +149,12 @@ DecodeStep decode(
 .yurut_float_deger1_o(float_operand1),      
 .yurut_float_deger2_o(float_operand2),      
 .yurut_float_deger3_o(float_operand3),      
-.yurut_immidiate_o(immediate_value),         
+.yurut_immidiate_o(immediate_value),  
+.yurut_mem_store_data_o(memory_write_data),       
 .yurut_ps_yeni_o(program_counter_decode),           
 .yurut_rd_adres_o(rd),
-.decode_working_info_o(decode_working_info)          
+.decode_working_info_o(decode_working_info),
+.writeback_reg_file_sec_o(register_selection_execute)          
   
 );
 /*
@@ -210,11 +213,12 @@ Execute1Step execute1(
     .enable_integer_multiplication_unit_i(yurut_IMU_en),
     .enable_integer_division_unit_i(yurut_IDU_en),
     .enable_floating_point_unit_i(yurut_FPU_en),
-    .enable_bit_manipulation_unit(yurut_BMU_en),
+    .enable_bit_manipulation_unit_i(yurut_BMU_en),
     .enable_control_status_unit_i(yurut_CSU_en),
-    //.enable_atomic_unit_i(..........),  decodedan gelecek
+    .enable_memory_unit_i(yurut_MU_en),
     .enable_atomic_unit_i(yurut_AU_en),
-   // .register_type_selection_i( ......),  decodenan gelecek
+    .enable_arithmetic_logic_unit_i(yurut_ALU_en),
+    .register_type_selection_i(register_selection_execute),
     .rd_i(rd),
     //.mem_stored_data_i(),  decodan gelecek rs2 de eri memorye yazlacak 
     //.extension_mode_i(),    buyrupa g re decodedan gelecek ve memory a amas ndan sonra gemi letme yap lacak
@@ -230,7 +234,9 @@ Execute1Step execute1(
    // .branched_address_o(calculated_branch_address),  to fetch
    // .is_branched_address_valid_o(), to fetch 
    // .is_branch_predictor_true_o(),    to fetch
-    .execute_busy_flag_o(execute_working_info) 
+    .execute_busy_flag_o(execute_working_info),
+    .forwarded_rd_o(forwarded_rd),
+    .forwarded_data_o(forwarded_data) 
 );
 /*
 // Execute1 module
