@@ -88,30 +88,30 @@ module FetchStep (
     input         clk_i, // Clock input
     input         rst_i, // Reset input
 
-    // buyruk önbelleği <> getir
-    input              bellek_gecerli_i, //bellekten gelen buyruk geçerli 
-    input      [31:0]  bellek_deger_i,   //bellekten gelen bıyruk
-    output reg         bellek_istek_o,   //bellekten sonraki buyruk için istek
-    output reg [31:0]  bellek_ps_o,      //sonraki buyruğun program sayacı
+    // buyruk Ã¶nbelleÄŸi <> getir
+    input              bellek_gecerli_i, //bellekten gelen buyruk geÃ§erli 
+    input      [31:0]  bellek_deger_i,   //bellekten gelen bÄ±yruk
+    output reg         bellek_istek_o,   //bellekten sonraki buyruk iÃ§in istek
+    output reg [31:0]  bellek_ps_o,      //sonraki buyruÄŸun program sayacÄ±
     
 
     // getir <> coz
-    input              coz_bos_i,        //çöz aşamasında buyruk yok
-    output reg [31:0]  coz_buyruk_o,     //çöz aşamasına verilecek olan buyruk
-    output reg         coz_buyruk_gecerli_o,//çöz aşamasına buyruk verildi
-    output reg [31:0]  coz_ps_o,         //çöz aşamasına verilecek olan buyruğun program sayacı
+    input              coz_bos_i,        //Ã§Ã¶z aÅŸamasÄ±nda buyruk yok
+    output reg [31:0]  coz_buyruk_o,     //Ã§Ã¶z aÅŸamasÄ±na verilecek olan buyruk
+    output reg         coz_buyruk_gecerli_o,//Ã§Ã¶z aÅŸamasÄ±na buyruk verildi
+    output reg [31:0]  coz_ps_o,         //Ã§Ã¶z aÅŸamasÄ±na verilecek olan buyruÄŸun program sayacÄ±
 
     //dallanma birimi (yurut) <> getir
-    input      [31:0]  yurut_ps_i,       //yürüt aşamasından gelen dallanma buyruğunun adresi
-    input              yurut_ps_gecerli_i,//yürüt aşamasından doğru program sayacı geldi
-    input              yurut_atladi_i    //dallanma öngörüsüne verilecek düzeltme sinyali
+    input      [31:0]  yurut_ps_i,       //yÃ¼rÃ¼t aÅŸamasÄ±ndan gelen dallanma buyruÄŸunun adresi
+    input              yurut_ps_gecerli_i,//yÃ¼rÃ¼t aÅŸamasÄ±ndan doÄŸru program sayacÄ± geldi
+    input              yurut_atladi_i    //dallanma Ã¶ngÃ¶rÃ¼sÃ¼ne verilecek dÃ¼zeltme sinyali
 );
 
 reg [31:0] ps=32'h8000_0000;
 reg [31:0] ps_next;
-
-
-// dallanma öngörücüsü için gerekli input ve outputlar
+reg [31:0] buyruk_next;
+reg buyruk_gecerli;
+// dallanma Ã¶ngÃ¶rÃ¼cÃ¼sÃ¼ iÃ§in gerekli input ve outputlar
 reg dallanma_tahmini_gecerli;
 reg [31:0] ongoru_genisletilmis_anlik;
 
@@ -119,7 +119,6 @@ wire [31:0] ongorulen_ps;
 wire ongorulen_ps_gecerli;
 
 reg yanlis_tahmin;
-reg yeni_baslamadi=0;
 
 always @(*) begin
     ps_next = ps;
@@ -127,18 +126,19 @@ always @(*) begin
     dallanma_tahmini_gecerli = 'b0;
 
     if (bellek_gecerli_i) begin
-        yeni_baslamadi = 1;
-        dallanma_tahmini_gecerli = (bellek_deger_i[1:0] == 'b11);
+        buyruk_next = bellek_deger_i;
+        buyruk_gecerli = 1;
+        dallanma_tahmini_gecerli = (bellek_deger_i[6:5] == 'b11);
         if (dallanma_tahmini_gecerli) begin
             case (bellek_deger_i[3:2])
                 'b11: begin
-                    ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {12'b1111_1111_1111, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]} : {12'b0000_0000_0000, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]};//son bit 0 mı olacak?
+                    ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {12'b1111_1111_1111, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]} : {12'b0000_0000_0000, bellek_deger_i[31], bellek_deger_i[19:12], bellek_deger_i[20], bellek_deger_i[30:21]};//son bit 0 mÄ± olacak?
                 end
                 'b01: begin
                     ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31:20]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31:20]};
                 end
                 'b00: begin
-                    ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]};//son bit 0 mı olacak?
+                    ongoru_genisletilmis_anlik = bellek_deger_i[31] ? {20'b1111_1111_1111_1111_1111, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]} : {20'b0000_0000_0000_0000_0000, bellek_deger_i[31], bellek_deger_i[7], bellek_deger_i[30:25], bellek_deger_i[11:8]};//son bit 0 mÄ± olacak?
                 end
                 default: begin
                     dallanma_tahmini_gecerli = 'b0;
@@ -155,7 +155,7 @@ always @(*) begin
     else if (yanlis_tahmin && yurut_ps_gecerli_i) begin
         ps_next = yurut_ps_i;
     end
-    else if (bellek_gecerli_i) begin
+    else if (buyruk_gecerli && coz_bos_i)begin
         ps_next = ps + 4;
     end
 end
@@ -186,32 +186,25 @@ end
 
 always @(posedge clk_i) begin
     if (rst_i) begin
-        yeni_baslamadi <= 0;
-        bellek_istek_o <= 1'b1;
-        bellek_ps_o <= 0;
+        bellek_ps_o <= 32'h8000_0000;
         ps <= 32'h8000_0000;
+        dallanma_tahmini_gecerli = 0;
     end
     else begin
-        
-        if (bellek_gecerli_i && coz_bos_i) begin //&&coz_bos_i gereksiz mi
-            coz_buyruk_gecerli_o = 1'b1;//<= olursa bi şey değişir mi?
+        if (buyruk_gecerli && coz_bos_i) begin
             coz_ps_o = ps;
-            coz_buyruk_o = bellek_deger_i;
+            coz_buyruk_o = buyruk_next;     //Ã§
+            coz_buyruk_gecerli_o = 1'b1;     
         end
         else begin
-            coz_buyruk_gecerli_o = 1'b0;
+            coz_buyruk_gecerli_o = 0;
         end
-
         ps = ps_next;
-
-        if (!yeni_baslamadi) begin
-            bellek_ps_o = ps_next;
-            bellek_istek_o = 1'b1;         
-        end
-        else begin
-            if ((coz_bos_i && bellek_gecerli_i) || yanlis_tahmin) begin//bellekten bilgi geldiyse???aşama boş kalabilir mi? ve çöz boş veya yanlış dallanma tahminiyse belleğe istek atılır.
-                bellek_ps_o = ps_next;
-                bellek_istek_o = 1'b1;         
+         
+        if ((coz_bos_i && buyruk_gecerli) || yanlis_tahmin) begin//bellekten bilgi geldiyse???aÅŸama boÅŸ kalabilir mi? ve Ã§Ã¶z boÅŸ veya yanlÄ±ÅŸ dallanma tahminiyse belleÄŸe istek atÄ±lÄ±r.
+                bellek_ps_o = ps;
+                bellek_istek_o = 1'b1;
+                buyruk_gecerli = 0;
             end
             else begin
                 bellek_istek_o = 1'b0;
@@ -219,7 +212,6 @@ always @(posedge clk_i) begin
         end
         
     end
-end
 
 
 endmodule
