@@ -9,12 +9,18 @@ module IntegerDivisionUnit(
    input                                      [31:0]                        operand1_i,
    input                                      [31:0]                        operand2_i,
    output                                     [31:0]                        result_o,
-   output                                                                   register_type_selection_o,
    output              reg                                                  finished_o
 
     );
-endmodule
 
+
+always@ (posedge clk_i) begin
+    if(rst_i)begin
+        finished_o<=0;
+    end
+end
+
+endmodule
 
 /*
 module IntegerDivisionUnit(

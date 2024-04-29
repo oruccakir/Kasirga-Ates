@@ -10,11 +10,10 @@ module IntegerMultiplicationUnit(
    input                         [31:0]                                    operand1_i,
    input                         [31:0]                                    operand2_i,
    output                        [31:0]                                    result_o,
-   output                                                                  register_type_selection_o,
    output         reg                                                      finished_o   
     );
     reg [4:0] cycle, cycle_s;
-reg finished_s;
+    reg finished_s;
     
     always@(*) begin
         cycle_s=cycle;

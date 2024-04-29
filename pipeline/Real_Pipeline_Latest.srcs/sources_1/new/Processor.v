@@ -193,37 +193,44 @@ Execute1Step execute1(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .execute_stall_required_i(memory_working_info),
-    .execute_busy_flag_o(execute_working_info),
+    
+  //  .branch_predictor_result_i(........)  decode outputu fetchden gelen
     .operand1_integer_i(integer_operand1),
     .operand2_integer_i(integer_operand2),
     .operand1_float_i(float_operand1),
     .operand2_float_i(float_operand2),
     .operand3_float_i(float_operand3),
-    .immediate_value_i(immediate_value),
-    .program_counter_i(program_counter_decode),
-    .which_operation_i(instruction_type),
-    .enable_alu_unit_i(yurut_ALU_en),
-    .enable_integer_multiplication_unit_i(yurut_IMU_en),
-    .enable_integer_division_unit_i(yurut_IDU_en),
-    .enable_atomic_unit_i(yurut_AU_en),
-    .enable_floating_point_unit_i(yurut_FPU_en),
-    .enable_bit_manipulation_unit(yurut_BMU_en),
-    .enable_branch_resolver_unit_i(yurut_BRU_en),
-    .enable_control_status_unit_i(yurut_CSU_en),
     .aq_i(yurut_aq),
     .rl_i(yurut_rl),
     .shamt_i(yurut_shamt),
     .rm_i(yurut_rm),
-    .memory_operation_type_o(memory_operation_selection),
-    .memory_write_data_o(memory_write_data),
-    .calculated_memory_address_o(memory_calculated_address),
-    .extension_mode_o(memory_extension_mode),
-    .calculated_result_o(calculated_result),
+    .which_operation_i(instruction_type),    
+    .immediate_i(immediate_value),
+    .pc_i(program_counter_decode),
+    .enable_integer_multiplication_unit_i(yurut_IMU_en),
+    .enable_integer_division_unit_i(yurut_IDU_en),
+    .enable_floating_point_unit_i(yurut_FPU_en),
+    .enable_bit_manipulation_unit(yurut_BMU_en),
+    .enable_control_status_unit_i(yurut_CSU_en),
+    //.enable_atomic_unit_i(..........),  decodedan gelecek
+    .enable_atomic_unit_i(yurut_AU_en),
+   // .register_type_selection_i( ......),  decodenan gelecek
     .rd_i(rd),
+    //.mem_stored_data_i(),  decodan gelecek rs2 de eri memorye yazlacak 
+    //.extension_mode_i(),    buyrupa g re decodedan gelecek ve memory a amas ndan sonra gemi letme yap lacak
+    //.enable_atomic_unit_o( ),   to memory
+    //.enable_memory_unit_o(),    to memory
     .rd_o(rd_to_memory),
+    //.memory_operation_type_o()   memory op i in 
+    .mem_stored_data_o(memory_write_data),   
+    .calculated_memory_address_o(memory_calculated_address),
+    .calculated_result_o(calculated_result),
     .register_type_selection_o(register_selection),
     .is_branched_o(branch_info),
-    .branched_address_o(calculated_branch_address)
+   // .branched_address_o(calculated_branch_address),  to fetch
+   // .is_branched_address_valid_o(), to fetch 
+   // .is_branch_predictor_true_o(),    to fetch
+    .execute_busy_flag_o(execute_working_info) 
 );
 /*
 // Execute1 module

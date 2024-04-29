@@ -7,13 +7,12 @@ module ControlStatusUnit (
    input                                                        enable_control_status_unit_i,
    output                      reg                              finished_o
     );
+
+
+
+always@ (posedge clk_i) begin
+    if(rst_i) begin
+        finished_o<=0;
+    end
+end
 endmodule
-
-/*
-module ControlStatusUnit (
-    input wire clk_i, // Clock input
-    input wire rst_i, // Reset input
-    input wire enable_i // Enable input
-);
-
-endmodule*/
