@@ -424,7 +424,7 @@
 `define SH3ADD_COZ         19'b001000?????11001100
 `define XNOR_COZ           19'b010000?????10001100
 `define ZEXT_H_COZ         19'b0000100000010001100  
-
+`define NOP_COZ            19'b0000000000000000000
 
 // Memory Stage
 `define MEM_NOTHING                     3'h0

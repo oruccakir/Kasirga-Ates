@@ -307,7 +307,7 @@
 `define ZEXT_H      32'b0000100_00000_?????_100_?????_0110011
 
 
-// Buyruklar�n ��z�lmesi i�in gereken bitler(Bit manip�lasyon buyruklar� eklenerek en d���k bit say�s� ve de�erli bitler bulunarak olu�turulacakt�r) 
+// Buyruklar n   z lmesi i in gereken bitler(Bit manip lasyon buyruklar  eklenerek en d   k bit say s  ve de erli bitler bulunarak olu turulacakt r) 
 `define BIT_SAYISI_COZ 19 //(31-27, 25-20, 14-12, 6-2)
 
 `define ADD_COZ            19'b000000?????00001100
@@ -424,7 +424,7 @@
 `define SH3ADD_COZ         19'b001000?????11001100
 `define XNOR_COZ           19'b010000?????10001100
 `define ZEXT_H_COZ         19'b0000100000010001100  
-
+`define NOP_COZ            19'b0000000000000000000
 
 // Memory Stage
 `define MEM_NOTHING                     3'h0

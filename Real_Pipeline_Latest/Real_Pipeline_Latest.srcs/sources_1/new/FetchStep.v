@@ -101,7 +101,7 @@ module FetchStep (
     output reg [31:0]  coz_buyruk_o,     //coz asamasina verilecek olan buyruk
     output reg         coz_buyruk_gecerli_o,//coz asamasina buyruk verildi
     output reg [31:0]  coz_ps_o,         //coz asamasina verilecek olan buyrugun program sayaci
-    output reg         ongoru_atladi_o,  //yurutun yanlis tahmin bilgisi vermesi icin cozun yurute direkt verecegi atladi bilgisi
+    output wire         ongoru_atladi_o,  //yurutun yanlis tahmin bilgisi vermesi icin cozun yurute direkt verecegi atladi bilgisi
 
     //dallanma birimi (yurut) <> getir
     input      [31:0]  yurut_ps_i,       //yurut asamasindan gelen dallanma buyrugunun adresi
@@ -173,7 +173,7 @@ GsharePredictor ongoru(
 
     .yurut_ps_gecerli_i                 (yurut_ps_gecerli_i),	
     .yurut_ps_i                         (yurut_ps_i),
-    .yanlis_tahmin_i                    (yanlis_tahmin),
+    .yanlis_tahmin_i                    (yurut_yanlis_tahmin),
     .yurut_atladi_i                     (yurut_atladi_i));
 
 
@@ -201,7 +201,7 @@ always @(posedge clk_i) begin
         end
         ps = ps_next;
          
-        if ((coz_bos_i && buyruk_gecerli) || yanlis_tahmin) begin//bellekten bilgi geldiyse???asama bos kalabilir mi? ve coz bos veya yanlis dallanma tahminiyse bellege istek atilir.
+        if ((coz_bos_i && buyruk_gecerli) || yurut_yanlis_tahmin) begin//bellekten bilgi geldiyse???asama bos kalabilir mi? ve coz bos veya yanlis dallanma tahminiyse bellege istek atilir.
                 bellek_ps_o = ps;
                 bellek_istek_o = 1'b1;
                 buyruk_gecerli = 0;

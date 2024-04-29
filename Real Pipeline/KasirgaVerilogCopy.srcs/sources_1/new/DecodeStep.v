@@ -86,6 +86,23 @@ reg  [31:0] second_operand;
 
 always@(*)begin
     casez (buyruk_w)
+        `NOP_COZ       : begin
+             FPU_en_sonraki = `DISABLE;
+             ALU_en_sonraki = `DISABLE;
+             IMU_en_sonraki = `DISABLE;
+             IDU_en_sonraki = `DISABLE;
+             BRU_en_sonraki = `DISABLE;
+             CU_en_sonraki  = `DISABLE;
+             CSU_en_sonraki = `DISABLE;
+             AU_en_sonraki  = `DISABLE;
+             BMU_en_sonraki = `DISABLE;
+             MU_en_sonraki  = `DISABLE;
+             islem_secimi_sonraki_r = `NOP;
+             reg_file_sec_r = `NONE_REGISTER;
+             rd_sonraki_r = 5'b0;
+             enable_first_operand  = 1'b0;
+             enable_second_operand = 1'b0;
+        end
         `ADD_COZ       : begin
              FPU_en_sonraki = `DISABLE;
              ALU_en_sonraki = `ENABLE;
@@ -416,8 +433,7 @@ always@(*)begin
              enable_first_operand  = 1'b0;
              enable_second_operand = 1'b1;
              second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
-             
-                
+             rd_sonraki_r = 5'b0;
         end  
         `SH_COZ        : begin
              FPU_en_sonraki = `DISABLE;
@@ -435,7 +451,8 @@ always@(*)begin
              reg_file_sec_r = `NONE_REGISTER;
              enable_first_operand  = 1'b0;
              enable_second_operand = 1'b1;
-             second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
+             second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
+             rd_sonraki_r = 5'b0;  
         end  
         `SW_COZ        : begin
              FPU_en_sonraki = `DISABLE;
@@ -454,6 +471,7 @@ always@(*)begin
              enable_first_operand  = 1'b0;
              enable_second_operand = 1'b1;  
              second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
+             rd_sonraki_r = 5'b0;
         end  
         `LB_COZ        : begin
              FPU_en_sonraki = `DISABLE;
@@ -555,7 +573,8 @@ always@(*)begin
              immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
              reg_file_sec_r = `NONE_REGISTER;
              enable_first_operand  = 1'b0;
-             enable_second_operand = 1'b0;  
+             enable_second_operand = 1'b0;
+             rd_sonraki_r = 5'b0;  
         end  
         `BNE_COZ       : begin
              FPU_en_sonraki = `DISABLE;
@@ -606,7 +625,8 @@ always@(*)begin
              immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
              reg_file_sec_r = `NONE_REGISTER;
              enable_first_operand  = 1'b0;
-             enable_second_operand = 1'b0;  
+             enable_second_operand = 1'b0
+             rd_sonraki_r = 5'b0;  
         end  
         `BLTU_COZ      : begin
              FPU_en_sonraki = `DISABLE;
@@ -624,6 +644,7 @@ always@(*)begin
              reg_file_sec_r = `NONE_REGISTER;
              enable_first_operand  = 1'b0;
              enable_second_operand = 1'b0;  
+             rd_sonraki_r = 5'b0;
         end  
         `BGEU_COZ      : begin
              FPU_en_sonraki = `DISABLE;
@@ -640,7 +661,8 @@ always@(*)begin
              immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
              reg_file_sec_r = `NONE_REGISTER;
              enable_first_operand  = 1'b0;
-             enable_second_operand = 1'b0;  
+             enable_second_operand = 1'b0; 
+             rd_sonraki_r = 5'b0; 
         end  
         `LUI_COZ       : begin
              FPU_en_sonraki = `DISABLE;
@@ -1078,7 +1100,6 @@ always@(*)begin
              enable_first_operand  = 1'b0;
              enable_second_operand = 1'b1;
              operand2 = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
-
         end  
         `FMADD_S_COZ   : begin
              FPU_en_sonraki = `ENABLE;
@@ -2055,16 +2076,16 @@ always@(posedge clk_i)begin
           AU_en_sonraki          <= `DISABLE;
           BMU_en_sonraki         <= `DISABLE;
           MU_en_sonraki          <= `DISABLE;
-          islem_secimi_sonraki_r <= 5'bx;
-          shamt_sonraki_r        <= 5'bx;
-          rm_sonraki_r           <= 3'bx;
-          aq_sonraki_r           <= 1'bx;
-          rl_sonraki_r           <= 1'bx;
-          yurut_islem_secimi_o   <= 5'bx;
-          yurut_shamt_o          <= 5'bx;
-          yurut_rm_o             <= 3'bx;
-          yurut_aq_o             <= 1'bx;
-          yurut_rl_o             <= 1'bx;
+          islem_secimi_sonraki_r <= 5'b0;
+          shamt_sonraki_r        <= 5'b0;
+          rm_sonraki_r           <= 3'b0;
+          aq_sonraki_r           <= 1'b0;
+          rl_sonraki_r           <= 1'b0;
+          yurut_islem_secimi_o   <= 5'b0;
+          yurut_shamt_o          <= 5'b0;
+          yurut_rm_o             <= 3'b0;
+          yurut_aq_o             <= 1'b0;
+          yurut_rl_o             <= 1'b0;
           
     end
     else if (execute_working_info_i == `EXECUTE_IS_NOT_WORKING)begin
