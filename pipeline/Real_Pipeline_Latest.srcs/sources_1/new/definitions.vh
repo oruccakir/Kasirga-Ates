@@ -15,6 +15,18 @@
 `define ENABLE                  1'b1
 `define DISABLE                 1'b0
 
+// CONTROL SIGNALS FOR UNIT SELECTİON
+`define NO_UNIT                 10'b0000000000
+`define ENABLE_FPU              10'b0000000001
+`define ENABLE_ALU              10'b0000000010
+`define ENABLE_IMU              10'b0000000100
+`define ENABLE_IDU              10'b0000001000
+`define ENABLE_BRU              10'b0000010000
+`define ENABLE_CU               10'b0000100000
+`define ENABLE_CSU              10'b0001000000
+`define ENABLE_AU               10'b0010000000
+`define ENABLE_BMU              10'b0100000000
+`define ENABLE_MU               10'b1000000000
 
 // CONTROL SIGNALS FOR UNIT SELECTION 
 `define FLOATING_POINT_UNIT             4'h0
@@ -28,7 +40,7 @@
 `define BIT_MANIPULATION_UNIT           4'h8
 `define MEMORY_UNIT                     4'h9
 
-`define NO_UNIT                         4'ha
+//`define NO_UNIT                         4'ha
 
 // Control Signals for ALU operations
 `define ALU_ADD                 5'h0
