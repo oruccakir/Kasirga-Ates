@@ -3,14 +3,10 @@
 <!--                                                         -->
 <!-- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.   -->
 
-<<<<<<< HEAD
-<Project Version="7" Minor="39" Path="C:/Users/bbatu/Desktop/Teknofest-Ates-Processor-Design/pipeline/Real_Pipeline_Latest.xpr">
-=======
-<Project Version="7" Minor="39" Path="C:/Users/User/Desktop/Teknofest-Ates-Processor-Design/pipeline/Real_Pipeline_Latest.xpr">
->>>>>>> 7d00a5bfa9c8e51df3d456b51806f4529f04f460
+<Project Version="7" Minor="39" Path="C:/Users/bbatu/Desktop/Teknofest-Ates-Processor-Design/pipeline/Pipeline.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
-    <Option Name="Id" Val="e812e1ce2af24c6aa2bb79cb2596e260"/>
+    <Option Name="Id" Val="9770ce94215346039fafedb3c93f3bba"/>
     <Option Name="Part" Val="xc7k70tfbv676-1"/>
     <Option Name="CompiledLibDir" Val="$PCACHEDIR/compile_simlib"/>
     <Option Name="CompiledLibDirXSim" Val=""/>
@@ -35,7 +31,7 @@
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSAVendor" Val="xilinx"/>
     <Option Name="DSANumComputeUnits" Val="60"/>
-    <Option Name="WTXSimLaunchSim" Val="2644"/>
+    <Option Name="WTXSimLaunchSim" Val="146"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -63,183 +59,112 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/new/definitions.vh">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/definitions.vh">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/definitions.vh"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/ArithmeticLogicUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/ArithmeticLogicUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/ArithmeticLogicUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/BitManipulationUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/AtomicUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/BitManipulationUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/BranchResolverUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/BitManipulationUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/BranchResolverUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/ControlStatusUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/BranchResolverUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/ControlStatusUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/DecodeStep.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/ControlStatusUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/DecodeStep.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/Execute1Step.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/DecodeStep.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/Execute1Step.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/FetchStep.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/Execute1Step.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/FetchStep.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/FloatRegisterFile.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/FetchStep.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/FloatRegisterFile.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/FloatingPointUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/FloatRegisterFile.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/FloatingPointUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/GsharePredictor.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/FloatingPointUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/GsharePredictor.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/IntegerDivisionUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/GsharePredictor.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/IntegerDivisionUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/IntegerMultiplicationUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/IntegerDivisionUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/IntegerMultiplicationUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/IntegerRegisterFile.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/IntegerMultiplicationUnit.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/IntegerRegisterFile.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/MemoryStep.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/IntegerRegisterFile.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/MemoryStep.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/WriteBackStep.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/MemoryStep.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/WriteBackStep.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/Processor.v">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/Processor.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/AtomicUnit.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/AtomicUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/RippleCarryAdder32.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/RippleCarryAdder32.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/wallace.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/wallace.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -247,68 +172,91 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/MemoryUnit.v">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/MemoryUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/ControlUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/WriteBackStep.v">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/ControlUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/FloatingDivisionUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/Processor.v">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/FloatingDivisionUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/FloatingMultiplicationUnit.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/wallace.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/FloatingMultiplicationUnit.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/CsrRegisterFile.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/RippleCarryAdder32.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/CsrRegisterFile.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/functions.vh">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/ControlUnit.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/functions.vh"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/FloatingDivisionUnit.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/FloatingMultiplicationUnit.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/HelperMemory.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/MemoryUnit.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/functions.vh">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/HelperMemory.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sources_1/new/CsrRegisterFile.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sources_1/new/HelperMemory.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -327,16 +275,14 @@
     </FileSet>
     <FileSet Name="sim_1" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/sim_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sim_1/new/processor_tb.v">
+      <File Path="$PPRDIR/Real_Pipeline_Latest.srcs/sim_1/new/processor_tb.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Real Pipeline/KasirgaVerilogCopy.srcs/sim_1/new/processor_tb.v"/>
-          <Attr Name="ImportTime" Val="1714381107"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../Real Pipeline/processor_tb_behav.wcfg">
+      <File Path="$PPRDIR/processor_tb_behav.wcfg">
         <FileInfo>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
@@ -345,11 +291,10 @@
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="processor_tb"/>
         <Option Name="TopLib" Val="xil_defaultlib"/>
-        <Option Name="TopAutoSet" Val="TRUE"/>
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>
         <Option Name="SrcSet" Val="sources_1"/>
-        <Option Name="XSimWcfgFile" Val="$PPRDIR/../Real Pipeline/processor_tb_behav.wcfg"/>
+        <Option Name="XSimWcfgFile" Val="$PPRDIR/processor_tb_behav.wcfg"/>
       </Config>
     </FileSet>
     <FileSet Name="utils_1" Type="Utils" RelSrcDir="$PSRCDIR/utils_1">

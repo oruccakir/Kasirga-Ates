@@ -1,32 +1,23 @@
+
 // Purpose: Atomic unit for the execute stage of the pipeline.
 // Functionality: This module performs atomic operations.
 // File: AtomicUnit.v
-
-module AtomicUnit(
-   input                                            clk_i,                              // Clock signal            
-   input                                            rst_i,                              // Reset signal                                  
-   input                                            enable_atomic_unit_i,                // Start signal for the atomic unit                        
-   input                         [31:0]             operand1_i,                         // Operand 1                                    
-   input                         [31:0]             operand2_i,                         // Operand 2
-   input                         [2:0]              atomicOp_i,                         // Atomic operation (11 instr.) 
-   input                                            aq_i,
-   input                                            rl_i,                             
-   output                        [31:0]             calculated_memory_address_o,        // Calculated memory address                        
-   output                        [31:0]             calculated_result_o,                // Calculated result
-   output                                           extension_mode_o,                   // Extension mode  0: zero extension, 1: sign extension                        
-   output                        [2:0]              au_memory_operation_type_o,         // Memory operation type                    
-   output                                           register_type_selection_o,          // Register type selection                                
-   output            reg                            finished_o                          // Finished signal                                  
-    );
-
-/*
+include "definitions.vh";
 module AtomicUnit(
     input wire clk_i, // Clock input
     input wire rst_i, // Reset input
     input wire enable_i, // Enable input
+    input wire data_completed_i,
+    input wire [31:0] mem_address_i,
+    input wire [31:0] data_i,
+    input wire [31:0] mem_stored_data_i,
     input wire [4:0] atomicOp_i, // Atomic operation input
+    output wire [31:0] mem_address_o,
+    output wire [31:0] mem_data_o,
+    output wire [31:0] mem_data_for_writeback_o,
     output wire is_finished_o,  // finished output
-    output wire [31:0] result_o // result output
+    output wire write_enable_o, // goes to processor from there goes to helper memory
+    output wire read_enable_o   // read enable output goes to processor from there goes to memory
 );
 
 reg [31:0] result = 32'b0;
@@ -67,6 +58,5 @@ always@(posedge clk_i) begin
 end
 
 assign is_finished_o = is_finished;
-assign result_o = result;
-*/
+
 endmodule
