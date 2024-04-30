@@ -23,6 +23,9 @@ module Processor(
     
 );
 
+
+wire enable_memory_unit;
+wire enable_atomic_unit;
 wire decode_working_info;                                                             // working info for decode stage
 wire execute_working_info;                                                            // working info for execute stage
 wire memory_working_info;                                                             // working info for memeory stage
@@ -236,7 +239,9 @@ Execute1Step execute1(
    // .is_branch_predictor_true_o(),    to fetch
     .execute_busy_flag_o(execute_working_info),
     .forwarded_rd_o(forwarded_rd),
-    .forwarded_data_o(forwarded_data) 
+    .forwarded_data_o(forwarded_data),
+    .enable_memory_unit_o(enable_memory_unit),
+    .enable_atomic_unit_o(enable_atomic_unit) 
 );
 /*
 // Execute1 module
@@ -280,7 +285,8 @@ MemoryStep memory(
     .rst_i(rst_i),
     .data_i(data_i),
     .mem_address_i(memory_calculated_address),
-    //.unit_type_i(unit_type_to_memory),
+    .enable_memory_unit_i(enable_memory_unit),
+    .enable_atomic_unit_i(enable_atomic_unit),
     .data_completed_i(data_completed_i),
     .memOp_i(memory_operation_selection),
     .calculated_result_i(calculated_result),

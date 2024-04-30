@@ -190,6 +190,7 @@ ControlStatusUnit csu(
 
 always@(posedge clk_i) begin
     if(rst_i) begin
+        fo
         enable_atomic_unit_o<=1'b0;
         enable_memory_unit_o<=1'b0;
         rd_o<=5'b0;

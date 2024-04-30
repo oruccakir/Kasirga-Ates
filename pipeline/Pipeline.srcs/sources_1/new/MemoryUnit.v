@@ -1,6 +1,5 @@
-/*
-include "definitions.vh";
 
+include "definitions.vh";
 module MemoryUnit(
     input wire clk_i,        // clk_i input comes from processor
     input wire rst_i,        // rst_i input comes from processor
@@ -131,4 +130,3 @@ assign write_enable_o = write_enable;                // Assign write_enable, goe
 assign read_enable_o = read_enable;                  // Assign read_enable, goes to mempory
 assign mem_data_for_writeback_o = calculated_result; // Assign result for writeback step
 endmodule
-*/
