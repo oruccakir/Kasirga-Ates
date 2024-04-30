@@ -21,7 +21,7 @@ module MemoryStep (
     output wire [31:0] mem_data_o,                               // Memory data output goes to memory
     output wire [31:0] mem_address_o,                            // Memory address output goes to memory
     output wire [31:0] calculated_result_o,                      // calculated_result this will conveyed to writeback step
-    output wire memory_working_info_o,                           // memory working info, goes to execute step
+    output wire memory_state_o,                           // memory working info, goes to execute step
     output wire [4:0] rd_o,                                      // target register goes to writeback step
     output wire write_enable_o,                                  // goes to processor from there goes to helper memory
     output wire read_enable_o,                                   // read enable output goes to processor from there goes to memory
@@ -38,7 +38,7 @@ wire write_enable_next;                                           // write enabl
 wire read_enable_next;                                            // read enable next
 
 
-wire memory_working_info;                                          // Working info for memory step, goes to execute step
+wire memory_state;                                          // Working info for memory step, goes to execute step
 reg write_enable;                                                 // write info goes to memory
 reg read_enable;                                                  // read info goes to memory
 reg [31:0] mem_data;                                              // Memory data goes to memory
@@ -57,7 +57,7 @@ wire atomic_unit_working_info;
 assign memory_unit_working_info = (enable_memory_unit_i && ~finished_memory_unit);
 assign atomic_unit_working_info = (enable_atomic_unit_i && ~finished_atomic_unit);
 
-assign memory_working_info = memory_unit_working_info ||
+assign memory_state = memory_unit_working_info ||
                                 atomic_unit_working_info;
         
 
@@ -117,7 +117,7 @@ always @(posedge clk_i) begin
         register_selection <= `NONE_REGISTER;     register_selection_next <= `NONE_REGISTER;
     end
     else begin
-        if(memory_working_info == 1'b0) begin
+        if(memory_state == `COMPLETED) begin
             write_enable <= write_enable_next;
             read_enable <= read_enable_next;
             mem_address <= mem_address_next;
@@ -136,7 +136,7 @@ end
 assign mem_data_o = mem_data;                       // Assign the memory data, goes to memory
 assign mem_address_o = mem_address;                 // Assign the memory address, goes to memory
 assign calculated_result_o = calculated_result;     // Assign result info, goes to writeback step
-assign memory_working_info_o = memory_working_info; // Assign memory working info, goes to execute step
+assign memory_state_o = memory_state;               // Assign memory working info, goes to execute step
 assign rd_o = rd;                                   // Assign target register, goes to writeback step
 assign write_enable_o = write_enable;               // Assign write_enable, goes to memory
 assign read_enable_o = read_enable;                 // Assign read_enable, goes to mempory

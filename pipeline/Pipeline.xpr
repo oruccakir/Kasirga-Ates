@@ -31,7 +31,11 @@
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSAVendor" Val="xilinx"/>
     <Option Name="DSANumComputeUnits" Val="60"/>
+<<<<<<< HEAD
     <Option Name="WTXSimLaunchSim" Val="135"/>
+=======
+    <Option Name="WTXSimLaunchSim" Val="146"/>
+>>>>>>> 0bbf34292246e53d79aa6ca5f334422b6fb9396e
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
