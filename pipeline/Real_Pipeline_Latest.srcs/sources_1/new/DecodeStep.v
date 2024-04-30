@@ -8,23 +8,23 @@ module DecodeStep (
     input wire execute_working_info_i,     // is execute working
     
     //execute
-    input wire [ 4:0] forwarded_rd_i,
-    input wire [31:0] forwarded_data_i,
+    input wire [ 4:0] forwarded_rd_i,      // Veri yonlendirmesi Rd
+    input wire [31:0] forwarded_data_i,    // Veri yonlendirmmesi data
 
     //getir
-    input wire [31:0] getir_buyruk_i,       // Instruction input 
-    input wire [31:0] getir_ps_i,                // Program Counter input (?program sayac  uzunlugu)
+    input wire [31:0] getir_buyruk_i,      // Instruction input 
+    input wire [31:0] getir_ps_i,          // Program Counter input 
 
     //writeback 
     input wire [31:0] writeback_result_i,  // Writeback input
     input wire [ 4:0] writeback_address_i, // writeback_address input
 
-    //register file flags - 3 register file ??gerek olmayabilir
-    input wire write_integer_file_i,    // write IntegerRegisterFile
-    input wire write_float_file_i,      // write FloatRegisterFile
-    input wire write_csr_file_i,        // write CsrRegisterFile
+    //register file enable girisleri
+    input wire write_integer_file_i,       // write IntegerRegisterFile
+    input wire write_float_file_i,         // write FloatRegisterFile
+    input wire write_csr_file_i,           // write CsrRegisterFile
 
-    //Y r t - CSR buyruklar  ile ilgili i lemleri sonraya b rak yorum
+    //Yurut - CSR buyruklar  ile ilgili islemleri sonraya bırakıyorum
     output reg        yurut_FPU_en_o,
     output reg        yurut_ALU_en_o,
     output reg        yurut_IMU_en_o,
@@ -44,7 +44,7 @@ module DecodeStep (
     output reg [31:0] yurut_float_deger1_o,      // yurut birimi float girdileri
     output reg [31:0] yurut_float_deger2_o,   
     output reg [31:0] yurut_float_deger3_o,
-    output reg [31:0] yurut_mem_store_data_o,      // store buyruklar� icin rs2 degeri
+    output reg [31:0] yurut_mem_store_data_o,    // store buyruklar� icin rs2 degeri
     output reg [31:0] yurut_immidiate_o,         // immidiate value
     output reg [31:0] yurut_ps_yeni_o,           // Geriyaz'a kadar   kt lar
     output reg [ 4:0] yurut_rd_adres_o ,
@@ -55,33 +55,34 @@ module DecodeStep (
 );
 
 reg [31:0]  mem_stored_sonraki_r;
+reg [31:0]  first_operand;
+reg [31:0]  second_operand;
+reg [31:0]  immidiate_sonraki_r;     
+reg [31:0]  ps_yeni_sonraki_r;
 reg [ 4:0]  rd_sonraki_r;
 reg [ 1:0]  reg_file_sec_r;
 reg [ 4:0]  islem_secimi_sonraki_r;
 reg [ 4:0]  shamt_sonraki_r;
-reg [ 2:0]  rm_sonraki_r;
-reg [31:0]  first_operand;
-reg [31:0]  second_operand;
-reg [31:0]  immidiate_sonraki_r;     
-reg [31:0]  ps_yeni_sonraki_r;       
+reg [ 2:0]  rm_sonraki_r;       
 reg [ 4:0]  rd_adres_sonraki_r;
-reg         FPU_en_sonraki;
-reg         ALU_en_sonraki;
-reg         IMU_en_sonraki;
-reg         IDU_en_sonraki;
-reg         BRU_en_sonraki;
-reg         CU_en_sonraki;
-reg         CSU_en_sonraki;
-reg         AU_en_sonraki;
-reg         BMU_en_sonraki;
-reg         MU_en_sonraki;
-reg         aq_sonraki_r;
-reg         rl_sonraki_r;
-reg         enable_first_operand;
-reg         enable_second_operand;
-reg         change_reg_state_r;
 reg [ 4:0]  rs1;
 reg [ 4:0]  rs2;
+reg [ 9:0] unit_selection_r;
+reg         FPU_en_sonraki_r;
+reg         ALU_en_sonraki_r;
+reg         IMU_en_sonraki_r;
+reg         IDU_en_sonraki_r;
+reg         BRU_en_sonraki_r;
+reg         CU_en_sonraki_r;
+reg         CSU_en_sonraki_r;
+reg         AU_en_sonraki_r;
+reg         BMU_en_sonraki_r;
+reg         MU_en_sonraki_r;
+reg         aq_sonraki_r;
+reg         rl_sonraki_r;
+reg         enable_first_operand_r;
+reg         enable_second_operand_r;
+reg         change_reg_state_r;
 
 wire [31:0] integer_deger1_sonraki_r;
 wire [31:0] integer_deger2_sonraki_r;
@@ -96,17 +97,14 @@ wire        data_forwarding_rs2;
 wire        decode_next_instruction;
 wire        data_dependency_rs1;
 wire        data_dependency_rs2;
+wire[`BIT_SAYISI_COZ-1:0] buyruk_w = {getir_buyruk_i[31:27], getir_buyruk_i[25:20], getir_buyruk_i[14:12], getir_buyruk_i[6:2]};
 
 assign data_forwarding_rs1 = ((forwarded_rd_i == rs1 ) && (forwarded_rd_i != 0));
 assign data_forwarding_rs2 = ((forwarded_rd_i == rs2 ) && (forwarded_rd_i != 0));
-
 assign data_dependency_rs1 = ((rs1_state == `WRITING_IN_PROGRESS) && rs1 != rd_sonraki_r);
 assign data_dependency_rs2 = ((rs2_state == `WRITING_IN_PROGRESS) && rs2 != rd_sonraki_r);
-
 assign decode_next_instruction = ((execute_working_info_i == 1'b0) && (data_dependency_rs1 == 1'b0) && (data_dependency_rs2 == 1'b0));
 assign decode_working_info_o = ~decode_next_instruction;
-
-wire[`BIT_SAYISI_COZ-1:0] buyruk_w = {getir_buyruk_i[31:27], getir_buyruk_i[25:20], getir_buyruk_i[14:12], getir_buyruk_i[6:2]};
 
 IntegerRegisterFile IRF (
     .clk_i(clk_i),
@@ -141,61 +139,62 @@ FloatRegisterFile FRF(
 
 always@(posedge clk_i)begin
     if(rst_i) begin
-          yurut_FPU_en_o         <= `DISABLE;
-          yurut_ALU_en_o         <= `DISABLE;
-          yurut_IMU_en_o         <= `DISABLE;
-          yurut_IDU_en_o         <= `DISABLE;
-          yurut_BRU_en_o         <= `DISABLE;
-          yurut_CSU_en_o         <= `DISABLE;
-          yurut_AU_en_o          <= `DISABLE;
-          yurut_BMU_en_o         <= `DISABLE;
-          yurut_MU_en_o          <= `DISABLE;
-          FPU_en_sonraki         <= `DISABLE;
-          ALU_en_sonraki         <= `DISABLE;
-          IMU_en_sonraki         <= `DISABLE;
-          IDU_en_sonraki         <= `DISABLE;
-          BRU_en_sonraki         <= `DISABLE;
-          CSU_en_sonraki         <= `DISABLE;
-          AU_en_sonraki          <= `DISABLE;
-          BMU_en_sonraki         <= `DISABLE;
-          MU_en_sonraki          <= `DISABLE;
-          change_reg_state_r     <= 1'b0;
-          islem_secimi_sonraki_r <= 5'b0;
-          shamt_sonraki_r        <= 5'b0;
-          rm_sonraki_r           <= 3'b0;
-          aq_sonraki_r           <= 1'b0;
-          rl_sonraki_r           <= 1'b0;
-          yurut_islem_secimi_o   <= 5'b0;
-          yurut_shamt_o          <= 5'b0;
-          yurut_rm_o             <= 3'b0;
-          yurut_aq_o             <= 1'b0;
-          yurut_rl_o             <= 1'b0;
-          rs1                    <= 5'b0;
-          rs2                    <= 5'b0;
+          yurut_FPU_en_o           <= `DISABLE;
+          yurut_ALU_en_o           <= `DISABLE;
+          yurut_IMU_en_o           <= `DISABLE;
+          yurut_IDU_en_o           <= `DISABLE;
+          yurut_BRU_en_o           <= `DISABLE;
+          yurut_CSU_en_o           <= `DISABLE;
+          yurut_AU_en_o            <= `DISABLE;
+          yurut_BMU_en_o           <= `DISABLE;
+          yurut_MU_en_o            <= `DISABLE;
+          FPU_en_sonraki_r         <= `DISABLE;
+          ALU_en_sonraki_r         <= `DISABLE;
+          IMU_en_sonraki_r         <= `DISABLE;
+          IDU_en_sonraki_r         <= `DISABLE;
+          BRU_en_sonraki_r         <= `DISABLE;
+          CSU_en_sonraki_r         <= `DISABLE;
+          AU_en_sonraki_r          <= `DISABLE;
+          BMU_en_sonraki_r         <= `DISABLE;
+          MU_en_sonraki_r          <= `DISABLE;
           writeback_reg_file_sec_o <= `NONE_REGISTER;
-          yurut_rd_adres_o       <= 5'b0;
-          yurut_ps_yeni_o        <= 32'b0;
-          yurut_immidiate_o      <= 32'b0;
-          yurut_mem_store_data_o <= 32'b0;
-          reg_file_sec_r         <= `NONE_REGISTER;
-          yurut_integer_deger1_o <= 32'b0;
-          yurut_integer_deger2_o <= 32'b0;
-          rd_sonraki_r           <= 5'b0;
-          ps_yeni_sonraki_r      <= 32'b0;
-          immidiate_sonraki_r    <= 32'b0;
-          mem_stored_data_o      <= 32'b0;
-          mem_stored_sonraki_r   <= 32'b0;
+          reg_file_sec_r           <= `NONE_REGISTER;
+          unit_selection_r         <= 10'b0;
+          change_reg_state_r       <= 1'b0;
+          islem_secimi_sonraki_r   <= 5'b0;
+          shamt_sonraki_r          <= 5'b0;
+          rm_sonraki_r             <= 3'b0;
+          aq_sonraki_r             <= 1'b0;
+          rl_sonraki_r             <= 1'b0;
+          yurut_islem_secimi_o     <= 5'b0;
+          yurut_shamt_o            <= 5'b0;
+          yurut_rm_o               <= 3'b0;
+          yurut_aq_o               <= 1'b0;
+          yurut_rl_o               <= 1'b0;
+          rs1                      <= 5'b0;
+          rs2                      <= 5'b0;    
+          yurut_rd_adres_o         <= 5'b0;
+          rd_sonraki_r             <= 5'b0;
+          yurut_ps_yeni_o          <= 32'b0;
+          yurut_immidiate_o        <= 32'b0;
+          yurut_mem_store_data_o   <= 32'b0;
+          yurut_integer_deger1_o   <= 32'b0;
+          yurut_integer_deger2_o   <= 32'b0;
+          ps_yeni_sonraki_r        <= 32'b0;
+          immidiate_sonraki_r      <= 32'b0;
+          mem_stored_data_o        <= 32'b0;
+          mem_stored_sonraki_r     <= 32'b0;
     end
     else if (decode_next_instruction)begin
-        yurut_FPU_en_o           <= FPU_en_sonraki;
-        yurut_ALU_en_o           <= ALU_en_sonraki;
-        yurut_IMU_en_o           <= IMU_en_sonraki;
-        yurut_IDU_en_o           <= IDU_en_sonraki;
-        yurut_BRU_en_o           <= BRU_en_sonraki;
-        yurut_CSU_en_o           <= CSU_en_sonraki;
-        yurut_AU_en_o            <= AU_en_sonraki;
-        yurut_BMU_en_o           <= BMU_en_sonraki;
-        yurut_MU_en_o            <= MU_en_sonraki;
+        yurut_FPU_en_o           <= FPU_en_sonraki_r;
+        yurut_ALU_en_o           <= ALU_en_sonraki_r;
+        yurut_IMU_en_o           <= IMU_en_sonraki_r;
+        yurut_IDU_en_o           <= IDU_en_sonraki_r;
+        yurut_BRU_en_o           <= BRU_en_sonraki_r;
+        yurut_CSU_en_o           <= CSU_en_sonraki_r;
+        yurut_AU_en_o            <= AU_en_sonraki_r;
+        yurut_BMU_en_o           <= BMU_en_sonraki_r;
+        yurut_MU_en_o            <= MU_en_sonraki_r;
         yurut_islem_secimi_o     <= islem_secimi_sonraki_r;
         yurut_shamt_o            <= shamt_sonraki_r;
         yurut_rm_o               <= rm_sonraki_r;
@@ -204,8 +203,8 @@ always@(posedge clk_i)begin
         yurut_immidiate_o        <= immidiate_sonraki_r;
         yurut_ps_yeni_o          <= ps_yeni_sonraki_r;
         yurut_rd_adres_o         <= rd_sonraki_r; 
-        yurut_integer_deger1_o   <= (enable_first_operand ) ? first_operand  : (data_forwarding_rs1) ? forwarded_data_i : integer_deger1_sonraki_r;
-        yurut_integer_deger2_o   <= (enable_second_operand) ? second_operand : (data_forwarding_rs2) ? forwarded_data_i : integer_deger2_sonraki_r;
+        yurut_integer_deger1_o   <= (enable_first_operand_r ) ? first_operand  : (data_forwarding_rs1) ? forwarded_data_i : integer_deger1_sonraki_r;
+        yurut_integer_deger2_o   <= (enable_second_operand_r) ? second_operand : (data_forwarding_rs2) ? forwarded_data_i : integer_deger2_sonraki_r;
         yurut_float_deger1_o     <= float_deger1_sonraki_r;
         yurut_float_deger2_o     <= float_deger2_sonraki_r;
         yurut_float_deger3_o     <= float_deger3_sonraki_r;
@@ -220,2026 +219,994 @@ end
 
 always@(*)begin
     mem_stored_sonraki_r = integer_deger2_sonraki_r;
-    ps_yeni_sonraki_r = getir_ps_i;
-    rd_sonraki_r = getir_buyruk_i[11:7];
-    rs1 = getir_buyruk_i[19:15];
-    rs2 = getir_buyruk_i[24:20];
+    ps_yeni_sonraki_r    = getir_ps_i;
+    rd_sonraki_r         = getir_buyruk_i[11:7];
+    rs1                  = getir_buyruk_i[19:15];
+    rs2                  = getir_buyruk_i[24:20];
     casez (buyruk_w)
         `NOP_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;
-             islem_secimi_sonraki_r = `NOP;
-             reg_file_sec_r = `NONE_REGISTER;
-             rd_sonraki_r = 5'b0;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `NO_UNIT;
+             islem_secimi_sonraki_r   = `NOP;
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0;
         end
         `ADD_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;
-             islem_secimi_sonraki_r = `ALU_ADD;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;  
+             unit_selection_r         = `ENABLE_ALU;
+             islem_secimi_sonraki_r   = `ALU_ADD;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;  
         end  
         `SUB_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;
-             islem_secimi_sonraki_r = `ALU_SUB;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `ENABLE;  
+             unit_selection_r         = `ENABLE_ALU;
+             islem_secimi_sonraki_r   = `ALU_SUB;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `ENABLE;   
          end  
         `SLL_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;
-             islem_secimi_sonraki_r = `ALU_SLL;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE; 
+             unit_selection_r         = `ENABLE_ALU;
+             islem_secimi_sonraki_r   = `ALU_SLL;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE; 
         end  
         `SLT_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SLT;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SLT;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end     
         `SLTU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SLTU;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SLTU;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `XOR_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_XOR;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;      
+             islem_secimi_sonraki_r   = `ALU_XOR;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `SRL_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SRL;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;      
+             islem_secimi_sonraki_r   = `ALU_SRL;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SRA_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SRA;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SRA;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `OR_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_OR;                                 
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;      
+             islem_secimi_sonraki_r   = `ALU_OR;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `AND_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_AND;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE; 
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_AND;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE; 
         end  
         `ADDI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_ADDI;       
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;      
+             islem_secimi_sonraki_r   = `ALU_ADDI;       
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SLTI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SLTI;       
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SLTI;       
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SLTIU_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SLTIU;      
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE; 
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SLTIU;      
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE; 
         end  
         `XORI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_XORI;       
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_XORI;       
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `ORI_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_ORI;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_ORI;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `ANDI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;      
-             islem_secimi_sonraki_r = `ALU_ANDI;       
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE; 
+             unit_selection_r         = `ENABLE_ALU;      
+             islem_secimi_sonraki_r   = `ALU_ANDI;       
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE; 
         end  
         `SLLI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SLLI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SLLI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SRLI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SRLI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_SRLI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SRAI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_SRAI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;      
+             islem_secimi_sonraki_r   = `ALU_SRAI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SB_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_SB;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `ENABLE;
-             second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
-             rd_sonraki_r = 5'b0;
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_MU;                 
+             islem_secimi_sonraki_r   = `MEM_SB;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `ENABLE;
+             second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0;
+             
         end  
         `SH_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;
-             islem_secimi_sonraki_r = `MEM_SH;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `ENABLE;
-             second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
-             rd_sonraki_r = 5'b0;  
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_MU;
+             islem_secimi_sonraki_r   = `MEM_SH;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `ENABLE;
+             second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]}; 
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0; 
         end  
         `SW_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_SW;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `ENABLE;  
-             second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
-             rd_sonraki_r = 5'b0;
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_MU;                
+             islem_secimi_sonraki_r   = `MEM_SW;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `ENABLE;  
+             second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0;
         end  
         `LB_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_LB;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE; 
+             unit_selection_r         = `ENABLE_MU;                
+             islem_secimi_sonraki_r   = `MEM_LB;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE; 
         end  
         `LH_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_LH;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_MU;                 
+             islem_secimi_sonraki_r   = `MEM_LH;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `LW_COZ        : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_LW;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_MU;                
+             islem_secimi_sonraki_r   = `MEM_LW;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `ENABLE;
         end  
         `LBU_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_LBU;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_MU;               
+             islem_secimi_sonraki_r   = `MEM_LBU;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `LHU_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `ENABLE;                 
-             islem_secimi_sonraki_r = `MEM_LHU;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_MU;                 
+             islem_secimi_sonraki_r   = `MEM_LHU;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `BEQ_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;        
-             islem_secimi_sonraki_r = `BR_BEQ;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             rd_sonraki_r = 5'b0;  
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_BRU;        
+             islem_secimi_sonraki_r   = `BR_BEQ;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0;
         end  
         `BNE_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `BR_BNE;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_BRU;        
+             islem_secimi_sonraki_r   = `BR_BNE;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `DISABLE;
         end  
         `BLT_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `BR_BLT;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_BRU;         
+             islem_secimi_sonraki_r   = `BR_BLT;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `DISABLE;
         end  
         `BGE_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;        
-             islem_secimi_sonraki_r = `BR_BGE;         
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             rd_sonraki_r = 5'b0;  
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_BRU;       
+             islem_secimi_sonraki_r   = `BR_BGE;         
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0;
         end  
         `BLTU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `BR_BLTU;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             rd_sonraki_r = 5'b0;
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_BRU;         
+             islem_secimi_sonraki_r   = `BR_BLTU;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0;
         end  
         `BGEU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `BR_BGEU;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             rd_sonraki_r = 5'b0; 
-             change_reg_state_r    = `DISABLE;
+             unit_selection_r         = `ENABLE_BRU;         
+             islem_secimi_sonraki_r   = `BR_BGEU;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[7], getir_buyruk_i[30:25], getir_buyruk_i[11: 8], 1'b0};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `DISABLE;
+             rd_sonraki_r             = 5'b0; 
         end  
         `LUI_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_LUI;        
-             immidiate_sonraki_r = {getir_buyruk_i[31:12], 12'b0};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `ENABLE;
-             second_operand = {getir_buyruk_i[31:12], 12'b0};
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_LUI;        
+             immidiate_sonraki_r      = {getir_buyruk_i[31:12], 12'b0};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `ENABLE;
+             second_operand           = {getir_buyruk_i[31:12], 12'b0};
+             change_reg_state_r       = `ENABLE;
         end  
         `AUIPC_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `ENABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `ALU_AUIPC;      
-             immidiate_sonraki_r = {getir_buyruk_i[31:12], 12'b0};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `ENABLE;
-             enable_second_operand = `ENABLE;
-             first_operand  = getir_ps_i;
-             second_operand = {getir_buyruk_i[31:12], 12'b0};
-             change_reg_state_r    = `ENABLE;  
+             unit_selection_r         = `ENABLE_ALU;       
+             islem_secimi_sonraki_r   = `ALU_AUIPC;      
+             immidiate_sonraki_r      = {getir_buyruk_i[31:12], 12'b0};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `ENABLE;
+             enable_second_operand_r  = `ENABLE;
+             change_reg_state_r       = `ENABLE;
+             first_operand            = getir_ps_i;
+             second_operand           = {getir_buyruk_i[31:12], 12'b0};     
         end  
         `JAL_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;        
-             islem_secimi_sonraki_r = `BR_JAL;         
-             immidiate_sonraki_r = {{12{getir_buyruk_i[31]}}, getir_buyruk_i[19:12], getir_buyruk_i[20], getir_buyruk_i[30:21], 1'b0};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `ENABLE;
-             enable_second_operand = `ENABLE;  
-             first_operand  = getir_ps_i;
-             second_operand = 'd4;
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BRU;       
+             islem_secimi_sonraki_r   = `BR_JAL;         
+             immidiate_sonraki_r      = {{12{getir_buyruk_i[31]}}, getir_buyruk_i[19:12], getir_buyruk_i[20], getir_buyruk_i[30:21], 1'b0};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `ENABLE;
+             enable_second_operand_r  = `ENABLE;
+             change_reg_state_r       = `ENABLE;  
+             first_operand            = getir_ps_i;
+             second_operand           = 'd4;
         end  
         `JALR_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `ENABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;        
-             islem_secimi_sonraki_r = `BR_JALR;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `ENABLE;
-             enable_second_operand = `ENABLE;  
-             first_operand  = getir_ps_i;
-             second_operand = 'd4; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BRU;        
+             islem_secimi_sonraki_r   = `BR_JALR;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `ENABLE;
+             enable_second_operand_r  = `ENABLE;  
+             change_reg_state_r       = `ENABLE;
+             first_operand            = getir_ps_i;
+             second_operand           = 'd4; 
+             
         end  
         `MUL_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `ENABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE; 
-             islem_secimi_sonraki_r = `INT_MUL;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IMU; 
+             islem_secimi_sonraki_r   = `INT_MUL;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MULH_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `ENABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE; 
-             islem_secimi_sonraki_r = `INT_MULH;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IMU;
+             islem_secimi_sonraki_r   = `INT_MULH;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MULHSU_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `ENABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE; 
-             islem_secimi_sonraki_r = `INT_MULHSU;                             
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IMU;
+             islem_secimi_sonraki_r   = `INT_MULHSU;                             
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MULHU_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `ENABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE; 
-             islem_secimi_sonraki_r = `INT_MULHU;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IMU;
+             islem_secimi_sonraki_r   = `INT_MULHU;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `DIV_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `ENABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `INT_DIV;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IDU;      
+             islem_secimi_sonraki_r   = `INT_DIV;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `DIVU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `ENABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;      
-             islem_secimi_sonraki_r = `INT_DIVU;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IDU;      
+             islem_secimi_sonraki_r   = `INT_DIVU;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `REM_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `ENABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `INT_REM;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IDU;       
+             islem_secimi_sonraki_r   = `INT_REM;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `REMU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `ENABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `INT_REMU;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_IDU;       
+             islem_secimi_sonraki_r   = `INT_REMU;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `LR_W_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_LR_W;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;               
+             islem_secimi_sonraki_r   = `ATOM_LR_W;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `SC_W_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                
-             islem_secimi_sonraki_r = `ATOM_SC_W;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                
+             islem_secimi_sonraki_r   = `ATOM_SC_W;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOSWAP_W_COZ : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOSWAP_W;                         
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                
+             islem_secimi_sonraki_r   = `ATOM_AMOSWAP_W;                         
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOADD_W_COZ  : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOADD_W;                          
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                 
+             islem_secimi_sonraki_r   = `ATOM_AMOADD_W;                          
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOXOR_W_COZ  : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOXOR_W;                          
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                 
+             islem_secimi_sonraki_r   = `ATOM_AMOXOR_W;                          
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOAND_W_COZ  : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOAND_W;                          
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                
+             islem_secimi_sonraki_r   = `ATOM_AMOAND_W;                          
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOOR_W_COZ   : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOOR_W;                           
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                
+             islem_secimi_sonraki_r   = `ATOM_AMOOR_W;                           
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOMIN_W_COZ  : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOMIN_W;                         
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                 
+             islem_secimi_sonraki_r   = `ATOM_AMOMIN_W;                         
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOMAX_W_COZ  : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOMAX_W;                          
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                
+             islem_secimi_sonraki_r   = `ATOM_AMOMAX_W;                          
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOMINU_W_COZ : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOMINU_W;                         
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26]; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                 
+             islem_secimi_sonraki_r   = `ATOM_AMOMINU_W;                         
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26]; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `AMOMAXU_W_COZ : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `ENABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;                 
-             islem_secimi_sonraki_r = `ATOM_AMOMAXU_W;                         
-             reg_file_sec_r = `INTEGER_REGISTER;
-             rl_sonraki_r = getir_buyruk_i[25];
-             aq_sonraki_r = getir_buyruk_i[26];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_AU;                
+             islem_secimi_sonraki_r   = `ATOM_AMOMAXU_W;                         
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             rl_sonraki_r             = getir_buyruk_i[25];
+             aq_sonraki_r             = getir_buyruk_i[26];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `FLW_COZ       : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FLW;        
-             immidiate_sonraki_r = getir_buyruk_i[31:20]; 
-             reg_file_sec_r = `FLOAT_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;         
+             islem_secimi_sonraki_r   = `FLT_FLW;        
+             immidiate_sonraki_r      = getir_buyruk_i[31:20]; 
+             reg_file_sec_r           = `FLOAT_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FSW_COZ       : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FSW;        
-             immidiate_sonraki_r = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
-             reg_file_sec_r = `NONE_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `ENABLE;
-             second_operand = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FSW;        
+             immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};  
+             reg_file_sec_r           = `NONE_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `ENABLE;
+             second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
         end  
         `FMADD_S_COZ   : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMADD_S;                            
-             reg_file_sec_r = `FLOAT_REGISTER; 
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
+             unit_selection_r         = `ENABLE_FPU;         
+             islem_secimi_sonraki_r   = `FLT_FMADD_S;                            
+             reg_file_sec_r           = `FLOAT_REGISTER; 
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
         end  
         `FMSUB_S_COZ   : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMSUB_S;                            
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12]; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;         
+             islem_secimi_sonraki_r   = `FLT_FMSUB_S;                            
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12]; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FNMSUB_S_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FNMSUB_S;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FNMSUB_S;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FNMADD_S_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FNMADD_S;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FNMADD_S;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FADD_S_COZ    : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FADD_S;                             
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;       
+             islem_secimi_sonraki_r   = `FLT_FADD_S;                             
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
          end  
         `FSUB_S_COZ    : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FSUB_S;                             
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FSUB_S;                             
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FMUL_S_COZ    : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMUL_S;                             
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12]; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FMUL_S;                             
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12]; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FDIV_S_COZ    : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FDIV_S;                             
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FDIV_S;                             
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FSQRT_S_COZ   : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FSQRT_S;                            
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FSQRT_S;                            
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FSGNJ_S_COZ   : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FSGNJ_S;                            
-             reg_file_sec_r = `FLOAT_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FSGNJ_S;                            
+             reg_file_sec_r           = `FLOAT_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FSGNJN_S_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FSGNJN_S;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FSGNJN_S;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FSGNJX_S_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FSGNJX_S;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FSGNJX_S;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FMIN_S_COZ    : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMIN_S;                             
-             reg_file_sec_r = `FLOAT_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;          
+             islem_secimi_sonraki_r   = `FLT_FMIN_S;                             
+             reg_file_sec_r           = `FLOAT_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FMAX_S_COZ    : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMAX_S;                             
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FMAX_S;                             
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FCVT_W_S_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FCVT_W_S;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FCVT_W_S;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FCVT_WU_S_COZ : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FCVT_WU_S;                          
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;         
+             islem_secimi_sonraki_r   = `FLT_FCVT_WU_S;                          
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FMV_X_W_COZ   : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMV_X_W;                            
-             reg_file_sec_r = `FLOAT_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FMV_X_W;                            
+             reg_file_sec_r           = `FLOAT_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FEQ_S_COZ     : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FEQ_S;                              
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;         
+             islem_secimi_sonraki_r   = `FLT_FEQ_S;                              
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FLT_S_COZ     : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FLT_S;                              
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;   
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FLT_S;                              
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;   
         end  
         `FLE_S_COZ     : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FLE_S;                              
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;       
+             islem_secimi_sonraki_r   = `FLT_FLE_S;                              
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FCLASS_S_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FCLASS_S;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FCLASS_S;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FCVT_S_W_COZ  : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FCVT_S_W;                           
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;         
+             islem_secimi_sonraki_r   = `FLT_FCVT_S_W;                           
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FCVT_S_WU_COZ : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FCVT_S_WU;                          
-             reg_file_sec_r = `FLOAT_REGISTER;
-             rm_sonraki_r = getir_buyruk_i[12];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FCVT_S_WU;                          
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             rm_sonraki_r             = getir_buyruk_i[12];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `FMV_W_X_COZ   : begin
-             FPU_en_sonraki = `ENABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `DISABLE;
-             MU_en_sonraki  = `DISABLE;         
-             islem_secimi_sonraki_r = `FLT_FMV_W_X;                            
-             reg_file_sec_r = `FLOAT_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;    
+             unit_selection_r         = `ENABLE_FPU;        
+             islem_secimi_sonraki_r   = `FLT_FMV_W_X;                            
+             reg_file_sec_r           = `FLOAT_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;    
         end  
         `ANDN_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_ANDN;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
-        end  
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_ANDN;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
+        end   
         `CLMUL_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_CLMUL;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE; 
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_CLMUL;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE; 
         end  
         `CLMULH_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_CLMULH;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_CLMULH;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `CLMULR_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_CLMULR;                              
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_CLMULR;                              
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `CLZ_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_CLZ;                                 
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_CLZ;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `CPOP_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_CPOP;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_CPOP;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `CTZ_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_CTZ;                                 
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;     
+             islem_secimi_sonraki_r   = `BT_CTZ;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MAX_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;      
-             islem_secimi_sonraki_r = `BT_MAX;                                 
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_MAX;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MAXU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_MAXU;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_MAXU;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MIN_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_MIN;                                 
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_MIN;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `MINU_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_MINU;                                
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_MINU;                                
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `ORC_B_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_ORC_B;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_ORC_B;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `ORN_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_ORN;                                 
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_ORN;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `REV8_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_REV8;                                
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_REV8;                                
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `ROL_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;      
-             islem_secimi_sonraki_r = `BT_ROL;                                 
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;     
+             islem_secimi_sonraki_r   = `BT_ROL;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `ROR_COZ       : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_ROR;                                 
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_ROR;                                 
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `RORI_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_RORI;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_RORI;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `ENABLE;
         end  
         `BCLR_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BCLR;                                
-             reg_file_sec_r = `INTEGER_REGISTER;  
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             change_reg_state_r    = `ENABLE;
-        end  
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_BCLR;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;  
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `ENABLE;
+        end    
         `BCLRI_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BCLRI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_BCLRI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `BEXT_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BEXT;                                
-             reg_file_sec_r = `INTEGER_REGISTER;  
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_BEXT;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;  
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `ENABLE;
         end  
         `BEXTI_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BEXTI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_BEXTI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `BINV_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BINV;                                
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE; 
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_BINV;                                
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE; 
+             change_reg_state_r       = `ENABLE;
         end  
         `BINVI_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BINVI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_BINVI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `BSET_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BSET;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;    
+             islem_secimi_sonraki_r   = `BT_BSET;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `BSETI_COZ     : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_BSETI;                               
-             reg_file_sec_r = `INTEGER_REGISTER;
-             shamt_sonraki_r = getir_buyruk_i[24:20];
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;     
+             islem_secimi_sonraki_r   = `BT_BSETI;                               
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             shamt_sonraki_r          = getir_buyruk_i[24:20];
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SEXT_B_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_SEXT_B;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_SEXT_B;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SEXT_H_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_SEXT_H;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_SEXT_H;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SH1ADD_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_SH1ADD;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_SH1ADD;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SH2ADD_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_SH2ADD;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_SH2ADD;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `SH3ADD_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_SH3ADD;                              
-             reg_file_sec_r = `INTEGER_REGISTER; 
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_SH3ADD;                              
+             reg_file_sec_r           = `INTEGER_REGISTER; 
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;
+             change_reg_state_r       = `ENABLE;
         end  
         `XNOR_COZ      : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_XNOR;                                
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;      
+             islem_secimi_sonraki_r   = `BT_XNOR;                                
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         `ZEXT_H_COZ    : begin
-             FPU_en_sonraki = `DISABLE;
-             ALU_en_sonraki = `DISABLE;
-             IMU_en_sonraki = `DISABLE;
-             IDU_en_sonraki = `DISABLE;
-             BRU_en_sonraki = `DISABLE;
-             CU_en_sonraki  = `DISABLE;
-             CSU_en_sonraki = `DISABLE;
-             AU_en_sonraki  = `DISABLE;
-             BMU_en_sonraki = `ENABLE;
-             MU_en_sonraki  = `DISABLE;       
-             islem_secimi_sonraki_r = `BT_ZEXT_H;                              
-             reg_file_sec_r = `INTEGER_REGISTER;
-             enable_first_operand  = `DISABLE;
-             enable_second_operand = `DISABLE;  
-             change_reg_state_r    = `ENABLE;
+             unit_selection_r         = `ENABLE_BMU;       
+             islem_secimi_sonraki_r   = `BT_ZEXT_H;                              
+             reg_file_sec_r           = `INTEGER_REGISTER;
+             enable_first_operand_r   = `DISABLE;
+             enable_second_operand_r  = `DISABLE;  
+             change_reg_state_r       = `ENABLE;
         end  
         default        : begin
           yurut_FPU_en_o         <= `DISABLE;
@@ -2255,6 +1222,17 @@ always@(*)begin
         end 
         
     endcase
+     FPU_en_sonraki_r    = unit_selection_r[0];
+     ALU_en_sonraki_r    = unit_selection_r[1];
+     IMU_en_sonraki_r    = unit_selection_r[2];
+     IDU_en_sonraki_r    = unit_selection_r[3];
+     BRU_en_sonraki_r    = unit_selection_r[4];
+     CU_en_sonraki_r     = unit_selection_r[5];
+     CSU_en_sonraki_r    = unit_selection_r[6];
+     AU_en_sonraki_r     = unit_selection_r[7];
+     BMU_en_sonraki_r    = unit_selection_r[8];
+     MU_en_sonraki_r     = unit_selection_r[9];
+
     
 end
 
