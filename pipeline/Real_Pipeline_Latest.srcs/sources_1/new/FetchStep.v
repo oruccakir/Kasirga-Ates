@@ -109,6 +109,9 @@ always @(posedge clk_i) begin
         ps <= 'h8000_0000;
         dallanma_tahmini_gecerli <= 0;
         bellek_istek_o <= 1;
+        coz_buyruk_o <= 32'b0;
+        coz_buyruk_gecerli_o <= 1'b0;
+        coz_ps_o <= 32'b0;
     end
     else begin
         if (buyruk_gecerli && coz_bos_i) begin

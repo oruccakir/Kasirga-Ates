@@ -49,10 +49,12 @@ module DecodeStep (
     output reg [31:0] yurut_ps_yeni_o,           // Geriyaz'a kadar   kt lar
     output reg [ 4:0] yurut_rd_adres_o ,
     output reg [ 1:0] writeback_reg_file_sec_o,
-    output wire       decode_working_info_o
+    output wire       decode_working_info_o,
+    output reg [31:0] mem_stored_data_o
             
 );
 
+reg [31:0]  mem_stored_sonraki_r;
 reg [ 4:0]  rd_sonraki_r;
 reg [ 1:0]  reg_file_sec_r;
 reg [ 4:0]  islem_secimi_sonraki_r;
@@ -136,7 +138,89 @@ FloatRegisterFile FRF(
     .read_data3_o(float_deger3_sonraki_r)
 );
 
+
+always@(posedge clk_i)begin
+    if(rst_i) begin
+          yurut_FPU_en_o         <= `DISABLE;
+          yurut_ALU_en_o         <= `DISABLE;
+          yurut_IMU_en_o         <= `DISABLE;
+          yurut_IDU_en_o         <= `DISABLE;
+          yurut_BRU_en_o         <= `DISABLE;
+          yurut_CSU_en_o         <= `DISABLE;
+          yurut_AU_en_o          <= `DISABLE;
+          yurut_BMU_en_o         <= `DISABLE;
+          yurut_MU_en_o          <= `DISABLE;
+          FPU_en_sonraki         <= `DISABLE;
+          ALU_en_sonraki         <= `DISABLE;
+          IMU_en_sonraki         <= `DISABLE;
+          IDU_en_sonraki         <= `DISABLE;
+          BRU_en_sonraki         <= `DISABLE;
+          CSU_en_sonraki         <= `DISABLE;
+          AU_en_sonraki          <= `DISABLE;
+          BMU_en_sonraki         <= `DISABLE;
+          MU_en_sonraki          <= `DISABLE;
+          change_reg_state_r     <= 1'b0;
+          islem_secimi_sonraki_r <= 5'b0;
+          shamt_sonraki_r        <= 5'b0;
+          rm_sonraki_r           <= 3'b0;
+          aq_sonraki_r           <= 1'b0;
+          rl_sonraki_r           <= 1'b0;
+          yurut_islem_secimi_o   <= 5'b0;
+          yurut_shamt_o          <= 5'b0;
+          yurut_rm_o             <= 3'b0;
+          yurut_aq_o             <= 1'b0;
+          yurut_rl_o             <= 1'b0;
+          rs1                    <= 5'b0;
+          rs2                    <= 5'b0;
+          writeback_reg_file_sec_o <= `NONE_REGISTER;
+          yurut_rd_adres_o       <= 5'b0;
+          yurut_ps_yeni_o        <= 32'b0;
+          yurut_immidiate_o      <= 32'b0;
+          yurut_mem_store_data_o <= 32'b0;
+          reg_file_sec_r         <= `NONE_REGISTER;
+          yurut_integer_deger1_o <= 32'b0;
+          yurut_integer_deger2_o <= 32'b0;
+          rd_sonraki_r           <= 5'b0;
+          ps_yeni_sonraki_r      <= 32'b0;
+          immidiate_sonraki_r    <= 32'b0;
+          mem_stored_data_o      <= 32'b0;
+          mem_stored_sonraki_r   <= 32'b0;
+    end
+    else if (decode_next_instruction)begin
+        yurut_FPU_en_o           <= FPU_en_sonraki;
+        yurut_ALU_en_o           <= ALU_en_sonraki;
+        yurut_IMU_en_o           <= IMU_en_sonraki;
+        yurut_IDU_en_o           <= IDU_en_sonraki;
+        yurut_BRU_en_o           <= BRU_en_sonraki;
+        yurut_CSU_en_o           <= CSU_en_sonraki;
+        yurut_AU_en_o            <= AU_en_sonraki;
+        yurut_BMU_en_o           <= BMU_en_sonraki;
+        yurut_MU_en_o            <= MU_en_sonraki;
+        yurut_islem_secimi_o     <= islem_secimi_sonraki_r;
+        yurut_shamt_o            <= shamt_sonraki_r;
+        yurut_rm_o               <= rm_sonraki_r;
+        yurut_aq_o               <= aq_sonraki_r;
+        yurut_rl_o               <= rl_sonraki_r;
+        yurut_immidiate_o        <= immidiate_sonraki_r;
+        yurut_ps_yeni_o          <= ps_yeni_sonraki_r;
+        yurut_rd_adres_o         <= rd_sonraki_r; 
+        yurut_integer_deger1_o   <= (enable_first_operand ) ? first_operand  : (data_forwarding_rs1) ? forwarded_data_i : integer_deger1_sonraki_r;
+        yurut_integer_deger2_o   <= (enable_second_operand) ? second_operand : (data_forwarding_rs2) ? forwarded_data_i : integer_deger2_sonraki_r;
+        yurut_float_deger1_o     <= float_deger1_sonraki_r;
+        yurut_float_deger2_o     <= float_deger2_sonraki_r;
+        yurut_float_deger3_o     <= float_deger3_sonraki_r;
+        yurut_mem_store_data_o   <= integer_deger2_sonraki_r;
+        writeback_reg_file_sec_o <= reg_file_sec_r;
+        mem_stored_data_o        <= mem_stored_sonraki_r;
+    end 
+    
+
+end
+
+
 always@(*)begin
+    mem_stored_sonraki_r = integer_deger2_sonraki_r;
+    ps_yeni_sonraki_r = getir_ps_i;
     rd_sonraki_r = getir_buyruk_i[11:7];
     rs1 = getir_buyruk_i[19:15];
     rs2 = getir_buyruk_i[24:20];
@@ -2174,70 +2258,7 @@ always@(*)begin
     
 end
 
-always@(posedge clk_i)begin
-    if(rst_i) begin
-          yurut_FPU_en_o         <= `DISABLE;
-          yurut_ALU_en_o         <= `DISABLE;
-          yurut_IMU_en_o         <= `DISABLE;
-          yurut_IDU_en_o         <= `DISABLE;
-          yurut_BRU_en_o         <= `DISABLE;
-          yurut_CSU_en_o         <= `DISABLE;
-          yurut_AU_en_o          <= `DISABLE;
-          yurut_BMU_en_o         <= `DISABLE;
-          yurut_MU_en_o          <= `DISABLE;
-          FPU_en_sonraki         <= `DISABLE;
-          ALU_en_sonraki         <= `DISABLE;
-          IMU_en_sonraki         <= `DISABLE;
-          IDU_en_sonraki         <= `DISABLE;
-          BRU_en_sonraki         <= `DISABLE;
-          CSU_en_sonraki         <= `DISABLE;
-          AU_en_sonraki          <= `DISABLE;
-          BMU_en_sonraki         <= `DISABLE;
-          MU_en_sonraki          <= `DISABLE;
-          change_reg_state_r     <= 1'b0;
-          islem_secimi_sonraki_r <= 5'b0;
-          shamt_sonraki_r        <= 5'b0;
-          rm_sonraki_r           <= 3'b0;
-          aq_sonraki_r           <= 1'b0;
-          rl_sonraki_r           <= 1'b0;
-          yurut_islem_secimi_o   <= 5'b0;
-          yurut_shamt_o          <= 5'b0;
-          yurut_rm_o             <= 3'b0;
-          yurut_aq_o             <= 1'b0;
-          yurut_rl_o             <= 1'b0;
-          rs1                    <= 5'b0;
-          rs2                    <= 5'b0;
-          
-    end
-    else if (decode_next_instruction)begin
-        yurut_FPU_en_o           <= FPU_en_sonraki;
-        yurut_ALU_en_o           <= ALU_en_sonraki;
-        yurut_IMU_en_o           <= IMU_en_sonraki;
-        yurut_IDU_en_o           <= IDU_en_sonraki;
-        yurut_BRU_en_o           <= BRU_en_sonraki;
-        yurut_CSU_en_o           <= CSU_en_sonraki;
-        yurut_AU_en_o            <= AU_en_sonraki;
-        yurut_BMU_en_o           <= BMU_en_sonraki;
-        yurut_MU_en_o            <= MU_en_sonraki;
-        yurut_islem_secimi_o     <= islem_secimi_sonraki_r;
-        yurut_shamt_o            <= shamt_sonraki_r;
-        yurut_rm_o               <= rm_sonraki_r;
-        yurut_aq_o               <= aq_sonraki_r;
-        yurut_rl_o               <= rl_sonraki_r;
-        yurut_immidiate_o        <= immidiate_sonraki_r;
-        yurut_ps_yeni_o          <= ps_yeni_sonraki_r;
-        yurut_rd_adres_o         <= rd_sonraki_r; 
-        yurut_integer_deger1_o   <= (enable_first_operand ) ? first_operand  : (data_forwarding_rs1) ? forwarded_data_i : integer_deger1_sonraki_r;
-        yurut_integer_deger2_o   <= (enable_second_operand) ? second_operand : (data_forwarding_rs2) ? forwarded_data_i : integer_deger2_sonraki_r;
-        yurut_float_deger1_o     <= float_deger1_sonraki_r;
-        yurut_float_deger2_o     <= float_deger2_sonraki_r;
-        yurut_float_deger3_o     <= float_deger3_sonraki_r;
-        yurut_mem_store_data_o   <= integer_deger2_sonraki_r;
-        writeback_reg_file_sec_o <= reg_file_sec_r;
-    end 
-    
 
-end
 endmodule
 
 /*

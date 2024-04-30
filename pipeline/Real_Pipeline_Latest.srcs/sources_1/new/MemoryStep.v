@@ -109,15 +109,15 @@ end
 
 always @(posedge clk_i) begin
     if(rst_i) begin
+        mem_address <= 32'b0;
         mem_data <= 32'b0;
         write_register_info <= 3'b0;
         calculated_result <= 32'b0;     calculated_result_next <= 32'b0;
         rd <= 5'b0;                     rd_next <= 5'b0;
-        register_selection <= 2'b0;     register_selection_next <= 32'b0;
+        register_selection <= `NONE_REGISTER;     register_selection_next <= `NONE_REGISTER;
     end
     else begin
         if(memory_working_info == 1'b0) begin
-            mem_address <= 32'b0;
             write_enable <= write_enable_next;
             read_enable <= read_enable_next;
             mem_address <= mem_address_next;
