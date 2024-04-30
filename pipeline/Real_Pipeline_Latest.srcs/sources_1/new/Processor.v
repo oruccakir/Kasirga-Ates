@@ -146,7 +146,7 @@ DecodeStep decode(
 Execute1Step execute1(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .execute_stall_required_i(memory_working_info),
+    .memory_state_i(memory_working_info),
   //  .branch_predictor_result_i(........)  decode outputu fetchden gelen
     .operand1_integer_i(integer_operand1),
     .operand2_integer_i(integer_operand2),
@@ -175,7 +175,6 @@ Execute1Step execute1(
     //.enable_atomic_unit_o( ),   to memory
     //.enable_memory_unit_o(),    to memory
     .rd_o(rd_to_memory),
-    //.memory_operation_type_o()   memory op i in 
     .mem_stored_data_o(memory_write_data),   
     .calculated_memory_address_o(memory_calculated_address),
     .calculated_result_o(calculated_result),
@@ -184,7 +183,7 @@ Execute1Step execute1(
    // .branched_address_o(calculated_branch_address),  to fetch
    // .is_branched_address_valid_o(), to fetch 
    // .is_branch_predictor_true_o(),    to fetch
-    .execute_busy_flag_o(execute_working_info),
+    .execute_state_o(execute_working_info),
     .forwarded_rd_o(forwarded_rd),
     .forwarded_data_o(forwarded_data),
     .enable_memory_unit_o(enable_memory_unit),
@@ -208,7 +207,7 @@ MemoryStep memory(
     .mem_data_o(write_data_o),
     .mem_address_o(data_address_o),
     .calculated_result_o(calculated_result_to_writeback),
-    .memory_working_info_o(memory_working_info),
+    .memory_state_o(memory_working_info),
     .rd_o(rd_to_writeback),
     .read_enable_o(read_enable_o),
     .write_enable_o(write_enable_o),

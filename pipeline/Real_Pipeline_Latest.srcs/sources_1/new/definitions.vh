@@ -467,3 +467,5 @@
 
 `define NOP                                5'b0
 
+`define IN_PROGRESS                        1'b1
+`define COMPLETED                          1'b0
