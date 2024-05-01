@@ -29,10 +29,12 @@ module main_memory_controller(
     
     //DURUM MAKINESI
     localparam BOSTA = 'd0;
-    localparam YANIT_VER = 'd1;
+    localparam BEKLETME1 = 'd1;
+    localparam BEKLETME2 = 'd2;
+    localparam YANIT_VER = 'd3;
     
-    reg simdiki_durum = BOSTA;
-    reg sonraki_durum;
+    reg [1:0] simdiki_durum = BOSTA;
+    reg [1:0] sonraki_durum;
     
     reg [`BUYRUK_BLOK_BIT-1:0] veri;
     
@@ -49,11 +51,17 @@ module main_memory_controller(
         case(simdiki_durum)
             BOSTA: begin
                 if(denetleyici_okuma_istek_gecerli_i) begin
-                    sonraki_durum = YANIT_VER;
+                    sonraki_durum = BEKLETME1;
                 end
                 else begin
                     sonraki_durum = BOSTA;
                 end
+            end
+            BEKLETME1: begin
+            sonraki_durum = BEKLETME2;
+            end
+            BEKLETME2: begin
+            sonraki_durum = YANIT_VER;
             end
             YANIT_VER: begin
                veri = BELLEK[denetleyici_okuma_istek_adres_i[31:4]];
