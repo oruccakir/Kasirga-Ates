@@ -132,7 +132,7 @@ module instruction_cache_controller(
     //assign getir_okuma_istek_buyruk_o = veri;
     assign getir_okuma_istek_buyruk_o = getir_okuma_istek_buyruk;
     
-    assign b_onbellek_istek_gecerli_o = (sonraki_durum == ONBELLEK_OKU) || (simdiki_durum == ANABELLEK_OKU_ONBELLEK_YAZ) || (sonraki_durum == ONBELLEK_OKU_TEKRAR);
+    assign b_onbellek_istek_gecerli_o = (sonraki_durum == ONBELLEK_OKU) || anabellek_denetleyici_okuma_istek_hazir_i || (sonraki_durum == ONBELLEK_OKU_TEKRAR);
     
     assign b_onbellek_okuma_istek_adres_o = adres_ns[`satir_indexi]; // BRAM sadece satir indexini istiyor
     
@@ -140,7 +140,7 @@ module instruction_cache_controller(
     assign b_onbellek_yazma_veri_blok_o = {adres_r[`etiket], anabellek_denetleyici_okuma_veri_blok_i};
     assign b_onbellek_yazma_istek_adres_o = adres_r[`etiket];
     
-    assign anabellek_denetleyici_okuma_istek_gecerli_o = (simdiki_durum == ANABELLEK_OKU_ONBELLEK_YAZ);
+    assign anabellek_denetleyici_okuma_istek_gecerli_o = simdiki_durum == ANABELLEK_OKU_ONBELLEK_YAZ && !anabellek_denetleyici_okuma_istek_hazir_i;
     assign anabellek_denetleyici_okuma_istek_adres_o = adres_r;
     
     endmodule
