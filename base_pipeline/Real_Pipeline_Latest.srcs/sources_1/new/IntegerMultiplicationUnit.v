@@ -9,7 +9,7 @@ module IntegerMultiplicationUnit(
    input                         [ 4:0]                                     mulOp_i,
    input                         [31:0]                                    operand1_i,
    input                         [31:0]                                    operand2_i,
-   output         reg            [31:0]                                    result_o,
+   output                        [31:0]                                    result_o,
    output         reg                                                      finished_o   
     );
     reg [4:0] cycle, cycle_s;
@@ -18,7 +18,7 @@ module IntegerMultiplicationUnit(
     always@(*) begin
         cycle_s=cycle;
         if(enable_integer_multiplication_unit_i)begin
-            if(cycle_s<30) begin
+            if(cycle_s<2) begin
                 cycle_s=cycle+1;
                 finished_s=0;
             end else begin
@@ -40,7 +40,6 @@ module IntegerMultiplicationUnit(
         end else begin
             cycle<=cycle_s;
             finished_o<=finished_s;
-            result_o <= operand1_i * operand2_i;
         end
         
     end

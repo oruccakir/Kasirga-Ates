@@ -8,52 +8,12 @@ module FloatingMultiplicationUnit(
     input wire enable_i, // Enable input
     input wire [31:0] operand1_i, // Operand 1 input
     input wire [31:0] operand2_i, // Operand 2 input 
-    output reg [31:0] result_o, // Result output
-    output reg exception_o, // exception_o output
-    output reg overflow_o, // Overflow output
-    output reg underflow_o // underflow_o output
+    output wire [31:0] result_o, // Result output
+    output wire exception_o, // exception_o output
+    output wire overflow_o, // Overflow output
+    output wire underflow_o // underflow_o output
 );
-
-
-reg [23:0] mantissa_1;
-reg [23:0] mantissa_2;
-reg [7:0 ] exponent_1;
-reg [7:0 ] exponent_2;
-reg sign_1;
-reg sign_2;
-reg [47:0] mantissa_result;
-reg [8:0 ] exponent_result;
-reg sign_result;
-reg [31:0] result_o_next;
-    always@(*) begin
-        if(enable_i)begin
-            mantissa_1 = {1'b1, operand1_i[22:0]};
-            mantissa_2 = {1'b1, operand2_i[22:0]};
-            exponent_1 = operand1_i[30:23];
-            exponent_2 = operand2_i[30:23];
-            sign_1 = operand1_i[31];
-            sign_2 = operand2_i[31];   
-
-            mantissa_result = mantissa_1 * mantissa_2; 
-            exponent_result = exponent_1 + exponent_2 - 127;
-            if(mantissa_result[47]) begin
-                exponent_result=exponent_result+1;                    
-            end
-            sign_result = sign_1 ^ sign_2;
-            
-            result_o_next={sign_result, exponent_result[7:0], mantissa_result[47:24]};
-            
-        end 
-    end
     
-    always@(posedge clk_i)begin
-        if(rst_i)begin
-        end
-        result_o<=result_o_next;
-    end
-endmodule
-
-/*   
 wire sign,product_round,normalised,zero;
 wire [8:0] exponent,sum_exponent;
 wire [22:0] product_mantissa;
@@ -98,4 +58,4 @@ assign underflow_o = ((exponent[8] & exponent[7]) & !zero) ? 1'b1 : 1'b0;
 
 assign result = exception_o ? 32'd0 : zero ? {sign,31'd0} : overflow_o ? {sign,8'hFF,23'd0} : underflow_o ? {sign,31'd0} : {sign,exponent[7:0],product_mantissa};
 
-endmodule*/
+endmodule

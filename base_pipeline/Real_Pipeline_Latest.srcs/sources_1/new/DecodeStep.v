@@ -319,9 +319,8 @@ always@(*)begin
              immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
              reg_file_sec_r           = `INTEGER_REGISTER;
              enable_first_operand_r   = `DISABLE;
-             enable_second_operand_r  = `ENABLE;  
+             enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
-             second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};
         end  
         `SLTI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       

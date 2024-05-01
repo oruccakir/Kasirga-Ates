@@ -99,21 +99,14 @@ initial begin
     */
     
     memory_write('h8000_0000, 32'h00940633); // 1    add x12, x8, x9
-    memory_write('h8000_0004, 32'h008381b3); //  2   add  x3, x7, x8
+    /*memory_write('h8000_0004, 32'h008381b3); //  2   add  x3, x7, x8
     memory_write('h8000_0008, 32'h40360f33);  // 3   sub x30, x12, x3
     memory_write('h8000_000c, 32'h15ef0e93); //  4   addi x29 x30 350
     memory_write('h8000_0010, 32'h40c288b3); //  5   sub x17, x5, x12
-    memory_write('h8000_0014, 32'h025185b3);  // 10  mul x11, x3, x5
-    memory_write('h8000_0018, 32'h003589b3); //  6   add x19, x11, x3
-    /*
-    memory_write('h8000_0018, 32'h025185b3);  // 10  mul x11, x3, x5
-    memory_write('h8000_001c, 32'h03158ab3); //  7   mul x21, x11, x17
-    memory_write('h8000_0020, 32'h00940633); // 1    add x12, x8, x9
-    memory_write('h8000_0024, 32'h008381b3); //  2   add  x3, x7, x8
-    memory_write('h8000_0028, 32'h40360f33);  // 3   sub x30, x12, x3
-    
+    memory_write('h8000_0014, 32'h003589b3); //  6   add x19, x11, x3
+    memory_write('h8000_0018, 32'h03158ab3); //  7   mul x21, x11, x17
     memory_write('h8000_001c, 32'h03158ab3);
-    //memory_write('h8000_001c, 32'h0235cb33); //  8   div x22, x11, x3  ...bu buyrukta ï¿½ï¿½z ve execute flaglarï¿½ x gelmeye baï¿½lï¿½yor? onun dï¿½ï¿½ï¿½nda her ï¿½ey tamam.
+    //memory_write('h8000_001c, 32'h0235cb33); //  8   div x22, x11, x3  ...bu buyrukta çöz ve execute flaglarý x gelmeye baþlýyor? onun dýþýnda her þey tamam.
     memory_write('h8000_0020, 32'h02897cb3);  // 9   remu x25, x18, x8
     memory_write('h8000_0024, 32'h025185b3);  // 10  mul x11, x3, x5
     memory_write('h8000_0028,32'h06cfa223);   // 11  sw x12, 100(x31)
@@ -216,114 +209,3 @@ end
 endfunction
 
 endmodule
-
-
-/*
-module processor_tb();
-
-localparam MEMORY_ADDRESS = 32'h8000_0000;
-localparam ADDRESS_BIT = 32;
-localparam DATA_BIT = 32;
-
-reg clk_r;
-reg rst_r;
-
-wire [31:0] processor_MEMORY_ADDRESS_INS;
-wire [31:0] processor_MEMORY_ADDRESS_DATA;
-wire [DATA_BIT-1:0] processor_memory_read_data;
-wire [DATA_BIT-1:0] processor_memory_read_ins;
-wire [DATA_BIT-1:0] processor_memory_write_data;
-wire processor_memory_write;
-wire processor_memory_read;
-wire get_instruction;
-wire data_completed;
-wire instruction_completed;
-
-
-wire b_onbellek_istek_gecerli_o;
-    
-    wire [`BUYRUK_ONBELLEGI_SATIR_SECIM_BIT-1:0] b_onbellek_okuma_istek_adres_o;
-    wire [`BUYRUK_ETIKET_BIT+`BUYRUK_BLOK_BIT-1:0] b_onbellek_okuma_istek_etiket_blok_i;
-    
-    wire [`BUYRUK_ONBELLEGI_SATIR_SECIM_BIT-1:0] b_onbellek_yazma_istek_adres_o;
-    wire b_onbellek_yazma_istek_gecerli_o;
-    wire [`BUYRUK_ETIKET_BIT+`BUYRUK_BLOK_BIT-1:0] b_onbellek_yazma_veri_blok_o;
-    
-    wire [`BUYRUK_ADRES_BIT-1:0] anabellek_denetleyici_okuma_istek_adres_o;
-    wire anabellek_denetleyici_okuma_istek_gecerli_o;
-    wire [`BUYRUK_BLOK_BIT-1:0] anabellek_denetleyici_okuma_veri_blok_i;
-    wire anabellek_denetleyici_okuma_istek_hazir_i;
-
-// Instantiate the module under test
-    instruction_cache_controller instruction_cache_controller_dut (
-        .clk_i(clk_r),
-        .rst_i(rst_r),
-        .getir_okuma_istek_adres_i(processor_MEMORY_ADDRESS_INS),
-        .getir_okuma_istek_gecerli_i(get_instruction),
-        .getir_okuma_istek_buyruk_o(processor_memory_read_ins),
-        .getir_okuma_istek_hazir_o(instruction_completed),
-        .b_onbellek_istek_gecerli_o(b_onbellek_istek_gecerli_o),
-        .b_onbellek_okuma_istek_adres_o(b_onbellek_okuma_istek_adres_o),
-        .b_onbellek_okuma_istek_etiket_blok_i(b_onbellek_okuma_istek_etiket_blok_i),
-        .b_onbellek_yazma_istek_adres_o(b_onbellek_yazma_istek_adres_o),
-        .b_onbellek_yazma_istek_gecerli_o(b_onbellek_yazma_istek_gecerli_o),
-        .b_onbellek_yazma_veri_blok_o(b_onbellek_yazma_veri_blok_o),
-        .anabellek_denetleyici_okuma_istek_adres_o(anabellek_denetleyici_okuma_istek_adres_o),
-        .anabellek_denetleyici_okuma_istek_gecerli_o(anabellek_denetleyici_okuma_istek_gecerli_o),
-        .anabellek_denetleyici_okuma_veri_blok_i(anabellek_denetleyici_okuma_veri_blok_i),
-        .anabellek_denetleyici_okuma_istek_hazir_i(anabellek_denetleyici_okuma_istek_hazir_i)
-    );
-    
-    bram_instruction_cache_1 BRAM_instruction_cache_dut (
-        .clk_i(clk_r),
-        .data_i(b_onbellek_yazma_veri_blok_o),
-        .addr_i(b_onbellek_okuma_istek_adres_o),
-        .wr_en_i(b_onbellek_yazma_istek_gecerli_o),
-        .cmd_en_i(b_onbellek_istek_gecerli_o),
-        .data_o(b_onbellek_okuma_istek_etiket_blok_i) 
-    );
-    
-
-    
-    main_memory_controller1 main_memory_controller_dut(
-        .clk_i(clk_r),
-        .rst_i(rst_r),
-        .denetleyici_okuma_istek_adres_i(anabellek_denetleyici_okuma_istek_adres_o),
-        .denetleyici_okuma_istek_gecerli_i(anabellek_denetleyici_okuma_istek_gecerli_o),
-        .denetleyici_okuma_veri_blok_o(anabellek_denetleyici_okuma_veri_blok_i),
-        .denetleyici_okuma_istek_hazir_o(anabellek_denetleyici_okuma_istek_hazir_i)
-    );
-
-
-Processor processor (
-    .clk_i(clk_r),
-    .rst_i(rst_r),
-    .instruction_i(processor_memory_read_ins),
-    .data_i(processor_memory_read_data),
-    .data_completed_i(data_completed),
-    .instruction_completed_i(instruction_completed),
-    .mem_address_o(processor_MEMORY_ADDRESS_INS),
-    .read_enable_o(processor_memory_read),
-    .get_instruction_o(get_instruction),
-    .write_data_o(processor_memory_write_data),
-    .write_enable_o(processor_memory_write),
-    .data_address_o(processor_MEMORY_ADDRESS_DATA)
-);
-
-always begin
-        clk_r = ~clk_r;
-        #5;
-    end
-
-initial begin
-        clk_r = 0;
-        rst_r = 1;
-        #20;
-        rst_r = 0;
-    end
-
-
-// datalen adresi memory satir indisine donusturur.
-
-
-endmodule*/

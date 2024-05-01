@@ -180,7 +180,6 @@ ControlStatusUnit csu(
 );
 
 always@(*) begin
-    
     memOp_next =  which_operation_i[2:0]; 
     register_type_selection_next = register_type_selection_i;
     mem_stored_data_next = mem_stored_data_i;
@@ -224,7 +223,6 @@ always@(posedge clk_i) begin
         calculated_memory_address <= calculated_result_alu;
         if(enable_arithmetic_logic_unit_i)begin
             calculated_result<=calculated_result_alu;
-            $display("alu result:%d",  calculated_result_alu); 
         end
         else if (enable_integer_multiplication_unit_i && finished_integer_multiplication_unit) begin
             calculated_result<=calculated_result_mul;
