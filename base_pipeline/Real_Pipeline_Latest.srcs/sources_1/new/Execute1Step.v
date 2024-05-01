@@ -59,6 +59,7 @@ reg [4:0] rd_next;
 reg [4:0] rd;
 reg [31:0] mem_stored_data;
 reg [31:0] calculated_result;
+wire [31:0] calculated_result_next;
 reg [31:0] calculated_memory_address;
 reg [2:0]  memOp;
 reg [2:0]  memOp_next;
@@ -207,6 +208,7 @@ always@(posedge clk_i) begin
         calculated_result<=32'b0;
     end else begin
         if(execute_state == `COMPLETED) begin
+            calculated_result <= calculated_result_next;
             memOp <= memOp_next;
             register_type_selection <= register_type_selection_next;
             mem_stored_data <= mem_stored_data_next;
@@ -217,6 +219,7 @@ always@(posedge clk_i) begin
     end
 end
 
+/*
 always@(posedge clk_i) begin
 
     if(execute_state == `COMPLETED) begin  //memory degisince ~execute_stall_required_i cevir
@@ -224,9 +227,9 @@ always@(posedge clk_i) begin
         if(enable_arithmetic_logic_unit_i)begin
             calculated_result<=calculated_result_alu;
         end
-        else if (enable_integer_multiplication_unit_i && finished_integer_multiplication_unit) begin
+        else if (enable_integer_multiplication_unit_i) begin
+            $display("IMU RESULT : %d",$signed(calculated_result_mul));
             calculated_result<=calculated_result_mul;
-            imu.finished_o<=1'b0;
         end 
         else if (enable_integer_division_unit_i && finished_integer_division_unit) begin
             calculated_result<=calculated_int_div_result;
@@ -245,8 +248,12 @@ always@(posedge clk_i) begin
         end 
     end
 end
+*/
 
-assign int_mul_unit_state =  enable_integer_multiplication_unit_i && ~finished_integer_multiplication_unit;
+assign calculated_result_next = enable_arithmetic_logic_unit_i ? calculated_result_alu :
+                                enable_integer_multiplication_unit_i ? calculated_result_mul : 32'b1;
+
+assign int_mul_unit_state = enable_integer_multiplication_unit_i && ~finished_integer_multiplication_unit;
 assign int_div_unit_state =  enable_integer_division_unit_i && ~finished_integer_division_unit;
 assign float_point_unit_state = enable_floating_point_unit_i && ~finished_floating_point_unit;
 assign control_status_unit_state = enable_control_status_unit_i && ~finished_control_status_unit;

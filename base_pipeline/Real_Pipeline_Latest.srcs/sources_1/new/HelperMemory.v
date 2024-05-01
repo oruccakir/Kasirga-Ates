@@ -291,7 +291,7 @@ always @(posedge clk_i) begin
         instruction_completed <= 1'b0;
     end
     else begin
-        if(instruction_counter == 10) begin
+        if(instruction_counter == 2) begin
             instruction_completed_next = 1'b1;
             instruction_counter = 0;
         end

@@ -97,7 +97,8 @@ wire        data_forwarding_rs2;
 wire        decode_next_instruction;
 wire        data_dependency_rs1;
 wire        data_dependency_rs2;
-wire[`BIT_SAYISI_COZ-1:0] buyruk_w = {getir_buyruk_i[31:27], getir_buyruk_i[25:20], getir_buyruk_i[14:12], getir_buyruk_i[6:2]};
+wire[`BIT_SAYISI_COZ-1:0] buyruk_w;
+assign buyruk_w = {getir_buyruk_i[31:27], getir_buyruk_i[25:20], getir_buyruk_i[14:12], getir_buyruk_i[6:2]};
 
 assign data_forwarding_rs1 = ((forwarded_rd_i == rs1 ) && (forwarded_rd_i != 0));
 assign data_forwarding_rs2 = ((forwarded_rd_i == rs2 ) && (forwarded_rd_i != 0));
@@ -223,6 +224,18 @@ always@(*)begin
     rd_sonraki_r         = getir_buyruk_i[11:7];
     rs1                  = getir_buyruk_i[19:15];
     rs2                  = getir_buyruk_i[24:20];
+    
+    FPU_en_sonraki_r    = unit_selection_r[0];
+    ALU_en_sonraki_r    = unit_selection_r[1];
+    IMU_en_sonraki_r    = unit_selection_r[2];
+    IDU_en_sonraki_r    = unit_selection_r[3];
+    BRU_en_sonraki_r    = unit_selection_r[4];
+    CU_en_sonraki_r     = unit_selection_r[5];
+    CSU_en_sonraki_r    = unit_selection_r[6];
+    AU_en_sonraki_r     = unit_selection_r[7];
+    BMU_en_sonraki_r    = unit_selection_r[8];
+    MU_en_sonraki_r     = unit_selection_r[9];
+
     casez (buyruk_w)
         `NOP_COZ       : begin
              unit_selection_r         = `NO_UNIT;
@@ -319,8 +332,9 @@ always@(*)begin
              immidiate_sonraki_r      = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:20]};  
              reg_file_sec_r           = `INTEGER_REGISTER;
              enable_first_operand_r   = `DISABLE;
-             enable_second_operand_r  = `DISABLE;  
+             enable_second_operand_r  = `ENABLE;  
              change_reg_state_r       = `ENABLE;
+             second_operand           = immidiate_sonraki_r;
         end  
         `SLTI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -1209,6 +1223,8 @@ always@(*)begin
              change_reg_state_r       = `ENABLE;
         end  
         default        : begin
+        $display(" DEFAULTTT  CASEEEEEEEEEE");
+        /*
           yurut_FPU_en_o         <= `DISABLE;
           yurut_ALU_en_o         <= `DISABLE;
           yurut_IMU_en_o         <= `DISABLE;
@@ -1219,21 +1235,10 @@ always@(*)begin
           yurut_BMU_en_o         <= `DISABLE;
           yurut_MU_en_o          <= `DISABLE;
           change_reg_state_r    = 1'b0;
+          */
         end 
         
-    endcase
-     FPU_en_sonraki_r    = unit_selection_r[0];
-     ALU_en_sonraki_r    = unit_selection_r[1];
-     IMU_en_sonraki_r    = unit_selection_r[2];
-     IDU_en_sonraki_r    = unit_selection_r[3];
-     BRU_en_sonraki_r    = unit_selection_r[4];
-     CU_en_sonraki_r     = unit_selection_r[5];
-     CSU_en_sonraki_r    = unit_selection_r[6];
-     AU_en_sonraki_r     = unit_selection_r[7];
-     BMU_en_sonraki_r    = unit_selection_r[8];
-     MU_en_sonraki_r     = unit_selection_r[9];
-
-    
+    endcase    
 end
 
 
