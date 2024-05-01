@@ -28,6 +28,7 @@ module Execute1Step(
     input wire [1:0]   register_type_selection_i,                  // destination register: floating register or integer register
     input wire [4:0]   rd_i,                                      // Destination register input from decode step, goes to memory step for write back
     input wire [31:0]  mem_stored_data_i,                       // input register value to store in memory    
+    input wire [3:0]   unit_selection_i,
     output wire        enable_atomic_unit_o,
     output wire        enable_memory_unit_o,
     output wire [4:0]  rd_o,                                      // Destination register output goes to memory step for write back
@@ -54,6 +55,7 @@ wire control_status_unit_state;
 wire bit_manip_unit_state;
 wire execute_state;
 
+reg reset_imu_finish;
 
 reg [4:0] rd_next;
 reg [4:0] rd;
@@ -72,7 +74,7 @@ reg enable_memory_unit;
 reg enable_atomic_unit;
 
 
-
+wire enable_alu = unit_selection_i == `ARITHMETIC_LOGIC_UNIT;
 wire [31:0] calculated_result_alu;
 ArithmeticLogicUnit alu(
     .operand1_i(operand1_integer_i),
@@ -84,21 +86,25 @@ ArithmeticLogicUnit alu(
 // Integer Multiplication Unit module 
 wire finished_integer_multiplication_unit;
 wire [31:0] calculated_result_mul;
+wire enable_imu = unit_selection_i == `INTEGER_MULTIPLICATION_UNIT;
 IntegerMultiplicationUnit imu(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .enable_integer_multiplication_unit_i(enable_integer_multiplication_unit_i),
+    .enable_integer_multiplication_unit_i(enable_imu),
     .mulOp_i(which_operation_i),
     .operand1_i(operand1_integer_i),
     .operand2_i(operand2_integer_i),
+    .reset_finish(reset_imu_finish),
     .result_o(calculated_result_mul),
-    .finished_o(finished_integer_multiplication_unit)
+    .finished_o(finished_integer_multiplication_unit),
+    .state_o(int_mul_unit_state)
 );
 
 
 // Integer Division Unit module;
 wire finished_integer_division_unit;
 wire [31:0] calculated_int_div_result;
+wire enable_idu = unit_selection_i == `INTEGER_DIVISION_UNIT;
 IntegerDivisionUnit idu(
     .clk_i(clk_i),
     .rst_i(rst_i),
@@ -180,6 +186,7 @@ ControlStatusUnit csu(
     .finished_o(finished_control_status_unit)
 );
 
+
 always@(*) begin
     memOp_next =  which_operation_i[2:0]; 
     register_type_selection_next = register_type_selection_i;
@@ -192,6 +199,7 @@ end
 
 always@(posedge clk_i) begin
     if(rst_i) begin
+        reset_imu_finish = 1'b0;
         enable_atomic_unit_next<=1'b0;
         enable_memory_unit_next<=1'b0;
         enable_atomic_unit<=1'b0;
@@ -250,10 +258,11 @@ always@(posedge clk_i) begin
 end
 */
 
-assign calculated_result_next = enable_arithmetic_logic_unit_i ? calculated_result_alu :
-                                enable_integer_multiplication_unit_i ? calculated_result_mul : 32'b1;
+assign calculated_result_next = enable_alu ? calculated_result_alu :
+                                enable_imu ? calculated_result_mul : 32'b0;
+                                
 
-assign int_mul_unit_state = enable_integer_multiplication_unit_i && ~finished_integer_multiplication_unit;
+//assign int_mul_unit_state = enable_imu && ~finished_integer_multiplication_unit;
 assign int_div_unit_state =  enable_integer_division_unit_i && ~finished_integer_division_unit;
 assign float_point_unit_state = enable_floating_point_unit_i && ~finished_floating_point_unit;
 assign control_status_unit_state = enable_control_status_unit_i && ~finished_control_status_unit;

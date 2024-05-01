@@ -110,8 +110,8 @@ end
 
 always @(posedge clk_i) begin
     if (rst_i) begin
-        bellek_ps_o <= 0;
-        ps <= 0;
+        bellek_ps_o <= 'h8000_0000;
+        ps <= 'h8000_0000;
         dallanma_tahmini_gecerli <= 0;
         bellek_istek_o <= 1;
     end

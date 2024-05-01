@@ -9,13 +9,16 @@ module IntegerMultiplicationUnit(
    input wire [ 4:0] mulOp_i,
    input wire [31:0] operand1_i,
    input wire[31:0] operand2_i,
+   input wire reset_finish,
    output wire[31:0] result_o,
-   output wire finished_o   
+   output wire finished_o,
+   output wire state_o   
 );
 
 reg is_finished;
 reg [31:0] result;
 integer counter = 0;
+integer c =0;
 wire state;
 assign state = enable_integer_multiplication_unit_i && ~is_finished;
 
@@ -35,11 +38,21 @@ always@(posedge clk_i) begin
                 counter = 0;
             end
         end
+        else if(is_finished) begin
+            if(c == 1) begin
+                is_finished = 1'b0;
+                c = 0;
+            end
+            else begin
+                c = c + 1;
+                
+            end
+        end
     end
 end
 
 assign finished_o = is_finished;
 assign result_o = result;
-
+assign state_o = state;
 endmodule
 

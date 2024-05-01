@@ -105,8 +105,9 @@ initial begin
     memory_write('h8000_0010, 32'h40c288b3); //  5   sub x17, x5, x12
     memory_write('h8000_0014, 32'h003589b3); //  6   add x19, x11, x3
     memory_write('h8000_0018, 32'h03158ab3); //  7   mul x21, x11, x17
-    memory_write('h8000_001c, 32'h00fa8e33); //  8   add x28, x21, x15
-    memory_write('h8000_0020,32'h016586b3);   // 12  add x13, x11, x22
+    memory_write('h8000_001c, 32'h025185b3);  // 10  mul x11, x3, x5
+    memory_write('h8000_0020, 32'h00fa8e33); //  8   add x28, x21, x15
+   // memory_write('h8000_0020,32'h016586b3);   // 12  add x13, x11, x22
     /*
     memory_write('h8000_001c, 32'h03158ab3);
     //memory_write('h8000_001c, 32'h0235cb33); //  8   div x22, x11, x3  ...bu buyrukta çöz ve execute flaglarý x gelmeye baþlýyor? onun dýþýnda her þey tamam.
@@ -134,44 +135,6 @@ initial begin
     
     */
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-   
     // PROGRAM dataSI
     memory_write('h8000_0400, 32'hdeadbee0);
     memory_write('h8000_0404, 32'h55555555);

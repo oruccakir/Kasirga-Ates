@@ -138,7 +138,8 @@ DecodeStep decode(
 .yurut_rd_adres_o(rd),
 .decode_working_info_o(decode_working_info),
 .writeback_reg_file_sec_o(register_selection_execute),
-.mem_stored_data_o(rs2_value)          
+.mem_stored_data_o(rs2_value),
+.unit_selection_o(unit_type)          
   
 );
 
@@ -171,6 +172,7 @@ Execute1Step execute1(
     .register_type_selection_i(register_selection_execute),
     .rd_i(rd),
     .mem_stored_data_i(rs2_value),  //decodan gelecek rs2 de eri memorye yazlacak 
+    .unit_selection_i(unit_type),
     //.extension_mode_i(),    buyrupa g re decodedan gelecek ve memory a amas ndan sonra gemi letme yap lacak
     //.enable_atomic_unit_o( ),   to memory
     //.enable_memory_unit_o(),    to memory

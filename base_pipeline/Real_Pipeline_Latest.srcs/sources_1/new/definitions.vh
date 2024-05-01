@@ -39,6 +39,7 @@
 `define ATOMIC_UNIT                     4'h7
 `define BIT_MANIPULATION_UNIT           4'h8
 `define MEMORY_UNIT                     4'h9
+`define NONE_UNIT                       4'h10
 
 //`define NO_UNIT                         4'ha
 

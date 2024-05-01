@@ -50,10 +50,12 @@ module DecodeStep (
     output reg [ 4:0] yurut_rd_adres_o ,
     output reg [ 1:0] writeback_reg_file_sec_o,
     output wire       decode_working_info_o,
-    output reg [31:0] mem_stored_data_o
+    output reg [31:0] mem_stored_data_o,
+    output reg [3:0] unit_selection_o
             
 );
 
+reg [3:0]   unit_selection_sonraki_r;
 reg [31:0]  mem_stored_sonraki_r;
 reg [31:0]  first_operand;
 reg [31:0]  second_operand;
@@ -140,6 +142,8 @@ FloatRegisterFile FRF(
 
 always@(posedge clk_i)begin
     if(rst_i) begin
+          unit_selection_o         <= `NONE_UNIT;
+          unit_selection_sonraki_r <= `NONE_UNIT;
           yurut_FPU_en_o           <= `DISABLE;
           yurut_ALU_en_o           <= `DISABLE;
           yurut_IMU_en_o           <= `DISABLE;
@@ -185,8 +189,11 @@ always@(posedge clk_i)begin
           immidiate_sonraki_r      <= 32'b0;
           mem_stored_data_o        <= 32'b0;
           mem_stored_sonraki_r     <= 32'b0;
+          enable_first_operand_r   <= 1'b0;
+          enable_second_operand_r  <= 1'b0;
     end
     else if (decode_next_instruction)begin
+        unit_selection_o         <= unit_selection_sonraki_r;
         yurut_FPU_en_o           <= FPU_en_sonraki_r;
         yurut_ALU_en_o           <= ALU_en_sonraki_r;
         yurut_IMU_en_o           <= IMU_en_sonraki_r;
@@ -217,13 +224,18 @@ always@(posedge clk_i)begin
 
 end
 
+always @(*) begin
+    rs1                  = getir_buyruk_i[19:15];
+    rs2                  = getir_buyruk_i[24:20];
+end
 
 always@(*)begin
+    $display("DECODE RESET &h",getir_buyruk_i);
     mem_stored_sonraki_r = integer_deger2_sonraki_r;
     ps_yeni_sonraki_r    = getir_ps_i;
     rd_sonraki_r         = getir_buyruk_i[11:7];
-    rs1                  = getir_buyruk_i[19:15];
-    rs2                  = getir_buyruk_i[24:20];
+    //rs1                  = getir_buyruk_i[19:15];
+    //rs2                  = getir_buyruk_i[24:20];
     
     FPU_en_sonraki_r    = unit_selection_r[0];
     ALU_en_sonraki_r    = unit_selection_r[1];
@@ -253,6 +265,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE;  
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SUB_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;
@@ -261,6 +274,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;
              change_reg_state_r       = `ENABLE;   
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
          end  
         `SLL_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;
@@ -269,6 +283,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE; 
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SLT_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -277,6 +292,8 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
+             
         end     
         `SLTU_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -285,6 +302,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `XOR_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;      
@@ -293,6 +311,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SRL_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;      
@@ -301,6 +320,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SRA_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -309,6 +329,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `OR_COZ        : begin
              unit_selection_r         = `ENABLE_ALU;      
@@ -317,6 +338,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `AND_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -325,6 +347,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE; 
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `ADDI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;      
@@ -335,6 +358,7 @@ always@(*)begin
              enable_second_operand_r  = `ENABLE;  
              change_reg_state_r       = `ENABLE;
              second_operand           = immidiate_sonraki_r;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SLTI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -344,6 +368,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SLTIU_COZ     : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -353,6 +378,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE; 
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `XORI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -362,6 +388,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `ORI_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -371,6 +398,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `ANDI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;      
@@ -380,6 +408,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE; 
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SLLI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -389,6 +418,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SRLI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -398,6 +428,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SRAI_COZ      : begin
              unit_selection_r         = `ENABLE_ALU;      
@@ -407,6 +438,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
         end  
         `SB_COZ        : begin
              unit_selection_r         = `ENABLE_MU;                 
@@ -418,6 +450,7 @@ always@(*)begin
              second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0;
+             unit_selection_sonraki_r = `ARITHMETIC_LOGIC_UNIT;
              
         end  
         `SH_COZ        : begin
@@ -430,6 +463,7 @@ always@(*)begin
              second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]}; 
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0; 
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `SW_COZ        : begin
              unit_selection_r         = `ENABLE_MU;                
@@ -441,6 +475,7 @@ always@(*)begin
              second_operand           = {{20{getir_buyruk_i[31]}}, getir_buyruk_i[31:25], getir_buyruk_i[11:7]};
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0;
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `LB_COZ        : begin
              unit_selection_r         = `ENABLE_MU;                
@@ -450,6 +485,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `ENABLE; 
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `LH_COZ        : begin
              unit_selection_r         = `ENABLE_MU;                 
@@ -459,6 +495,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `LW_COZ        : begin
              unit_selection_r         = `ENABLE_MU;                
@@ -468,6 +505,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `LBU_COZ       : begin
              unit_selection_r         = `ENABLE_MU;               
@@ -477,6 +515,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `LHU_COZ       : begin
              unit_selection_r         = `ENABLE_MU;                 
@@ -486,6 +525,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `MEMORY_UNIT;
         end  
         `BEQ_COZ       : begin
              unit_selection_r         = `ENABLE_BRU;        
@@ -496,6 +536,7 @@ always@(*)begin
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0;
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `BNE_COZ       : begin
              unit_selection_r         = `ENABLE_BRU;        
@@ -505,6 +546,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `DISABLE;
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `BLT_COZ       : begin
              unit_selection_r         = `ENABLE_BRU;         
@@ -514,6 +556,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `DISABLE;
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `BGE_COZ       : begin
              unit_selection_r         = `ENABLE_BRU;       
@@ -524,6 +567,7 @@ always@(*)begin
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0;
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `BLTU_COZ      : begin
              unit_selection_r         = `ENABLE_BRU;         
@@ -534,6 +578,7 @@ always@(*)begin
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0;
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `BGEU_COZ      : begin
              unit_selection_r         = `ENABLE_BRU;         
@@ -544,6 +589,7 @@ always@(*)begin
              enable_second_operand_r  = `DISABLE; 
              change_reg_state_r       = `DISABLE;
              rd_sonraki_r             = 5'b0; 
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `LUI_COZ       : begin
              unit_selection_r         = `ENABLE_ALU;       
@@ -576,6 +622,7 @@ always@(*)begin
              change_reg_state_r       = `ENABLE;  
              first_operand            = getir_ps_i;
              second_operand           = 'd4;
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
         end  
         `JALR_COZ      : begin
              unit_selection_r         = `ENABLE_BRU;        
@@ -587,6 +634,7 @@ always@(*)begin
              change_reg_state_r       = `ENABLE;
              first_operand            = getir_ps_i;
              second_operand           = 'd4; 
+             unit_selection_sonraki_r = `BRANCH_RESOLVER_UNIT;
              
         end  
         `MUL_COZ       : begin
@@ -596,6 +644,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_MULTIPLICATION_UNIT;
         end  
         `MULH_COZ      : begin
              unit_selection_r         = `ENABLE_IMU;
@@ -604,6 +653,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_MULTIPLICATION_UNIT;
         end  
         `MULHSU_COZ    : begin
              unit_selection_r         = `ENABLE_IMU;
@@ -612,6 +662,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_MULTIPLICATION_UNIT;
         end  
         `MULHU_COZ     : begin
              unit_selection_r         = `ENABLE_IMU;
@@ -620,6 +671,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_MULTIPLICATION_UNIT;
         end  
         `DIV_COZ       : begin
              unit_selection_r         = `ENABLE_IDU;      
@@ -628,6 +680,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_DIVISION_UNIT;
         end  
         `DIVU_COZ      : begin
              unit_selection_r         = `ENABLE_IDU;      
@@ -636,6 +689,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_DIVISION_UNIT;
         end  
         `REM_COZ       : begin
              unit_selection_r         = `ENABLE_IDU;       
@@ -644,6 +698,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_DIVISION_UNIT;
         end  
         `REMU_COZ      : begin
              unit_selection_r         = `ENABLE_IDU;       
@@ -652,6 +707,7 @@ always@(*)begin
              enable_first_operand_r   = `DISABLE;
              enable_second_operand_r  = `DISABLE;  
              change_reg_state_r       = `ENABLE;
+             unit_selection_sonraki_r = `INTEGER_DIVISION_UNIT;
         end  
         `LR_W_COZ      : begin
              unit_selection_r         = `ENABLE_AU;               
@@ -1223,7 +1279,6 @@ always@(*)begin
              change_reg_state_r       = `ENABLE;
         end  
         default        : begin
-        $display(" DEFAULTTT  CASEEEEEEEEEE");
         /*
           yurut_FPU_en_o         <= `DISABLE;
           yurut_ALU_en_o         <= `DISABLE;
