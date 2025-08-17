@@ -1,4 +1,4 @@
-# ⚡ Kasırga ATEŞ – Digital Processor Design
+# ⚡ Kasırga ATEŞ  Digital Processor Design
 
 Kasırga ATEŞ is a **digital processor design project** developed in **Verilog** under the **Kasırga Microprocessors Laboratory (TOBB ETÜ)**.  
 The project focuses on building a high-performance, pipelined RISC-V–inspired processor architecture, optimized for efficiency and tested in competitive real-world scenarios.
@@ -56,13 +56,6 @@ This achievement wouldn't have been possible without the dedication and expertis
 - **Batuhan Uzunoğlu**
 
 ![Kasırga ATEŞ Team](kasirga_ates_team.jpeg)
-
----
-
-## 📊 Example Architecture (Placeholder)
-
-![Processor Architecture](docs/architecture.png)  
-*(Add your block diagram here for visual representation of the pipeline and modules.)*
 
 ---
 
