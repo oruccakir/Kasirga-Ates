@@ -1,6 +1,6 @@
 # ⚡ Kasırga ATEŞ – Digital Processor Design
 
-Kasırga ATEŞ is a **digital processor design project** developed in **Verilog** and **SystemVerilog** under the **Kasırga Microprocessors Laboratory (TOBB ETÜ)**.  
+Kasırga ATEŞ is a **digital processor design project** developed in **Verilog** under the **Kasırga Microprocessors Laboratory (TOBB ETÜ)**.  
 The project focuses on building a high-performance, pipelined RISC-V–inspired processor architecture, optimized for efficiency and tested in competitive real-world scenarios.
 
 This repository contains the processor implementation, memory modules, pipeline logic, and testbench infrastructure used in the **TEKNOFEST 2024 Digital Processor Design Competition**.
@@ -15,13 +15,8 @@ This repository contains the processor implementation, memory modules, pipeline 
 - **`sources/`** – Source files for the architecture design  
 - **`test/`** – Testbenches and simulation utilities  
 - **`.vscode/`** – Development environment configurations  
-- **`.gitignore`** – Git ignore rules  
-
-**Languages Used**  
-- Verilog – ~89%  
-- SystemVerilog – ~8.7%  
-- Python – ~1.7%  
-
+- **`.gitignore`** – Git ignore rules
+  
 ---
 
 ## ✨ Key Features
@@ -44,7 +39,9 @@ This repository contains the processor implementation, memory modules, pipeline 
 - **TEKNOFEST 2024 – Best Team Spirit Award**  
   🏅 Recognized for outstanding teamwork, collaboration, and resilience  
   *Institution:* TÜBİTAK | The Scientific and Technological Research Council of Türkiye  
-  *Date:* 05/09/2024  
+  *Date:* 05/09/2024
+
+  👉 [Read our announcement on LinkedIn](https://www.linkedin.com/feed/update/urn:li:activity:7331327321959809026/)
 
 ---
 
