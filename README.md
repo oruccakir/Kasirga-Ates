@@ -53,7 +53,9 @@ This achievement wouldn't have been possible without the dedication and expertis
 - **Zeynep Yavuz**  
 - **Sena Filiz**  
 - **Betül Aydeğer**  
-- **Batuhan Uzunoğlu**  
+- **Batuhan Uzunoğlu**
+
+![Kasırga ATEŞ Team](kasirga_ates_team.jpg)
 
 ---
 
